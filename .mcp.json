@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "crosslink-knowledge": {
+      "args": [
+        "run",
+        ".claude/mcp/knowledge-server.py"
+      ],
+      "command": "uv"
+    },
+    "crosslink-safe-fetch": {
+      "args": [
+        "run",
+        ".claude/mcp/safe-fetch-server.py"
+      ],
+      "command": "uv"
+    }
+  }
+}
