@@ -33,3 +33,6 @@
 # Rust build artifacts
 /target
 .claude/worktrees/
+
+# Crosslink caches in subcrates
+**/.crosslink/
