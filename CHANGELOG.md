@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Changed
+- Agent 8: Phase 1 integration (#10)
 - Agent 7: fixtures + test infra (#9)
 - Agent 6: ferrolearn-model-sel (#8)
 - Agent 5: ferrolearn-linear (#7)
