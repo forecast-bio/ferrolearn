@@ -18,3 +18,5 @@ approx.workspace = true
 trybuild.workspace = true
 ferrolearn-linear.workspace = true
 ferrolearn-preprocess.workspace = true
+ferrolearn-decomp.workspace = true
+ferrolearn-cluster.workspace = true

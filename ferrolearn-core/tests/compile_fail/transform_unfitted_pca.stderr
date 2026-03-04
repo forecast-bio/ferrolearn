@@ -1,0 +1,5 @@
+error[E0599]: no method named `transform` found for struct `PCA<F>` in the current scope
+  --> tests/compile_fail/transform_unfitted_pca.rs:12:17
+   |
+12 |     let _ = pca.transform(&x);
+   |                 ^^^^^^^^^ method not found in `PCA<f64>`

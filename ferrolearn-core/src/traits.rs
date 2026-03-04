@@ -18,6 +18,26 @@
 //! [LogisticRegression]  --fit(&x, &y) --> [FittedLogisticRegression] --predict(&x) --> Array1<usize>
 //! ```
 //!
+//! # Type-System Safety Guarantees
+//!
+//! ferrolearn encodes ML workflow correctness in Rust's type system. The [`Fit`]
+//! trait returns a distinct `Fitted` associated type, and only that fitted type
+//! implements [`Predict`] or [`Transform`]. This means:
+//!
+//! - **An unfitted model cannot call `predict()` or `transform()`** -- this is a
+//!   compile-time error, not a runtime check. There is no `is_fitted()` guard
+//!   that can be forgotten or bypassed.
+//! - **`clone()` on a fitted model preserves fitted state** -- unlike frameworks
+//!   where cloning resets learned parameters, a cloned `FittedLinearRegression`
+//!   retains its coefficients because the fitted state is part of the type.
+//! - **Type mismatches (e.g., fitting on `f32`, predicting on `f64`) are compile
+//!   errors** -- the generic parameter `F` threads through `Fit`, `Predict`, and
+//!   `Transform`, so the compiler rejects mixed-precision workflows.
+//!
+//! This is a formal guarantee carried by Rust's type checker. The compiler serves
+//! as the theorem prover: successful compilation is the proof certificate that
+//! every `predict()` call is preceded by a `fit()` call on compatible data.
+//!
 //! # Float Bound
 //!
 //! All algorithms are generic over `F: num_traits::Float + Send + Sync + 'static`.
@@ -28,6 +48,14 @@
 /// fitted type that holds learned parameters. This is the core mechanism
 /// that ensures compile-time enforcement: the unfitted type does not
 /// implement [`Predict`], so calling `predict` before `fit` is a type error.
+///
+/// # Type-System Role
+///
+/// `Fit` is the entry point of the type-level state machine. It transitions
+/// an unfitted configuration struct (which does **not** implement [`Predict`]
+/// or [`Transform`]) into a fitted struct (which does). This transition is
+/// enforced at compile time -- the compiler will reject any program that
+/// calls `predict()` or `transform()` on the unfitted type.
 ///
 /// # Type Parameters
 ///
@@ -73,6 +101,13 @@ pub trait Fit<X, Y> {
 /// structs do **not** implement `Predict`, which means that calling
 /// `predict` on an unfitted model is a compile-time error.
 ///
+/// # Type-System Role
+///
+/// `Predict` is only implemented on fitted types (e.g., `FittedLinearRegression`,
+/// `FittedKMeans`). The unfitted counterparts (`LinearRegression`, `KMeans`)
+/// never implement `Predict`. This makes "predict before fit" impossible to
+/// express in valid Rust -- the compiler rejects it outright.
+///
 /// # Type Parameters
 ///
 /// - `X`: The feature matrix type (typically `ndarray::Array2<F>`).
@@ -96,6 +131,13 @@ pub trait Predict<X> {
 /// Transformers that require fitting first should implement [`Fit`]
 /// to produce a fitted type that implements `Transform`. Stateless
 /// transformers can implement `Transform` directly.
+///
+/// # Type-System Role
+///
+/// For stateful transformers (e.g., `StandardScaler`, `PCA`), `Transform`
+/// is only implemented on the fitted type (`FittedStandardScaler`,
+/// `FittedPCA`). The unfitted type implements [`Fit`] but not `Transform`,
+/// so calling `transform()` before `fit()` is a compile-time error.
 ///
 /// # Type Parameters
 ///
