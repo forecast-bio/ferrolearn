@@ -16,3 +16,4 @@ num-traits.workspace = true
 approx.workspace = true
 rand.workspace = true
 serde_json.workspace = true
+proptest = "1"

@@ -20,3 +20,4 @@ approx.workspace = true
 float-cmp.workspace = true
 serde_json.workspace = true
 kani-verifier = "0.67"
+proptest = "1"

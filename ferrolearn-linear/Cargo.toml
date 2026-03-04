@@ -18,3 +18,4 @@ rand.workspace = true
 approx.workspace = true
 float-cmp.workspace = true
 serde_json.workspace = true
+proptest = "1"
