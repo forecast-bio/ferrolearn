@@ -146,8 +146,6 @@ fn test_nmf_oracle() {
     let sklearn_reconstruction_err = fixture["expected"]["reconstruction_error"]
         .as_f64()
         .unwrap();
-    let sklearn_h = json_to_array2(&fixture["expected"]["H"]);
-
     let nmf = ferrolearn_decomp::NMF::<f64>::new(3)
         .with_init(ferrolearn_decomp::NMFInit::Nndsvd)
         .with_random_state(42)
