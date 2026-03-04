@@ -361,6 +361,7 @@ dependencies = [
 name = "ferrolearn"
 version = "0.1.0"
 dependencies = [
+ "approx 0.5.1",
  "ferrolearn-bayes",
  "ferrolearn-cluster",
  "ferrolearn-core",
@@ -374,6 +375,9 @@ dependencies = [
  "ferrolearn-preprocess",
  "ferrolearn-sparse",
  "ferrolearn-tree",
+ "ndarray",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -474,6 +478,7 @@ dependencies = [
  "float-cmp",
  "ndarray",
  "num-traits",
+ "serde_json",
 ]
 
 [[package]]
@@ -485,6 +490,7 @@ dependencies = [
  "ndarray",
  "num-traits",
  "rand 0.9.2",
+ "serde_json",
 ]
 
 [[package]]
@@ -507,6 +513,7 @@ dependencies = [
  "float-cmp",
  "ndarray",
  "num-traits",
+ "serde_json",
 ]
 
 [[package]]

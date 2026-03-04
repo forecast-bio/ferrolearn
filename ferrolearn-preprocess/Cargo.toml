@@ -14,3 +14,4 @@ num-traits.workspace = true
 [dev-dependencies]
 approx.workspace = true
 float-cmp.workspace = true
+serde_json.workspace = true

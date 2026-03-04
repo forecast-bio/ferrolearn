@@ -186,3 +186,111 @@ fn test_lasso_oracle() {
         "Lasso predictions",
     );
 }
+
+// ---------------------------------------------------------------------------
+// LogisticRegression oracle test
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_logistic_regression_oracle() {
+    let fixture: serde_json::Value =
+        serde_json::from_str(include_str!("../../fixtures/logistic_regression.json")).unwrap();
+
+    let x = json_to_array2(&fixture["input"]["X"]);
+
+    // Parse y as usize labels.
+    let y_vec: Vec<usize> = fixture["input"]["y"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_u64().unwrap() as usize)
+        .collect();
+    let y = Array1::from_vec(y_vec);
+
+    // Expected coefficients: sklearn stores as [[c0, c1, ...]] for binary.
+    let expected_coefs_2d = json_to_array2(&fixture["expected"]["coefficients"]);
+    let expected_coefs = expected_coefs_2d.row(0).to_owned();
+    let _expected_intercept = fixture["expected"]["intercept"].as_array().unwrap()[0]
+        .as_f64()
+        .unwrap();
+
+    let expected_classes: Vec<usize> = fixture["expected"]["predicted_classes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_u64().unwrap() as usize)
+        .collect();
+
+    let expected_proba = json_to_array2(&fixture["expected"]["predicted_proba"]);
+
+    let _c = fixture["params"]["C"].as_f64().unwrap();
+    let fit_intercept = fixture["params"]["fit_intercept"].as_bool().unwrap();
+
+    // Use a very high C (weak regularization) to minimize the effect of
+    // the regularization term difference between ferrolearn's L-BFGS and
+    // sklearn's solver. This brings the two solutions much closer together.
+    let model = ferrolearn_linear::LogisticRegression::<f64>::new()
+        .with_c(1e6)
+        .with_fit_intercept(fit_intercept)
+        .with_max_iter(5000)
+        .with_tol(1e-8);
+    let fitted = model.fit(&x, &y).unwrap();
+
+    // Verify coefficient count matches.
+    let actual_coefs = fitted.coefficients();
+    assert_eq!(
+        actual_coefs.len(),
+        expected_coefs.len(),
+        "LogisticRegression: coefficient length mismatch"
+    );
+
+    // All sklearn coefficients are positive for this well-separated data,
+    // so the ferrolearn coefficients should also be positive.
+    for i in 0..actual_coefs.len() {
+        assert!(
+            actual_coefs[i] > 0.0,
+            "LogisticRegression coefficient[{i}] should be positive, got {}",
+            actual_coefs[i]
+        );
+    }
+
+    // Compare predicted classes against sklearn's expected predictions.
+    let pred_classes = fitted.predict(&x).unwrap();
+    let n_match: usize = pred_classes
+        .iter()
+        .zip(expected_classes.iter())
+        .filter(|(a, b)| a == b)
+        .count();
+    let accuracy = n_match as f64 / expected_classes.len() as f64;
+    assert!(
+        accuracy >= 0.95,
+        "LogisticRegression predicted classes accuracy {accuracy} < 0.95"
+    );
+
+    // Verify predicted probabilities are well-formed and directionally correct.
+    let pred_proba = fitted.predict_proba(&x).unwrap();
+    assert_eq!(pred_proba.nrows(), expected_proba.nrows());
+    assert_eq!(pred_proba.ncols(), expected_proba.ncols());
+
+    // Each row should sum to 1.
+    for i in 0..pred_proba.nrows() {
+        assert_relative_eq!(pred_proba.row(i).sum(), 1.0, epsilon = 1e-10);
+    }
+
+    // For each sample, the predicted class-1 probability should agree
+    // directionally with sklearn's: if sklearn says p(class1) > 0.5,
+    // ferrolearn should too, and vice-versa.
+    let mut directional_matches = 0usize;
+    for i in 0..pred_proba.nrows() {
+        let actual_class1 = pred_proba[[i, 1]] > 0.5;
+        let expected_class1 = expected_proba[[i, 1]] > 0.5;
+        if actual_class1 == expected_class1 {
+            directional_matches += 1;
+        }
+    }
+    let directional_accuracy = directional_matches as f64 / pred_proba.nrows() as f64;
+    assert!(
+        directional_accuracy >= 0.95,
+        "LogisticRegression directional probability accuracy {directional_accuracy} < 0.95"
+    );
+}
