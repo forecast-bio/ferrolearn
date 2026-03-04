@@ -242,6 +242,13 @@ where
 ///
 /// `MAPE = (1/n) * sum |( y_true - y_pred ) / y_true| * 100`
 ///
+/// **Convention note:** This function returns MAPE as a **percentage** (multiplied
+/// by 100), so perfect predictions yield 0.0 and predictions that are off by 10%
+/// on average yield 10.0. This differs from scikit-learn's
+/// `mean_absolute_percentage_error`, which returns a **fraction** (not multiplied
+/// by 100), where the same 10% error would be 0.1. Divide by 100 to convert to
+/// the sklearn convention.
+///
 /// Note: samples where `y_true == 0` are skipped to avoid division by zero.
 /// If all `y_true` values are zero, `MAPE` is returned as `F::infinity()`.
 ///
