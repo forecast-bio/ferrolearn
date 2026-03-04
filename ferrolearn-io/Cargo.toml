@@ -9,4 +9,10 @@ description = "Serialization and I/O utilities for ferrolearn"
 
 [dependencies]
 ferrolearn-core.workspace = true
-serde.workspace = true
+serde = { workspace = true }
+serde_json.workspace = true
+rmp-serde.workspace = true
+crc32fast.workspace = true
+
+[dev-dependencies]
+approx.workspace = true
