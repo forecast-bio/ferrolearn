@@ -3,9 +3,9 @@
 //! Dimensionality reduction and matrix decomposition for the ferrolearn
 //! machine learning framework.
 //!
-//! This crate provides PCA, TruncatedSVD, NMF, Kernel PCA, and other
-//! decomposition methods that follow the ferrolearn `Fit`/`Transform`
-//! trait pattern.
+//! This crate provides PCA, TruncatedSVD, NMF, Kernel PCA, and manifold
+//! learning methods that follow the ferrolearn `Fit`/`Transform` trait
+//! pattern.
 //!
 //! ## Algorithms
 //!
@@ -18,6 +18,14 @@
 //!   matrix `X` into `W * H` where both factors are non-negative.
 //! - [`KernelPCA`] — Kernel PCA. Non-linear dimensionality reduction via
 //!   a kernel-induced feature space.
+//! - [`MDS`] — Classical Multidimensional Scaling. Embeds data preserving
+//!   pairwise distances.
+//! - [`Isomap`] — Isometric Mapping. Non-linear dimensionality reduction
+//!   via geodesic distances on a kNN graph.
+//! - [`SpectralEmbedding`] — Laplacian Eigenmaps. Non-linear dimensionality
+//!   reduction via the normalised graph Laplacian.
+//! - [`LLE`] — Locally Linear Embedding. Non-linear dimensionality reduction
+//!   preserving local reconstruction weights.
 //!
 //! ## Pipeline Integration
 //!
@@ -41,13 +49,21 @@
 //! assert_eq!(projected.ncols(), 1);
 //! ```
 
+pub mod isomap;
 pub mod kernel_pca;
+pub mod lle;
+pub mod mds;
 pub mod nmf;
 pub mod pca;
+pub mod spectral_embedding;
 pub mod truncated_svd;
 
 // Re-exports
+pub use isomap::{FittedIsomap, Isomap};
 pub use kernel_pca::{FittedKernelPCA, Kernel, KernelPCA};
+pub use lle::{FittedLLE, LLE};
+pub use mds::{Dissimilarity, FittedMDS, MDS};
 pub use nmf::{FittedNMF, NMF, NMFInit, NMFSolver};
 pub use pca::{FittedPCA, PCA};
+pub use spectral_embedding::{Affinity, FittedSpectralEmbedding, SpectralEmbedding};
 pub use truncated_svd::{FittedTruncatedSVD, TruncatedSVD};
