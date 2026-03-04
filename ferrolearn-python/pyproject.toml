@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "ferrolearn"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = ["numpy>=1.20", "scikit-learn>=1.6"]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"
+module-name = "ferrolearn._ferrolearn_rs"

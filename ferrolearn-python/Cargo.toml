@@ -1,0 +1,25 @@
+[package]
+name = "ferrolearn-python"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+name = "_ferrolearn_rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.28", features = ["extension-module"] }
+numpy = "0.28"
+ndarray = { workspace = true }
+num-traits = { workspace = true }
+ferrolearn-core = { workspace = true }
+ferrolearn-linear = { workspace = true }
+ferrolearn-tree = { workspace = true }
+ferrolearn-neighbors = { workspace = true }
+ferrolearn-bayes = { workspace = true }
+ferrolearn-cluster = { workspace = true }
+ferrolearn-decomp = { workspace = true }
+ferrolearn-preprocess = { workspace = true }
+ferrolearn-metrics = { workspace = true }
