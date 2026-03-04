@@ -36,3 +36,6 @@
 
 # Crosslink caches in subcrates
 **/.crosslink/
+
+# Python
+__pycache__/

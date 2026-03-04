@@ -65,7 +65,10 @@ fn test_pca_oracle() {
     // Mean should match sklearn's closely.
     let mean = fitted.mean();
     for (i, (&actual, &expected)) in mean.iter().zip(sklearn_mean.iter()).enumerate() {
-        assert_relative_eq!(actual, expected, epsilon = 1e-6,
+        assert_relative_eq!(
+            actual,
+            expected,
+            epsilon = 1e-6,
             // Custom message on failure
         );
         let _ = i; // suppress unused warning
@@ -207,7 +210,12 @@ fn test_nmf_oracle() {
     // L2 norm to sklearn's.
     for j in 0..w.ncols() {
         let our_norm: f64 = w.column(j).iter().map(|v| v * v).sum::<f64>().sqrt();
-        let sk_norm: f64 = sklearn_w.column(j).iter().map(|v| v * v).sum::<f64>().sqrt();
+        let sk_norm: f64 = sklearn_w
+            .column(j)
+            .iter()
+            .map(|v| v * v)
+            .sum::<f64>()
+            .sqrt();
         let ratio = our_norm / sk_norm.max(1e-10);
         assert!(
             (0.1..10.0).contains(&ratio),

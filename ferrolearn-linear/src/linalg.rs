@@ -38,9 +38,6 @@ pub(crate) fn solve_lstsq<F: Float + Send + Sync + 'static>(
 ) -> Result<Array1<F>, FerroError> {
     let (n_samples, n_features) = x.dim();
 
-    // Try the faer path for f64.
-    // Since we are generic over F, we need to use a runtime check.
-    // For now, convert through f64 regardless.
     if n_samples < n_features {
         return Err(FerroError::InsufficientSamples {
             required: n_features,
@@ -49,9 +46,16 @@ pub(crate) fn solve_lstsq<F: Float + Send + Sync + 'static>(
         });
     }
 
-    // Normal equations approach: (X^T X) w = X^T y
-    // This is numerically less stable than QR but works for any Float type.
-    // We use the Householder QR manually via ndarray operations.
+    // Use faer QR decomposition for f64 (higher numerical accuracy).
+    if std::any::TypeId::of::<F>() == std::any::TypeId::of::<f64>() {
+        // Convert to f64 arrays, solve with faer, convert back.
+        let x_f64 = x.mapv(|v| v.to_f64().unwrap());
+        let y_f64 = y.mapv(|v| v.to_f64().unwrap());
+        let result = solve_lstsq_faer(&x_f64, &y_f64)?;
+        return Ok(result.mapv(|v| F::from(v).unwrap()));
+    }
+
+    // Fallback for f32 and other float types: normal equations.
     solve_normal_equations(x, y)
 }
 
@@ -229,7 +233,6 @@ pub(crate) fn solve_ridge<F: Float + Send + Sync + 'static>(
 /// Solve `X^T X w = X^T y` using faer QR decomposition (f64 only).
 ///
 /// This provides the highest numerical accuracy for f64 data.
-#[allow(dead_code)]
 pub(crate) fn solve_lstsq_faer(
     x: &Array2<f64>,
     y: &Array1<f64>,

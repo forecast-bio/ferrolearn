@@ -61,8 +61,7 @@ fn test_decision_tree_classifier_oracle() {
 
     let sklearn_accuracy = fixture["expected"]["accuracy"].as_f64().unwrap();
 
-    let model = ferrolearn_tree::DecisionTreeClassifier::<f64>::new()
-        .with_max_depth(Some(3));
+    let model = ferrolearn_tree::DecisionTreeClassifier::<f64>::new().with_max_depth(Some(3));
     let fitted = model.fit(&x, &y).unwrap();
     let preds = fitted.predict(&x).unwrap();
 
@@ -100,14 +99,17 @@ fn test_decision_tree_regressor_oracle() {
 
     let sklearn_r2 = fixture["expected"]["r2"].as_f64().unwrap();
 
-    let model = ferrolearn_tree::DecisionTreeRegressor::<f64>::new()
-        .with_max_depth(Some(4));
+    let model = ferrolearn_tree::DecisionTreeRegressor::<f64>::new().with_max_depth(Some(4));
     let fitted = model.fit(&x, &y).unwrap();
     let preds = fitted.predict(&x).unwrap();
 
     // Compute R².
     let y_mean = y.mean().unwrap();
-    let ss_res: f64 = preds.iter().zip(y.iter()).map(|(p, t)| (t - p).powi(2)).sum();
+    let ss_res: f64 = preds
+        .iter()
+        .zip(y.iter())
+        .map(|(p, t)| (t - p).powi(2))
+        .sum();
     let ss_tot: f64 = y.iter().map(|t| (t - y_mean).powi(2)).sum();
     let r2 = 1.0 - ss_res / ss_tot;
 
@@ -186,7 +188,11 @@ fn test_random_forest_regressor_oracle() {
     let preds = fitted.predict(&x).unwrap();
 
     let y_mean = y.mean().unwrap();
-    let ss_res: f64 = preds.iter().zip(y.iter()).map(|(p, t)| (t - p).powi(2)).sum();
+    let ss_res: f64 = preds
+        .iter()
+        .zip(y.iter())
+        .map(|(p, t)| (t - p).powi(2))
+        .sum();
     let ss_tot: f64 = y.iter().map(|t| (t - y_mean).powi(2)).sum();
     let r2 = 1.0 - ss_res / ss_tot;
 
@@ -210,9 +216,10 @@ fn test_random_forest_regressor_oracle() {
 
 #[test]
 fn test_gradient_boosting_classifier_oracle() {
-    let fixture: serde_json::Value =
-        serde_json::from_str(include_str!("../../fixtures/gradient_boosting_classifier.json"))
-            .unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../fixtures/gradient_boosting_classifier.json"
+    ))
+    .unwrap();
 
     let x = json_to_array2(&fixture["input"]["X"]);
     let y = json_to_labels(&fixture["input"]["y"]);
@@ -250,9 +257,10 @@ fn test_gradient_boosting_classifier_oracle() {
 
 #[test]
 fn test_gradient_boosting_regressor_oracle() {
-    let fixture: serde_json::Value =
-        serde_json::from_str(include_str!("../../fixtures/gradient_boosting_regressor.json"))
-            .unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(
+        "../../fixtures/gradient_boosting_regressor.json"
+    ))
+    .unwrap();
 
     let x = json_to_array2(&fixture["input"]["X"]);
     let y = json_to_array1_f64(&fixture["input"]["y"]);
@@ -268,7 +276,11 @@ fn test_gradient_boosting_regressor_oracle() {
     let preds = fitted.predict(&x).unwrap();
 
     let y_mean = y.mean().unwrap();
-    let ss_res: f64 = preds.iter().zip(y.iter()).map(|(p, t)| (t - p).powi(2)).sum();
+    let ss_res: f64 = preds
+        .iter()
+        .zip(y.iter())
+        .map(|(p, t)| (t - p).powi(2))
+        .sum();
     let ss_tot: f64 = y.iter().map(|t| (t - y_mean).powi(2)).sum();
     let r2 = 1.0 - ss_res / ss_tot;
 

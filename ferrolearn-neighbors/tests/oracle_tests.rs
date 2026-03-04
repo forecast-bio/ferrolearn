@@ -63,8 +63,7 @@ fn test_kneighbors_classifier_oracle() {
         .collect();
     let sklearn_accuracy = fixture["expected"]["accuracy"].as_f64().unwrap();
 
-    let model = ferrolearn_neighbors::KNeighborsClassifier::<f64>::new()
-        .with_n_neighbors(5);
+    let model = ferrolearn_neighbors::KNeighborsClassifier::<f64>::new().with_n_neighbors(5);
     let fitted = model.fit(&x, &y).unwrap();
     let preds = fitted.predict(&x).unwrap();
 
@@ -106,8 +105,7 @@ fn test_kneighbors_regressor_oracle() {
     let expected_preds = json_to_array1_f64(&fixture["expected"]["predictions"]);
     let sklearn_r2 = fixture["expected"]["r2"].as_f64().unwrap();
 
-    let model = ferrolearn_neighbors::KNeighborsRegressor::<f64>::new()
-        .with_n_neighbors(5);
+    let model = ferrolearn_neighbors::KNeighborsRegressor::<f64>::new().with_n_neighbors(5);
     let fitted = model.fit(&x, &y).unwrap();
     let preds = fitted.predict(&x).unwrap();
 
@@ -125,7 +123,11 @@ fn test_kneighbors_regressor_oracle() {
 
     // R² should be close to sklearn's.
     let y_mean = y.mean().unwrap();
-    let ss_res: f64 = preds.iter().zip(y.iter()).map(|(p, t)| (t - p).powi(2)).sum();
+    let ss_res: f64 = preds
+        .iter()
+        .zip(y.iter())
+        .map(|(p, t)| (t - p).powi(2))
+        .sum();
     let ss_tot: f64 = y.iter().map(|t| (t - y_mean).powi(2)).sum();
     let r2 = 1.0 - ss_res / ss_tot;
 

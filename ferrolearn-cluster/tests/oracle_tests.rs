@@ -133,8 +133,7 @@ fn test_dbscan_oracle() {
     let sklearn_n_clusters = fixture["expected"]["n_clusters"].as_u64().unwrap() as usize;
     let sklearn_n_noise = fixture["expected"]["n_noise"].as_u64().unwrap() as usize;
 
-    let model = ferrolearn_cluster::DBSCAN::<f64>::new(1.5)
-        .with_min_samples(5);
+    let model = ferrolearn_cluster::DBSCAN::<f64>::new(1.5).with_min_samples(5);
     let fitted = model.fit(&x, &()).unwrap();
 
     let labels = fitted.labels();
