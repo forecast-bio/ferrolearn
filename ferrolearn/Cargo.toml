@@ -21,3 +21,9 @@ ferrolearn-model-sel.workspace = true
 ferrolearn-sparse.workspace = true
 ferrolearn-datasets.workspace = true
 ferrolearn-io.workspace = true
+
+[dev-dependencies]
+approx.workspace = true
+serde_json.workspace = true
+serde.workspace = true
+ndarray.workspace = true
