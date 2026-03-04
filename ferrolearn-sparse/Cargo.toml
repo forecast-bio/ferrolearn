@@ -4,11 +4,13 @@ version = "0.1.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
-repository.workspace = true
-description = "Sparse matrix support for ferrolearn"
+description = "Sparse matrix types for the ferrolearn ML framework"
 
 [dependencies]
 ferrolearn-core.workspace = true
+sprs.workspace = true
 ndarray.workspace = true
 num-traits.workspace = true
-sprs.workspace = true
+
+[dev-dependencies]
+approx.workspace = true
