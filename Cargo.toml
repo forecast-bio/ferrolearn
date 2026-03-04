@@ -15,6 +15,7 @@ members = [
     "ferrolearn-datasets",
     "ferrolearn-io",
     "ferrolearn-python",
+    "ferrolearn-bench",
 ]
 resolver = "3"
 
