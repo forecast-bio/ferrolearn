@@ -146,6 +146,9 @@ fn test_nmf_oracle() {
     let sklearn_reconstruction_err = fixture["expected"]["reconstruction_error"]
         .as_f64()
         .unwrap();
+    let sklearn_h = json_to_array2(&fixture["expected"]["H"]);
+    let sklearn_w = json_to_array2(&fixture["expected"]["W"]);
+
     let nmf = ferrolearn_decomp::NMF::<f64>::new(3)
         .with_init(ferrolearn_decomp::NMFInit::Nndsvd)
         .with_random_state(42)
@@ -162,6 +165,24 @@ fn test_nmf_oracle() {
         assert!(val >= 0.0, "NMF H matrix contains negative value: {val}");
     }
 
+    // Compare H matrix shape and scale against sklearn's.
+    // NMF is non-convex, so different solvers may find different local minima.
+    // We verify structural properties rather than exact element equality.
+    assert_eq!(h.nrows(), sklearn_h.nrows());
+    assert_eq!(h.ncols(), sklearn_h.ncols());
+
+    // Each component (row of H) should have similar L2 norm to sklearn's,
+    // indicating comparable scale of the factorization.
+    for i in 0..h.nrows() {
+        let our_norm: f64 = h.row(i).iter().map(|v| v * v).sum::<f64>().sqrt();
+        let sk_norm: f64 = sklearn_h.row(i).iter().map(|v| v * v).sum::<f64>().sqrt();
+        let ratio = our_norm / sk_norm.max(1e-10);
+        assert!(
+            (0.1..10.0).contains(&ratio),
+            "NMF H row {i} norm ratio {ratio:.2} out of range (ours={our_norm:.4}, sklearn={sk_norm:.4})"
+        );
+    }
+
     // Reconstruction error should be in the same ballpark.
     let recon_err = fitted.reconstruction_err();
     let ratio = recon_err / sklearn_reconstruction_err;
@@ -176,6 +197,22 @@ fn test_nmf_oracle() {
     assert_eq!(w.ncols(), 3);
     for &val in w.iter() {
         assert!(val >= 0.0, "NMF W matrix contains negative value: {val}");
+    }
+
+    // Compare W matrix shape and scale against sklearn's.
+    assert_eq!(w.nrows(), sklearn_w.nrows());
+    assert_eq!(w.ncols(), sklearn_w.ncols());
+
+    // Each column of W (corresponding to a component) should have similar
+    // L2 norm to sklearn's.
+    for j in 0..w.ncols() {
+        let our_norm: f64 = w.column(j).iter().map(|v| v * v).sum::<f64>().sqrt();
+        let sk_norm: f64 = sklearn_w.column(j).iter().map(|v| v * v).sum::<f64>().sqrt();
+        let ratio = our_norm / sk_norm.max(1e-10);
+        assert!(
+            (0.1..10.0).contains(&ratio),
+            "NMF W col {j} norm ratio {ratio:.2} out of range (ours={our_norm:.4}, sklearn={sk_norm:.4})"
+        );
     }
 
     // Verify approximate reconstruction: X ≈ W * H.
