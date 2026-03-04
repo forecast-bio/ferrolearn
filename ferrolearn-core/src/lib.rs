@@ -39,6 +39,7 @@ pub mod error;
 pub mod introspection;
 pub mod pipeline;
 pub mod traits;
+pub mod typed_pipeline;
 
 // Re-export the most commonly used items at the crate root.
 pub use dataset::Dataset;
