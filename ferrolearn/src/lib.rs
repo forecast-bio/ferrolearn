@@ -23,5 +23,6 @@ pub use ferrolearn_io as io;
 // Also re-export the most common items at the top level.
 pub use ferrolearn_core::pipeline::Pipeline;
 pub use ferrolearn_core::{
-    Dataset, FerroError, FerroResult, Fit, FitTransform, Predict, Transform,
+    Backend, Dataset, DefaultBackend, FerroError, FerroResult, Fit, FitTransform, Predict,
+    Transform,
 };
