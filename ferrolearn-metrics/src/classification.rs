@@ -1085,3 +1085,196 @@ mod tests {
         assert!(log_loss(&y_true, &y_prob).is_err());
     }
 }
+
+// ---------------------------------------------------------------------------
+// Kani formal verification harnesses
+// ---------------------------------------------------------------------------
+
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+    use ndarray::{Array1, Array2};
+
+    /// Prove that accuracy_score output is in [0.0, 1.0] for any non-empty
+    /// input with matching lengths and valid labels.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_accuracy_score_range() {
+        const N: usize = 4;
+        let mut y_true_data = [0usize; N];
+        let mut y_pred_data = [0usize; N];
+        for i in 0..N {
+            y_true_data[i] = kani::any::<usize>() % 3;
+            y_pred_data[i] = kani::any::<usize>() % 3;
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = accuracy_score(&y_true, &y_pred);
+        if let Ok(acc) = result {
+            assert!(acc >= 0.0, "accuracy must be >= 0.0");
+            assert!(acc <= 1.0, "accuracy must be <= 1.0");
+        }
+    }
+
+    /// Prove that precision_score output is in [0.0, 1.0] for binary labels
+    /// with Macro averaging (covers all code paths including zero denominator).
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_precision_score_range() {
+        const N: usize = 4;
+        let mut y_true_data = [0usize; N];
+        let mut y_pred_data = [0usize; N];
+        for i in 0..N {
+            y_true_data[i] = kani::any::<usize>() % 3;
+            y_pred_data[i] = kani::any::<usize>() % 3;
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = precision_score(&y_true, &y_pred, Average::Macro);
+        if let Ok(prec) = result {
+            assert!(prec >= 0.0, "precision must be >= 0.0");
+            assert!(prec <= 1.0, "precision must be <= 1.0");
+        }
+    }
+
+    /// Prove that precision_score does not panic on zero denominator
+    /// (all predictions wrong class) with Binary averaging.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_precision_no_panic_zero_denom() {
+        const N: usize = 4;
+        let mut y_true_data = [0usize; N];
+        let mut y_pred_data = [0usize; N];
+        for i in 0..N {
+            y_true_data[i] = kani::any::<usize>() % 2;
+            y_pred_data[i] = kani::any::<usize>() % 2;
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        // Must not panic regardless of input — may return Ok or Err.
+        let _ = precision_score(&y_true, &y_pred, Average::Binary);
+    }
+
+    /// Prove that recall_score output is in [0.0, 1.0] with Macro averaging.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_recall_score_range() {
+        const N: usize = 4;
+        let mut y_true_data = [0usize; N];
+        let mut y_pred_data = [0usize; N];
+        for i in 0..N {
+            y_true_data[i] = kani::any::<usize>() % 3;
+            y_pred_data[i] = kani::any::<usize>() % 3;
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = recall_score(&y_true, &y_pred, Average::Macro);
+        if let Ok(rec) = result {
+            assert!(rec >= 0.0, "recall must be >= 0.0");
+            assert!(rec <= 1.0, "recall must be <= 1.0");
+        }
+    }
+
+    /// Prove that recall_score does not panic on zero denominator
+    /// (no true positives for a class) with Binary averaging.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_recall_no_panic_zero_denom() {
+        const N: usize = 4;
+        let mut y_true_data = [0usize; N];
+        let mut y_pred_data = [0usize; N];
+        for i in 0..N {
+            y_true_data[i] = kani::any::<usize>() % 2;
+            y_pred_data[i] = kani::any::<usize>() % 2;
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        // Must not panic regardless of input.
+        let _ = recall_score(&y_true, &y_pred, Average::Binary);
+    }
+
+    /// Prove that f1_score output is in [0.0, 1.0] with Macro averaging.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_f1_score_range() {
+        const N: usize = 4;
+        let mut y_true_data = [0usize; N];
+        let mut y_pred_data = [0usize; N];
+        for i in 0..N {
+            y_true_data[i] = kani::any::<usize>() % 3;
+            y_pred_data[i] = kani::any::<usize>() % 3;
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = f1_score(&y_true, &y_pred, Average::Macro);
+        if let Ok(f1) = result {
+            assert!(f1 >= 0.0, "f1 must be >= 0.0");
+            assert!(f1 <= 1.0, "f1 must be <= 1.0");
+        }
+    }
+
+    /// Prove that log_loss output is >= 0.0 and not NaN for valid inputs.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_log_loss_non_negative_no_nan() {
+        const N: usize = 4;
+        const C: usize = 2;
+
+        let mut y_true_data = [0usize; N];
+        let mut y_prob_data = [0.0f64; N * C];
+
+        for i in 0..N {
+            y_true_data[i] = kani::any::<usize>() % C;
+        }
+
+        for i in 0..(N * C) {
+            let val: f64 = kani::any();
+            kani::assume(!val.is_nan() && !val.is_infinite());
+            kani::assume(val >= 0.0 && val <= 1.0);
+            y_prob_data[i] = val;
+        }
+
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_prob = Array2::from_shape_vec((N, C), y_prob_data.to_vec()).unwrap();
+
+        let result = log_loss(&y_true, &y_prob);
+        if let Ok(loss) = result {
+            assert!(loss >= 0.0, "log_loss must be >= 0.0");
+            assert!(!loss.is_nan(), "log_loss must not be NaN");
+        }
+    }
+
+    /// Prove that all entries in the confusion matrix are >= 0.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_confusion_matrix_non_negative() {
+        const N: usize = 4;
+        let mut y_true_data = [0usize; N];
+        let mut y_pred_data = [0usize; N];
+        for i in 0..N {
+            y_true_data[i] = kani::any::<usize>() % 3;
+            y_pred_data[i] = kani::any::<usize>() % 3;
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = confusion_matrix(&y_true, &y_pred);
+        if let Ok(cm) = result {
+            // usize entries are always >= 0 by type, but verify the matrix
+            // is well-formed and entries sum to N.
+            let total: usize = cm.iter().sum();
+            assert!(total == N, "confusion matrix entries must sum to N");
+            // All entries are >= 0 by construction (usize), but explicitly check
+            // the invariant for documentation.
+            for &entry in cm.iter() {
+                assert!(entry <= N, "no entry can exceed total sample count");
+            }
+        }
+    }
+}

@@ -12,7 +12,11 @@ ferrolearn-core.workspace = true
 ndarray.workspace = true
 num-traits.workspace = true
 
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(kani)'] }
+
 [dev-dependencies]
 approx.workspace = true
 float-cmp.workspace = true
 serde_json.workspace = true
+kani-verifier = "0.67"

@@ -633,3 +633,135 @@ mod tests {
         assert_abs_diff_eq!(evs, r2, epsilon = 1e-10);
     }
 }
+
+// ---------------------------------------------------------------------------
+// Kani formal verification harnesses
+// ---------------------------------------------------------------------------
+
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+    use ndarray::Array1;
+
+    /// Helper: generate a symbolic f64 that is finite (not NaN or Inf)
+    /// and within a reasonable magnitude range to avoid overflow.
+    fn any_finite_f64() -> f64 {
+        let val: f64 = kani::any();
+        kani::assume(!val.is_nan() && !val.is_infinite());
+        kani::assume(val.abs() < 1e6);
+        val
+    }
+
+    /// Prove that mean_absolute_error output is >= 0.0 for all finite inputs.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_mae_non_negative() {
+        const N: usize = 4;
+        let mut y_true_data = [0.0f64; N];
+        let mut y_pred_data = [0.0f64; N];
+        for i in 0..N {
+            y_true_data[i] = any_finite_f64();
+            y_pred_data[i] = any_finite_f64();
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = mean_absolute_error(&y_true, &y_pred);
+        if let Ok(mae) = result {
+            assert!(mae >= 0.0, "MAE must be >= 0.0");
+        }
+    }
+
+    /// Prove that mean_squared_error output is >= 0.0 for all finite inputs.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_mse_non_negative() {
+        const N: usize = 4;
+        let mut y_true_data = [0.0f64; N];
+        let mut y_pred_data = [0.0f64; N];
+        for i in 0..N {
+            y_true_data[i] = any_finite_f64();
+            y_pred_data[i] = any_finite_f64();
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = mean_squared_error(&y_true, &y_pred);
+        if let Ok(mse) = result {
+            assert!(mse >= 0.0, "MSE must be >= 0.0");
+        }
+    }
+
+    /// Prove that root_mean_squared_error output is >= 0.0 for all finite inputs.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_rmse_non_negative() {
+        const N: usize = 4;
+        let mut y_true_data = [0.0f64; N];
+        let mut y_pred_data = [0.0f64; N];
+        for i in 0..N {
+            y_true_data[i] = any_finite_f64();
+            y_pred_data[i] = any_finite_f64();
+        }
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = root_mean_squared_error(&y_true, &y_pred);
+        if let Ok(rmse) = result {
+            assert!(rmse >= 0.0, "RMSE must be >= 0.0");
+        }
+    }
+
+    /// Prove that r2_score does not produce NaN when y_true is non-constant
+    /// (i.e., when SS_tot > 0 and the function returns Ok).
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_r2_score_no_nan_on_non_constant() {
+        const N: usize = 4;
+        let mut y_true_data = [0.0f64; N];
+        let mut y_pred_data = [0.0f64; N];
+        for i in 0..N {
+            y_true_data[i] = any_finite_f64();
+            y_pred_data[i] = any_finite_f64();
+        }
+
+        // Ensure y_true is non-constant: at least one pair of values differs.
+        kani::assume(y_true_data[0] != y_true_data[1]);
+
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = r2_score(&y_true, &y_pred);
+        if let Ok(r2) = result {
+            assert!(!r2.is_nan(), "R² must not be NaN for non-constant y_true");
+        }
+    }
+
+    /// Prove that explained_variance_score does not produce NaN when y_true
+    /// is non-constant (Var(y_true) > 0).
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_evs_no_nan_on_non_constant() {
+        const N: usize = 4;
+        let mut y_true_data = [0.0f64; N];
+        let mut y_pred_data = [0.0f64; N];
+        for i in 0..N {
+            y_true_data[i] = any_finite_f64();
+            y_pred_data[i] = any_finite_f64();
+        }
+
+        // Ensure y_true is non-constant: at least one pair of values differs.
+        kani::assume(y_true_data[0] != y_true_data[1]);
+
+        let y_true = Array1::from_vec(y_true_data.to_vec());
+        let y_pred = Array1::from_vec(y_pred_data.to_vec());
+
+        let result = explained_variance_score(&y_true, &y_pred);
+        if let Ok(evs) = result {
+            assert!(
+                !evs.is_nan(),
+                "EVS must not be NaN for non-constant y_true"
+            );
+        }
+    }
+}

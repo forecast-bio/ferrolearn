@@ -966,3 +966,88 @@ mod tests {
         );
     }
 }
+
+// ---------------------------------------------------------------------------
+// Kani formal verification harnesses
+// ---------------------------------------------------------------------------
+
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+    use ndarray::{Array1, Array2};
+
+    /// Helper: generate a symbolic f64 that is finite and within a reasonable
+    /// magnitude range to avoid overflow in distance calculations.
+    fn any_finite_f64() -> f64 {
+        let val: f64 = kani::any();
+        kani::assume(!val.is_nan() && !val.is_infinite());
+        kani::assume(val.abs() < 1e3);
+        val
+    }
+
+    /// Prove that silhouette_score output is in [-1.0, 1.0] for valid inputs
+    /// with two well-formed clusters.
+    ///
+    /// We use 4 samples with 1 feature and 2 clusters (labels 0 and 1) to
+    /// keep the state space tractable for bounded model checking.
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_silhouette_score_range() {
+        const N: usize = 4;
+        const D: usize = 1;
+
+        let mut x_data = [0.0f64; N * D];
+        for i in 0..(N * D) {
+            x_data[i] = any_finite_f64();
+        }
+
+        // Assign labels: first two samples to cluster 0, last two to cluster 1.
+        // This guarantees exactly 2 clusters each with 2 members.
+        let labels_data: [isize; N] = [0, 0, 1, 1];
+
+        let x = Array2::from_shape_vec((N, D), x_data.to_vec()).unwrap();
+        let labels = Array1::from_vec(labels_data.to_vec());
+
+        let result = silhouette_score(&x, &labels);
+        if let Ok(score) = result {
+            assert!(
+                score >= -1.0,
+                "silhouette score must be >= -1.0"
+            );
+            assert!(
+                score <= 1.0,
+                "silhouette score must be <= 1.0"
+            );
+        }
+    }
+
+    /// Prove that davies_bouldin_score output is >= 0.0 for valid inputs
+    /// with two clusters and non-coincident centroids.
+    ///
+    /// We use 4 samples with 1 feature and 2 clusters (labels 0 and 1).
+    #[kani::proof]
+    #[kani::unwind(6)]
+    fn prove_davies_bouldin_score_non_negative() {
+        const N: usize = 4;
+        const D: usize = 1;
+
+        let mut x_data = [0.0f64; N * D];
+        for i in 0..(N * D) {
+            x_data[i] = any_finite_f64();
+        }
+
+        // Assign labels: first two samples to cluster 0, last two to cluster 1.
+        let labels_data: [isize; N] = [0, 0, 1, 1];
+
+        let x = Array2::from_shape_vec((N, D), x_data.to_vec()).unwrap();
+        let labels = Array1::from_vec(labels_data.to_vec());
+
+        let result = davies_bouldin_score(&x, &labels);
+        if let Ok(score) = result {
+            assert!(
+                score >= 0.0,
+                "Davies-Bouldin score must be >= 0.0"
+            );
+        }
+    }
+}
