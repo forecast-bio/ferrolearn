@@ -361,12 +361,19 @@ dependencies = [
 name = "ferrolearn"
 version = "0.1.0"
 dependencies = [
+ "ferrolearn-bayes",
+ "ferrolearn-cluster",
  "ferrolearn-core",
+ "ferrolearn-datasets",
+ "ferrolearn-decomp",
+ "ferrolearn-io",
  "ferrolearn-linear",
  "ferrolearn-metrics",
  "ferrolearn-model-sel",
+ "ferrolearn-neighbors",
  "ferrolearn-preprocess",
  "ferrolearn-sparse",
+ "ferrolearn-tree",
 ]
 
 [[package]]
