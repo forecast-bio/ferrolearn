@@ -33,7 +33,15 @@
 //! ## Error Handling
 //!
 //! All public functions return `Result<T, FerroError>`. Library code never panics.
+//!
+//! ## Pluggable Backends (REQ-19)
+//!
+//! The [`Backend`] trait abstracts linear algebra operations (SVD, QR, Cholesky,
+//! etc.), allowing algorithms to be generic over the backend implementation.
+//! The default backend [`NdarrayFaerBackend`] delegates to the `faer` crate.
 
+pub mod backend;
+pub mod backend_faer;
 pub mod dataset;
 pub mod error;
 pub mod introspection;
@@ -41,7 +49,16 @@ pub mod pipeline;
 pub mod traits;
 
 // Re-export the most commonly used items at the crate root.
+pub use backend::Backend;
+pub use backend_faer::NdarrayFaerBackend;
 pub use dataset::Dataset;
 pub use error::{FerroError, FerroResult};
 pub use introspection::{HasClasses, HasCoefficients, HasFeatureImportances};
 pub use traits::{Fit, FitTransform, Predict, Transform};
+
+/// The default linear algebra backend.
+///
+/// Algorithms generic over [`Backend`] can use `DefaultBackend` as a sensible
+/// default that delegates to the `faer` crate for high-performance pure-Rust
+/// implementations of SVD, QR, Cholesky, and other decompositions.
+pub type DefaultBackend = NdarrayFaerBackend;

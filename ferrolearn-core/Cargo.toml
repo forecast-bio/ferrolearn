@@ -8,6 +8,7 @@ repository.workspace = true
 description = "Core traits, error types, and pipeline for the ferrolearn ML framework"
 
 [dependencies]
+faer.workspace = true
 ndarray.workspace = true
 num-traits.workspace = true
 thiserror.workspace = true
