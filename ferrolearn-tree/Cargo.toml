@@ -5,7 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Decision tree models for ferrolearn"
+description = "Decision tree and ensemble models for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "decision-tree", "random-forest", "gradient-boosting", "ensemble"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

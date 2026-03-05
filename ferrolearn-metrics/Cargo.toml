@@ -6,6 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Classification and regression metrics for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "metrics", "accuracy", "f1-score", "evaluation"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

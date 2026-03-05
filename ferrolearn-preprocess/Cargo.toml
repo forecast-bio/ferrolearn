@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 description = "Preprocessing transformers for the ferrolearn ML framework"
+repository.workspace = true
+readme = "README.md"
+keywords = ["machine-learning", "preprocessing", "scaler", "encoder", "feature-engineering"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

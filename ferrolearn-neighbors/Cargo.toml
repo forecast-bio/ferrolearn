@@ -5,7 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Nearest neighbor models for ferrolearn"
+description = "Nearest neighbor models for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "knn", "nearest-neighbors", "kdtree", "classification"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

@@ -5,7 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Dimensionality reduction and decomposition for ferrolearn"
+description = "Dimensionality reduction and decomposition for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "pca", "svd", "dimensionality-reduction", "decomposition"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

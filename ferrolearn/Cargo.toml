@@ -6,6 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "A scikit-learn equivalent for Rust — re-export crate"
+readme = "README.md"
+keywords = ["machine-learning", "scikit-learn", "ml", "ndarray", "statistics"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

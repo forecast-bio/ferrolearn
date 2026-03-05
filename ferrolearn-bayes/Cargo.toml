@@ -5,7 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Naive Bayes models for ferrolearn"
+description = "Naive Bayes classifiers for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "naive-bayes", "classification", "gaussian", "multinomial"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

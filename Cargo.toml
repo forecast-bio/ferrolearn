@@ -45,16 +45,16 @@ crc32fast = "1.4"
 flate2 = "1.0"
 
 # Internal crates
-ferrolearn-core = { path = "ferrolearn-core" }
-ferrolearn-linear = { path = "ferrolearn-linear" }
-ferrolearn-tree = { path = "ferrolearn-tree" }
-ferrolearn-neighbors = { path = "ferrolearn-neighbors" }
-ferrolearn-bayes = { path = "ferrolearn-bayes" }
-ferrolearn-cluster = { path = "ferrolearn-cluster" }
-ferrolearn-decomp = { path = "ferrolearn-decomp" }
-ferrolearn-preprocess = { path = "ferrolearn-preprocess" }
-ferrolearn-metrics = { path = "ferrolearn-metrics" }
-ferrolearn-model-sel = { path = "ferrolearn-model-sel" }
-ferrolearn-sparse = { path = "ferrolearn-sparse" }
-ferrolearn-datasets = { path = "ferrolearn-datasets" }
-ferrolearn-io = { path = "ferrolearn-io" }
+ferrolearn-core = { path = "ferrolearn-core", version = "0.1.0" }
+ferrolearn-linear = { path = "ferrolearn-linear", version = "0.1.0" }
+ferrolearn-tree = { path = "ferrolearn-tree", version = "0.1.0" }
+ferrolearn-neighbors = { path = "ferrolearn-neighbors", version = "0.1.0" }
+ferrolearn-bayes = { path = "ferrolearn-bayes", version = "0.1.0" }
+ferrolearn-cluster = { path = "ferrolearn-cluster", version = "0.1.0" }
+ferrolearn-decomp = { path = "ferrolearn-decomp", version = "0.1.0" }
+ferrolearn-preprocess = { path = "ferrolearn-preprocess", version = "0.1.0" }
+ferrolearn-metrics = { path = "ferrolearn-metrics", version = "0.1.0" }
+ferrolearn-model-sel = { path = "ferrolearn-model-sel", version = "0.1.0" }
+ferrolearn-sparse = { path = "ferrolearn-sparse", version = "0.1.0" }
+ferrolearn-datasets = { path = "ferrolearn-datasets", version = "0.1.0" }
+ferrolearn-io = { path = "ferrolearn-io", version = "0.1.0" }

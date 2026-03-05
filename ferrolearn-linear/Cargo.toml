@@ -6,6 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Linear models for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "linear-regression", "logistic-regression", "ridge", "lasso"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

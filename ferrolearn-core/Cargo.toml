@@ -6,6 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 description = "Core traits, error types, and pipeline for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "traits", "pipeline", "ml", "ferrolearn"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 faer.workspace = true

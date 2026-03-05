@@ -5,7 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Model selection utilities for ferrolearn"
+description = "Model selection utilities for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "cross-validation", "grid-search", "model-selection", "hyperparameter"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

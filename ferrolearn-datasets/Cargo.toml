@@ -5,7 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Built-in datasets and data loading for ferrolearn"
+description = "Built-in datasets and synthetic data generators for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "datasets", "iris", "synthetic-data", "benchmarks"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true

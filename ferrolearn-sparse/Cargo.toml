@@ -5,6 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 description = "Sparse matrix types for the ferrolearn ML framework"
+repository.workspace = true
+readme = "README.md"
+keywords = ["machine-learning", "sparse-matrix", "csr", "csc", "linear-algebra"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true
