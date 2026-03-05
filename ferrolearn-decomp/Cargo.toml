@@ -7,7 +7,7 @@ license.workspace = true
 repository.workspace = true
 description = "Dimensionality reduction and decomposition for the ferrolearn ML framework"
 readme = "README.md"
-keywords = ["machine-learning", "pca", "svd", "dimensionality-reduction", "decomposition"]
+keywords = ["machine-learning", "pca", "svd", "dim-reduction", "decomposition"]
 categories = ["science", "algorithms"]
 
 [dependencies]
