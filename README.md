@@ -4,16 +4,16 @@ A scikit-learn equivalent for Rust. Type-safe, modular machine learning built on
 
 ```rust
 use ferrolearn::prelude::*;
-use ferrolearn::{linear, preprocess, datasets};
+use ferrolearn::{linear, preprocess, decomp, datasets};
 
 // Load data
-let (x, y) = datasets::load_iris_X_y();
+let (x, y) = datasets::load_iris::<f64>().unwrap();
 
 // Build a pipeline: scale -> PCA -> logistic regression
 let pipeline = Pipeline::new()
-    .add_transformer(preprocess::StandardScaler::new())
-    .add_transformer(decomp::PCA::<f64>::new(2))
-    .add_estimator(linear::LogisticRegression::<f64>::new());
+    .transform_step("scaler", Box::new(preprocess::StandardScaler::<f64>::new()))
+    .transform_step("pca", Box::new(decomp::PCA::<f64>::new(2)))
+    .estimator_step("clf", Box::new(linear::LogisticRegression::<f64>::new()));
 ```
 
 ## Features
@@ -111,7 +111,7 @@ The key traits from `ferrolearn-core`:
 ferrolearn is validated against scikit-learn with 26 numerical oracle tests that compare predictions, coefficients, and metrics against sklearn reference values:
 
 ```bash
-# Run the full test suite (1,468 tests)
+# Run the full test suite (1,932 tests)
 cargo test --workspace
 
 # Run only oracle tests
