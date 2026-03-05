@@ -307,20 +307,26 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> HasCoefficients<F> for Fi
     }
 }
 
-// Pipeline integration for f64.
-impl PipelineEstimator<f64> for Lasso<f64> {
+// Pipeline integration.
+impl<F> PipelineEstimator<F> for Lasso<F>
+where
+    F: Float + FromPrimitive + ScalarOperand + Send + Sync + 'static,
+{
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
+        x: &Array2<F>,
+        y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineEstimator<F>>, FerroError> {
         let fitted = self.fit(x, y)?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineEstimator<f64> for FittedLasso<f64> {
-    fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
+impl<F> FittedPipelineEstimator<F> for FittedLasso<F>
+where
+    F: Float + ScalarOperand + Send + Sync + 'static,
+{
+    fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         self.predict(x)
     }
 }

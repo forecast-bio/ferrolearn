@@ -192,11 +192,7 @@ impl<F: Float + Send + Sync + 'static> Pipeline<F> {
     /// Transformer steps are applied in the order they are added, before
     /// the final estimator step.
     #[must_use]
-    pub fn transform_step(
-        mut self,
-        name: &str,
-        step: Box<dyn PipelineTransformer<F>>,
-    ) -> Self {
+    pub fn transform_step(mut self, name: &str, step: Box<dyn PipelineTransformer<F>>) -> Self {
         self.transforms.push(TransformStep {
             name: name.to_owned(),
             step,
@@ -209,11 +205,7 @@ impl<F: Float + Send + Sync + 'static> Pipeline<F> {
     /// A pipeline must have exactly one estimator step. Setting a new
     /// estimator replaces any previously set estimator.
     #[must_use]
-    pub fn estimator_step(
-        mut self,
-        name: &str,
-        estimator: Box<dyn PipelineEstimator<F>>,
-    ) -> Self {
+    pub fn estimator_step(mut self, name: &str, estimator: Box<dyn PipelineEstimator<F>>) -> Self {
         self.estimator = Some((name.to_owned(), estimator));
         self
     }
@@ -372,9 +364,7 @@ impl<F: Float + Send + Sync + 'static> PipelineStep<F> for TransformerStepWrappe
 /// Wraps a [`PipelineEstimator`] to implement [`PipelineStep`].
 ///
 /// Created by [`as_estimator_step`].
-pub struct EstimatorStepWrapper<F: Float + Send + Sync + 'static>(
-    Box<dyn PipelineEstimator<F>>,
-);
+pub struct EstimatorStepWrapper<F: Float + Send + Sync + 'static>(Box<dyn PipelineEstimator<F>>);
 
 impl<F: Float + Send + Sync + 'static> PipelineStep<F> for EstimatorStepWrapper<F> {
     fn add_to_pipeline(self: Box<Self>, pipeline: Pipeline<F>, name: &str) -> Pipeline<F> {
@@ -538,8 +528,7 @@ mod tests {
             .transform_step("doubler", Box::new(DoublingTransformerF32))
             .estimator_step("sum", Box::new(SumEstimatorF32));
 
-        let x =
-            Array2::from_shape_vec((2, 3), vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let x = Array2::from_shape_vec((2, 3), vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
         let y = Array1::from_vec(vec![0.0f32, 1.0]);
 
         let fitted = pipeline.fit(&x, &y).unwrap();
@@ -568,8 +557,7 @@ mod tests {
 
     #[test]
     fn test_pipeline_no_estimator_returns_error() {
-        let pipeline =
-            Pipeline::new().transform_step("doubler", Box::new(DoublingTransformer));
+        let pipeline = Pipeline::new().transform_step("doubler", Box::new(DoublingTransformer));
 
         let x = Array2::<f64>::zeros((2, 3));
         let y = Array1::from_vec(vec![0.0, 1.0]);

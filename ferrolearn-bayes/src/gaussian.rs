@@ -30,7 +30,7 @@ use ferrolearn_core::introspection::HasClasses;
 use ferrolearn_core::pipeline::{FittedPipelineEstimator, PipelineEstimator};
 use ferrolearn_core::traits::{Fit, Predict};
 use ndarray::{Array1, Array2};
-use num_traits::Float;
+use num_traits::{Float, FromPrimitive, ToPrimitive};
 
 /// Gaussian Naive Bayes classifier.
 ///
@@ -310,28 +310,32 @@ impl<F: Float + Send + Sync + 'static> HasClasses for FittedGaussianNB<F> {
     }
 }
 
-// Pipeline integration for f64.
-impl PipelineEstimator<f64> for GaussianNB<f64> {
+// Pipeline integration.
+impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> PipelineEstimator<F>
+    for GaussianNB<F>
+{
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
-        let y_usize: Array1<usize> = y.mapv(|v| v as usize);
+        x: &Array2<F>,
+        y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineEstimator<F>>, FerroError> {
+        let y_usize: Array1<usize> = y.mapv(|v| v.to_usize().unwrap_or(0));
         let fitted = self.fit(x, &y_usize)?;
         Ok(Box::new(FittedGaussianNBPipeline(fitted)))
     }
 }
 
-struct FittedGaussianNBPipeline(FittedGaussianNB<f64>);
+struct FittedGaussianNBPipeline<F: Float + Send + Sync + 'static>(FittedGaussianNB<F>);
 
-unsafe impl Send for FittedGaussianNBPipeline {}
-unsafe impl Sync for FittedGaussianNBPipeline {}
+unsafe impl<F: Float + Send + Sync + 'static> Send for FittedGaussianNBPipeline<F> {}
+unsafe impl<F: Float + Send + Sync + 'static> Sync for FittedGaussianNBPipeline<F> {}
 
-impl FittedPipelineEstimator<f64> for FittedGaussianNBPipeline {
-    fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
+impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipelineEstimator<F>
+    for FittedGaussianNBPipeline<F>
+{
+    fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| v as f64))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
     }
 }
 

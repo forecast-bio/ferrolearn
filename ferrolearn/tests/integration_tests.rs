@@ -8,7 +8,7 @@ use ndarray::Array2;
 
 use ferrolearn::datasets;
 use ferrolearn::preprocess::{self, StandardScaler};
-use ferrolearn::{Fit, FitTransform, Predict, Transform};
+use ferrolearn::{Fit, FitTransform, Pipeline, Predict, Transform};
 
 // =========================================================================
 // 1. Classification Pipeline E2E
@@ -409,4 +409,43 @@ fn test_preprocessing_chain_e2e() {
             "Bias column should be 1.0, got {val}",
         );
     }
+}
+
+// =========================================================================
+// 8. Classification Pipeline FP32 E2E
+//    load_iris → StandardScaler → PCA(2) → LogisticRegression → accuracy
+// =========================================================================
+
+#[test]
+fn test_classification_pipeline_f32_e2e() {
+    // Load dataset.
+    let (x, y) = datasets::load_iris::<f32>().expect("failed to load iris");
+    assert_eq!(x.nrows(), 150);
+    assert_eq!(x.ncols(), 4);
+    assert_eq!(y.len(), 150);
+
+    let pipeline = Pipeline::new()
+        .transform_step("scale", Box::new(preprocess::StandardScaler::<f32>::new()))
+        .transform_step("pca", Box::new(ferrolearn::decomp::PCA::<f32>::new(1)))
+        .estimator_step(
+            "logistic regression",
+            Box::new(
+                ferrolearn::linear::LogisticRegression::<f32>::new()
+                    .with_max_iter(2000)
+                    .with_c(10.0),
+            ),
+        );
+    let y_f32 = y.mapv(|v| v as f32);
+    let fitted = pipeline.fit(&x, &y_f32).expect("fit failed");
+    let y_pred = fitted.predict(&x).expect("predict failed");
+    let y_pred_usize = y_pred.mapv(|v| v as usize);
+
+    // Evaluate accuracy.
+    let accuracy =
+        ferrolearn::metrics::accuracy_score(&y, &y_pred_usize).expect("accuracy_score failed");
+
+    assert!(
+        accuracy > 0.8,
+        "Expected accuracy > 0.8 on iris, got {accuracy}",
+    );
 }

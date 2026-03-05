@@ -211,10 +211,10 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedVarianceTh
 }
 
 // ---------------------------------------------------------------------------
-// Pipeline integration — VarianceThreshold (f64 specialisation)
+// Pipeline integration — VarianceThreshold (generic)
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer<f64> for VarianceThreshold<f64> {
+impl<F: Float + Send + Sync + 'static> PipelineTransformer<F> for VarianceThreshold<F> {
     /// Fit using the pipeline interface; `y` is ignored.
     ///
     /// # Errors
@@ -222,21 +222,21 @@ impl PipelineTransformer<f64> for VarianceThreshold<f64> {
     /// Propagates errors from [`Fit::fit`].
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
+        x: &Array2<F>,
+        _y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineTransformer<F>>, FerroError> {
         let fitted = self.fit(x, &())?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineTransformer<f64> for FittedVarianceThreshold<f64> {
+impl<F: Float + Send + Sync + 'static> FittedPipelineTransformer<F> for FittedVarianceThreshold<F> {
     /// Transform using the pipeline interface.
     ///
     /// # Errors
     ///
     /// Propagates errors from [`Transform::transform`].
-    fn transform_pipeline(&self, x: &Array2<f64>) -> Result<Array2<f64>, FerroError> {
+    fn transform_pipeline(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
         self.transform(x)
     }
 }
@@ -519,14 +519,14 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedSelectKBes
 }
 
 // ---------------------------------------------------------------------------
-// Pipeline integration — SelectKBest (f64 specialisation)
+// Pipeline integration — SelectKBest (generic)
 //
 // NOTE: The pipeline interface uses a *fixed* `y = Array1<f64>`, so we cannot
 // use the actual class-label vector from the pipeline.  We therefore refit
 // using the pipeline `y` converted to `usize` labels by rounding.
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer<f64> for SelectKBest<f64> {
+impl<F: Float + Send + Sync + 'static> PipelineTransformer<F> for SelectKBest<F> {
     /// Fit using the pipeline interface.
     ///
     /// The continuous `y` labels are rounded to `usize` class indices.
@@ -536,22 +536,22 @@ impl PipelineTransformer<f64> for SelectKBest<f64> {
     /// Propagates errors from [`Fit::fit`].
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
-        let y_usize: Array1<usize> = y.mapv(|v| v.round() as usize);
+        x: &Array2<F>,
+        y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineTransformer<F>>, FerroError> {
+        let y_usize: Array1<usize> = y.mapv(|v| v.round().to_usize().unwrap_or(0));
         let fitted = self.fit(x, &y_usize)?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineTransformer<f64> for FittedSelectKBest<f64> {
+impl<F: Float + Send + Sync + 'static> FittedPipelineTransformer<F> for FittedSelectKBest<F> {
     /// Transform using the pipeline interface.
     ///
     /// # Errors
     ///
     /// Propagates errors from [`Transform::transform`].
-    fn transform_pipeline(&self, x: &Array2<f64>) -> Result<Array2<f64>, FerroError> {
+    fn transform_pipeline(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
         self.transform(x)
     }
 }
@@ -686,13 +686,13 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for SelectFromModel<
 }
 
 // ---------------------------------------------------------------------------
-// Pipeline integration — SelectFromModel (f64 specialisation)
+// Pipeline integration — SelectFromModel (generic)
 //
 // `SelectFromModel` is already "fitted" (importance weights are provided at
 // construction time), so `fit_pipeline` merely boxes `self.clone()`.
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer<f64> for SelectFromModel<f64> {
+impl<F: Float + Send + Sync + 'static> PipelineTransformer<F> for SelectFromModel<F> {
     /// Clone the selector and box it as a fitted pipeline transformer.
     ///
     /// # Errors
@@ -700,20 +700,20 @@ impl PipelineTransformer<f64> for SelectFromModel<f64> {
     /// This implementation never fails.
     fn fit_pipeline(
         &self,
-        _x: &Array2<f64>,
-        _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
+        _x: &Array2<F>,
+        _y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineTransformer<F>>, FerroError> {
         Ok(Box::new(self.clone()))
     }
 }
 
-impl FittedPipelineTransformer<f64> for SelectFromModel<f64> {
+impl<F: Float + Send + Sync + 'static> FittedPipelineTransformer<F> for SelectFromModel<F> {
     /// Transform using the pipeline interface.
     ///
     /// # Errors
     ///
     /// Propagates errors from [`Transform::transform`].
-    fn transform_pipeline(&self, x: &Array2<f64>) -> Result<Array2<f64>, FerroError> {
+    fn transform_pipeline(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
         self.transform(x)
     }
 }
