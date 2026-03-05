@@ -102,14 +102,14 @@ impl CvResults {
 /// struct ConstantEstimator(f64);
 /// struct FittedConstant(f64);
 ///
-/// impl PipelineEstimator for ConstantEstimator {
+/// impl PipelineEstimator<f64> for ConstantEstimator {
 ///     fn fit_pipeline(&self, _x: &Array2<f64>, _y: &Array1<f64>)
-///         -> Result<Box<dyn FittedPipelineEstimator>, FerroError>
+///         -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError>
 ///     {
 ///         Ok(Box::new(FittedConstant(self.0)))
 ///     }
 /// }
-/// impl FittedPipelineEstimator for FittedConstant {
+/// impl FittedPipelineEstimator<f64> for FittedConstant {
 ///     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
 ///         Ok(Array1::from_elem(x.nrows(), self.0))
 ///     }
@@ -254,17 +254,17 @@ mod tests {
         value: f64,
     }
 
-    impl PipelineEstimator for ConstantEstimator {
+    impl PipelineEstimator<f64> for ConstantEstimator {
         fn fit_pipeline(
             &self,
             _x: &Array2<f64>,
             _y: &Array1<f64>,
-        ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+        ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
             Ok(Box::new(FittedConstant { value: self.value }))
         }
     }
 
-    impl FittedPipelineEstimator for FittedConstant {
+    impl FittedPipelineEstimator<f64> for FittedConstant {
         fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
             Ok(Array1::from_elem(x.nrows(), self.value))
         }
@@ -277,19 +277,19 @@ mod tests {
         mean: f64,
     }
 
-    impl PipelineEstimator for MeanEstimator {
+    impl PipelineEstimator<f64> for MeanEstimator {
         fn fit_pipeline(
             &self,
             _x: &Array2<f64>,
             y: &Array1<f64>,
-        ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+        ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
             Ok(Box::new(FittedMean {
                 mean: y.mean().unwrap_or(0.0),
             }))
         }
     }
 
-    impl FittedPipelineEstimator for FittedMean {
+    impl FittedPipelineEstimator<f64> for FittedMean {
         fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
             Ok(Array1::from_elem(x.nrows(), self.mean))
         }

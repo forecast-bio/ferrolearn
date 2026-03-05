@@ -634,7 +634,7 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
 name = "ferrolearn"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "approx 0.5.1",
  "ferrolearn-bayes",
@@ -657,7 +657,7 @@ dependencies = [
 
 [[package]]
 name = "ferrolearn-bayes"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "approx 0.5.1",
  "ferrolearn-core",
@@ -702,7 +702,7 @@ dependencies = [
 
 [[package]]
 name = "ferrolearn-core"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "approx 0.5.1",
  "faer",
@@ -732,7 +732,7 @@ dependencies = [
 
 [[package]]
 name = "ferrolearn-decomp"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "approx 0.5.1",
  "faer",
@@ -764,7 +764,7 @@ dependencies = [
 
 [[package]]
 name = "ferrolearn-linear"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "approx 0.5.1",
  "faer",
@@ -793,7 +793,7 @@ dependencies = [
 
 [[package]]
 name = "ferrolearn-model-sel"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "approx 0.5.1",
  "ferrolearn-core",
@@ -805,7 +805,7 @@ dependencies = [
 
 [[package]]
 name = "ferrolearn-neighbors"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "approx 0.5.1",
  "ferrolearn-core",
@@ -819,7 +819,7 @@ dependencies = [
 
 [[package]]
 name = "ferrolearn-preprocess"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "approx 0.5.1",
  "ferrolearn-core",
@@ -863,7 +863,7 @@ dependencies = [
 
 [[package]]
 name = "ferrolearn-tree"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "approx 0.5.1",
  "ferrolearn-core",
@@ -3277,9 +3277,9 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "winnow"
-version = "0.7.14"
+version = "0.7.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a5364e9d77fcdeeaa6062ced926ee3381faa2ee02d3eb83a5c27a8825540829"
+checksum = "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945"
 
 [[package]]
 name = "wit-bindgen"

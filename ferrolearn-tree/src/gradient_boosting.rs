@@ -438,18 +438,18 @@ impl<F: Float + Send + Sync + 'static> HasFeatureImportances<F>
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for GradientBoostingRegressor<f64> {
+impl PipelineEstimator<f64> for GradientBoostingRegressor<f64> {
     fn fit_pipeline(
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let fitted = self.fit(x, y)?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineEstimator for FittedGradientBoostingRegressor<f64> {
+impl FittedPipelineEstimator<f64> for FittedGradientBoostingRegressor<f64> {
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         self.predict(x)
     }
@@ -1035,12 +1035,12 @@ impl<F: Float + Send + Sync + 'static> HasClasses for FittedGradientBoostingClas
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for GradientBoostingClassifier<f64> {
+impl PipelineEstimator<f64> for GradientBoostingClassifier<f64> {
     fn fit_pipeline(
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let y_usize = y.mapv(|v| v as usize);
         let fitted = self.fit(x, &y_usize)?;
         Ok(Box::new(FittedGbcPipelineAdapter(fitted)))
@@ -1050,7 +1050,7 @@ impl PipelineEstimator for GradientBoostingClassifier<f64> {
 /// Pipeline adapter for `FittedGradientBoostingClassifier<f64>`.
 struct FittedGbcPipelineAdapter(FittedGradientBoostingClassifier<f64>);
 
-impl FittedPipelineEstimator for FittedGbcPipelineAdapter {
+impl FittedPipelineEstimator<f64> for FittedGbcPipelineAdapter {
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         let preds = self.0.predict(x)?;
         Ok(preds.mapv(|v| v as f64))

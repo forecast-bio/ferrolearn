@@ -627,12 +627,12 @@ mod tests {
     /// A trivial pipeline estimator that always predicts the mean of y_train.
     struct MeanEstimator;
 
-    impl PipelineEstimator for MeanEstimator {
+    impl PipelineEstimator<f64> for MeanEstimator {
         fn fit_pipeline(
             &self,
             _x: &Array2<f64>,
             y: &Array1<f64>,
-        ) -> Result<Box<dyn FittedEstTrait>, FerroError> {
+        ) -> Result<Box<dyn FittedEstTrait<f64>>, FerroError> {
             let mean = y.mean().unwrap_or(0.0);
             Ok(Box::new(FittedMean { mean }))
         }
@@ -642,7 +642,7 @@ mod tests {
         mean: f64,
     }
 
-    impl FittedEstTrait for FittedMean {
+    impl FittedEstTrait<f64> for FittedMean {
         fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
             Ok(Array1::from_elem(x.nrows(), self.mean))
         }
@@ -651,19 +651,19 @@ mod tests {
     /// Identity transformer (pass-through).
     struct IdentityTransformer;
 
-    impl PipelineTransformer for IdentityTransformer {
+    impl PipelineTransformer<f64> for IdentityTransformer {
         fn fit_pipeline(
             &self,
             _x: &Array2<f64>,
             _y: &Array1<f64>,
-        ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+        ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
             Ok(Box::new(FittedIdentity))
         }
     }
 
     struct FittedIdentity;
 
-    impl FittedPipelineTransformer for FittedIdentity {
+    impl FittedPipelineTransformer<f64> for FittedIdentity {
         fn transform_pipeline(&self, x: &Array2<f64>) -> Result<Array2<f64>, FerroError> {
             Ok(x.clone())
         }

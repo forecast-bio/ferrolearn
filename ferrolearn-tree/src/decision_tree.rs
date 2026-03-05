@@ -397,12 +397,12 @@ impl<F: Float + Send + Sync + 'static> HasClasses for FittedDecisionTreeClassifi
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for DecisionTreeClassifier<f64> {
+impl PipelineEstimator<f64> for DecisionTreeClassifier<f64> {
     fn fit_pipeline(
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let y_usize = y.mapv(|v| v as usize);
         let fitted = self.fit(x, &y_usize)?;
         Ok(Box::new(FittedClassifierPipelineAdapter(fitted)))
@@ -412,7 +412,7 @@ impl PipelineEstimator for DecisionTreeClassifier<f64> {
 /// Adapter to make `FittedDecisionTreeClassifier<f64>` work as a pipeline estimator.
 struct FittedClassifierPipelineAdapter(FittedDecisionTreeClassifier<f64>);
 
-impl FittedPipelineEstimator for FittedClassifierPipelineAdapter {
+impl FittedPipelineEstimator<f64> for FittedClassifierPipelineAdapter {
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         let preds = self.0.predict(x)?;
         Ok(preds.mapv(|v| v as f64))
@@ -636,18 +636,18 @@ impl<F: Float + Send + Sync + 'static> HasFeatureImportances<F> for FittedDecisi
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for DecisionTreeRegressor<f64> {
+impl PipelineEstimator<f64> for DecisionTreeRegressor<f64> {
     fn fit_pipeline(
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let fitted = self.fit(x, y)?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineEstimator for FittedDecisionTreeRegressor<f64> {
+impl FittedPipelineEstimator<f64> for FittedDecisionTreeRegressor<f64> {
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         self.predict(x)
     }

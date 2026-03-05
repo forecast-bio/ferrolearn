@@ -207,18 +207,18 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> HasCoefficients<F> for Fi
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for Ridge<f64> {
+impl PipelineEstimator<f64> for Ridge<f64> {
     fn fit_pipeline(
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let fitted = self.fit(x, y)?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineEstimator for FittedRidge<f64> {
+impl FittedPipelineEstimator<f64> for FittedRidge<f64> {
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         self.predict(x)
     }

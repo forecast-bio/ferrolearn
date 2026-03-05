@@ -630,7 +630,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedFactorAnal
 // Pipeline integration (f64 specialisation)
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer for FactorAnalysis<f64> {
+impl PipelineTransformer<f64> for FactorAnalysis<f64> {
     /// Fit using the pipeline interface (ignores `y`).
     ///
     /// # Errors
@@ -640,13 +640,13 @@ impl PipelineTransformer for FactorAnalysis<f64> {
         &self,
         x: &Array2<f64>,
         _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
         let fitted = self.fit(x, &())?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineTransformer for FittedFactorAnalysis<f64> {
+impl FittedPipelineTransformer<f64> for FittedFactorAnalysis<f64> {
     /// Transform via the pipeline interface.
     ///
     /// # Errors

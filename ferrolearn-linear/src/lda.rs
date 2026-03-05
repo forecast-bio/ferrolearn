@@ -581,7 +581,7 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedLDA<F> {
 // Pipeline integration (f64 specialisation)
 // ---------------------------------------------------------------------------
 
-impl PipelineEstimator for LDA<f64> {
+impl PipelineEstimator<f64> for LDA<f64> {
     /// Fit LDA using the pipeline interface.
     ///
     /// # Errors
@@ -591,7 +591,7 @@ impl PipelineEstimator for LDA<f64> {
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let y_usize: Array1<usize> = y.mapv(|v| v as usize);
         let fitted = self.fit(x, &y_usize)?;
         Ok(Box::new(FittedLDAPipeline(fitted)))
@@ -605,7 +605,7 @@ struct FittedLDAPipeline(FittedLDA<f64>);
 unsafe impl Send for FittedLDAPipeline {}
 unsafe impl Sync for FittedLDAPipeline {}
 
-impl FittedPipelineEstimator for FittedLDAPipeline {
+impl FittedPipelineEstimator<f64> for FittedLDAPipeline {
     /// Predict via the pipeline interface, returning `f64` class labels.
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         let preds = self.0.predict(x)?;

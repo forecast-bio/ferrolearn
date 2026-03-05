@@ -358,7 +358,7 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> HasCoefficients<F> for Fi
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for ElasticNet<f64> {
+impl PipelineEstimator<f64> for ElasticNet<f64> {
     /// Fit the model and return it as a boxed pipeline estimator.
     ///
     /// # Errors
@@ -368,13 +368,13 @@ impl PipelineEstimator for ElasticNet<f64> {
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let fitted = self.fit(x, y)?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineEstimator for FittedElasticNet<f64> {
+impl FittedPipelineEstimator<f64> for FittedElasticNet<f64> {
     /// Generate predictions via the pipeline interface.
     ///
     /// # Errors

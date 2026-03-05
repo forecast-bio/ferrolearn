@@ -205,7 +205,7 @@ fn hstack(matrices: &[Array2<f64>]) -> Result<Array2<f64>, FerroError> {
 /// ```
 pub struct ColumnTransformer {
     /// Named transformer steps with their column selectors.
-    transformers: Vec<(String, Box<dyn PipelineTransformer>, ColumnSelector)>,
+    transformers: Vec<(String, Box<dyn PipelineTransformer<f64>>, ColumnSelector)>,
     /// Policy for columns not covered by any transformer.
     remainder: Remainder,
 }
@@ -219,7 +219,7 @@ impl ColumnTransformer {
     /// - `remainder`: Policy for uncovered columns (`Drop` or `Passthrough`).
     #[must_use]
     pub fn new(
-        transformers: Vec<(String, Box<dyn PipelineTransformer>, ColumnSelector)>,
+        transformers: Vec<(String, Box<dyn PipelineTransformer<f64>>, ColumnSelector)>,
         remainder: Remainder,
     ) -> Self {
         Self {
@@ -277,7 +277,7 @@ impl Fit<Array2<f64>, ()> for ColumnTransformer {
             (0..n_features).filter(|c| !covered.contains(c)).collect();
 
         // Fit each transformer on its sub-matrix.
-        let mut fitted_transformers: Vec<(String, Box<dyn FittedPipelineTransformer>, Vec<usize>)> =
+        let mut fitted_transformers: Vec<FittedSubTransformer> =
             Vec::with_capacity(self.transformers.len());
 
         for ((name, transformer, _), indices) in
@@ -301,7 +301,7 @@ impl Fit<Array2<f64>, ()> for ColumnTransformer {
 // PipelineTransformer implementation
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer for ColumnTransformer {
+impl PipelineTransformer<f64> for ColumnTransformer {
     /// Fit the column transformer using the pipeline interface.
     ///
     /// The `y` argument is ignored; it exists only for API compatibility.
@@ -313,7 +313,7 @@ impl PipelineTransformer for ColumnTransformer {
         &self,
         x: &Array2<f64>,
         _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
         let fitted = self.fit(x, &())?;
         Ok(Box::new(fitted))
     }
@@ -323,6 +323,9 @@ impl PipelineTransformer for ColumnTransformer {
 // FittedColumnTransformer
 // ---------------------------------------------------------------------------
 
+/// A named, fitted sub-transformer with its column indices.
+type FittedSubTransformer = (String, Box<dyn FittedPipelineTransformer<f64>>, Vec<usize>);
+
 /// A fitted column transformer holding fitted sub-transformers and metadata.
 ///
 /// Created by calling [`Fit::fit`] on a [`ColumnTransformer`].
@@ -331,7 +334,7 @@ impl PipelineTransformer for ColumnTransformer {
 /// inside a [`ferrolearn_core::pipeline::Pipeline`].
 pub struct FittedColumnTransformer {
     /// Fitted transformers with their associated column indices.
-    fitted_transformers: Vec<(String, Box<dyn FittedPipelineTransformer>, Vec<usize>)>,
+    fitted_transformers: Vec<FittedSubTransformer>,
     /// Remainder policy from the original [`ColumnTransformer`].
     remainder: Remainder,
     /// Column indices not covered by any transformer.
@@ -415,7 +418,7 @@ impl Transform<Array2<f64>> for FittedColumnTransformer {
 // FittedPipelineTransformer implementation
 // ---------------------------------------------------------------------------
 
-impl FittedPipelineTransformer for FittedColumnTransformer {
+impl FittedPipelineTransformer<f64> for FittedColumnTransformer {
     /// Transform data using the pipeline interface.
     ///
     /// # Errors
@@ -462,10 +465,10 @@ impl FittedPipelineTransformer for FittedColumnTransformer {
 /// ```
 #[must_use]
 pub fn make_column_transformer(
-    transformers: Vec<(Box<dyn PipelineTransformer>, ColumnSelector)>,
+    transformers: Vec<(Box<dyn PipelineTransformer<f64>>, ColumnSelector)>,
     remainder: Remainder,
 ) -> ColumnTransformer {
-    let named: Vec<(String, Box<dyn PipelineTransformer>, ColumnSelector)> = transformers
+    let named: Vec<(String, Box<dyn PipelineTransformer<f64>>, ColumnSelector)> = transformers
         .into_iter()
         .enumerate()
         .map(|(i, (t, s))| (format!("transformer-{i}"), t, s))
@@ -752,18 +755,18 @@ mod tests {
 
         // Use a trivial estimator that sums rows.
         struct SumEstimator;
-        impl PipelineEstimator for SumEstimator {
+        impl PipelineEstimator<f64> for SumEstimator {
             fn fit_pipeline(
                 &self,
                 _x: &Array2<f64>,
                 _y: &Array1<f64>,
-            ) -> Result<Box<dyn ferrolearn_core::pipeline::FittedPipelineEstimator>, FerroError>
+            ) -> Result<Box<dyn ferrolearn_core::pipeline::FittedPipelineEstimator<f64>>, FerroError>
             {
                 Ok(Box::new(FittedSum))
             }
         }
         struct FittedSum;
-        impl ferrolearn_core::pipeline::FittedPipelineEstimator for FittedSum {
+        impl ferrolearn_core::pipeline::FittedPipelineEstimator<f64> for FittedSum {
             fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
                 let sums: Vec<f64> = x.rows().into_iter().map(|r| r.sum()).collect();
                 Ok(Array1::from_vec(sums))

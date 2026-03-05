@@ -366,7 +366,7 @@ impl<F: Float + Send + Sync + 'static> FitTransform<Array2<F>> for PowerTransfor
 // Pipeline integration (f64 specialisation)
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer for PowerTransformer<f64> {
+impl PipelineTransformer<f64> for PowerTransformer<f64> {
     /// Fit the transformer using the pipeline interface.
     ///
     /// # Errors
@@ -376,13 +376,13 @@ impl PipelineTransformer for PowerTransformer<f64> {
         &self,
         x: &Array2<f64>,
         _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
         let fitted = self.fit(x, &())?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineTransformer for FittedPowerTransformer<f64> {
+impl FittedPipelineTransformer<f64> for FittedPowerTransformer<f64> {
     /// Transform data using the pipeline interface.
     ///
     /// # Errors

@@ -286,19 +286,19 @@ mod tests {
         mean: f64,
     }
 
-    impl PipelineEstimator for MeanEstimator {
+    impl PipelineEstimator<f64> for MeanEstimator {
         fn fit_pipeline(
             &self,
             _x: &Array2<f64>,
             y: &Array1<f64>,
-        ) -> Result<Box<dyn FittedEstTrait>, ferrolearn_core::FerroError> {
+        ) -> Result<Box<dyn FittedEstTrait<f64>>, ferrolearn_core::FerroError> {
             Ok(Box::new(FittedMean {
                 mean: y.mean().unwrap_or(0.0),
             }))
         }
     }
 
-    impl FittedEstTrait for FittedMean {
+    impl FittedEstTrait<f64> for FittedMean {
         fn predict_pipeline(
             &self,
             x: &Array2<f64>,

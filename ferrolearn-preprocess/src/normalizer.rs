@@ -154,7 +154,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for Normalizer<F> {
 // Pipeline integration (f64 specialisation)
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer for Normalizer<f64> {
+impl PipelineTransformer<f64> for Normalizer<f64> {
     /// Fit the normalizer using the pipeline interface.
     ///
     /// Because `Normalizer` is stateless, this simply boxes `self` as a
@@ -167,12 +167,12 @@ impl PipelineTransformer for Normalizer<f64> {
         &self,
         _x: &Array2<f64>,
         _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
         Ok(Box::new(self.clone()))
     }
 }
 
-impl FittedPipelineTransformer for Normalizer<f64> {
+impl FittedPipelineTransformer<f64> for Normalizer<f64> {
     /// Transform data using the pipeline interface.
     ///
     /// # Errors

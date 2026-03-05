@@ -625,7 +625,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedTruncatedS
 // Pipeline integration (f64 specialisation)
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer for TruncatedSVD<f64> {
+impl PipelineTransformer<f64> for TruncatedSVD<f64> {
     /// Fit TruncatedSVD using the pipeline interface.
     ///
     /// The `y` argument is ignored; TruncatedSVD is unsupervised.
@@ -637,13 +637,13 @@ impl PipelineTransformer for TruncatedSVD<f64> {
         &self,
         x: &Array2<f64>,
         _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
         let fitted = self.fit(x, &())?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineTransformer for FittedTruncatedSVD<f64> {
+impl FittedPipelineTransformer<f64> for FittedTruncatedSVD<f64> {
     /// Transform data using the pipeline interface.
     ///
     /// # Errors
@@ -846,19 +846,19 @@ mod tests {
 
         struct SumEstimator;
 
-        impl PipelineEstimator for SumEstimator {
+        impl PipelineEstimator<f64> for SumEstimator {
             fn fit_pipeline(
                 &self,
                 _x: &Array2<f64>,
                 _y: &Array1<f64>,
-            ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+            ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
                 Ok(Box::new(FittedSumEstimator))
             }
         }
 
         struct FittedSumEstimator;
 
-        impl FittedPipelineEstimator for FittedSumEstimator {
+        impl FittedPipelineEstimator<f64> for FittedSumEstimator {
             fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
                 let sums: Vec<f64> = x.rows().into_iter().map(|r| r.sum()).collect();
                 Ok(Array1::from_vec(sums))

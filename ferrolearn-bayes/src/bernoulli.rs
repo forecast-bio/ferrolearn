@@ -344,12 +344,12 @@ impl<F: Float + Send + Sync + 'static> HasClasses for FittedBernoulliNB<F> {
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for BernoulliNB<f64> {
+impl PipelineEstimator<f64> for BernoulliNB<f64> {
     fn fit_pipeline(
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let y_usize: Array1<usize> = y.mapv(|v| v as usize);
         let fitted = self.fit(x, &y_usize)?;
         Ok(Box::new(FittedBernoulliNBPipeline(fitted)))
@@ -361,7 +361,7 @@ struct FittedBernoulliNBPipeline(FittedBernoulliNB<f64>);
 unsafe impl Send for FittedBernoulliNBPipeline {}
 unsafe impl Sync for FittedBernoulliNBPipeline {}
 
-impl FittedPipelineEstimator for FittedBernoulliNBPipeline {
+impl FittedPipelineEstimator<f64> for FittedBernoulliNBPipeline {
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         let preds = self.0.predict(x)?;
         Ok(preds.mapv(|v| v as f64))

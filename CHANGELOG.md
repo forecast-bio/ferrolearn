@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.1.0] - 2026-03-04
 
+### Added
+- Add Pipeline support for f32 data (generic over float type) (#14)
+
 Initial release with full scikit-learn-equivalent coverage across 14 crates.
 
 ### Phase 1: Foundation

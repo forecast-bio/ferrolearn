@@ -710,7 +710,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedFastICA<F>
 // Pipeline integration (f64 specialisation)
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer for FastICA<f64> {
+impl PipelineTransformer<f64> for FastICA<f64> {
     /// Fit using the pipeline interface (ignores `y`).
     ///
     /// # Errors
@@ -720,13 +720,13 @@ impl PipelineTransformer for FastICA<f64> {
         &self,
         x: &Array2<f64>,
         _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
         let fitted = self.fit(x, &())?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineTransformer for FittedFastICA<f64> {
+impl FittedPipelineTransformer<f64> for FittedFastICA<f64> {
     /// Transform via the pipeline interface.
     ///
     /// # Errors

@@ -988,12 +988,12 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> HasCoefficients<F>
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for SGDClassifier<f64> {
+impl PipelineEstimator<f64> for SGDClassifier<f64> {
     fn fit_pipeline(
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let y_usize: Array1<usize> = y.mapv(|v| v as usize);
         let fitted = self.fit(x, &y_usize)?;
         Ok(Box::new(FittedSGDClassifierPipeline(fitted)))
@@ -1007,7 +1007,7 @@ struct FittedSGDClassifierPipeline(FittedSGDClassifier<f64>);
 unsafe impl Send for FittedSGDClassifierPipeline {}
 unsafe impl Sync for FittedSGDClassifierPipeline {}
 
-impl FittedPipelineEstimator for FittedSGDClassifierPipeline {
+impl FittedPipelineEstimator<f64> for FittedSGDClassifierPipeline {
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         let preds = self.0.predict(x)?;
         Ok(preds.mapv(|v| v as f64))
@@ -1501,18 +1501,18 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> HasCoefficients<F>
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for SGDRegressor<f64> {
+impl PipelineEstimator<f64> for SGDRegressor<f64> {
     fn fit_pipeline(
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         let fitted = self.fit(x, y)?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineEstimator for FittedSGDRegressor<f64> {
+impl FittedPipelineEstimator<f64> for FittedSGDRegressor<f64> {
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         self.predict(x)
     }

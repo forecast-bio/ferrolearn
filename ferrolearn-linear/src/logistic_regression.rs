@@ -604,12 +604,12 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> HasClasses for FittedLogi
 }
 
 // Pipeline integration for f64.
-impl PipelineEstimator for LogisticRegression<f64> {
+impl PipelineEstimator<f64> for LogisticRegression<f64> {
     fn fit_pipeline(
         &self,
         x: &Array2<f64>,
         y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
         // Convert f64 labels to usize.
         let y_usize: Array1<usize> = y.mapv(|v| v as usize);
         let fitted = self.fit(x, &y_usize)?;
@@ -624,7 +624,7 @@ struct FittedLogisticRegressionPipeline(FittedLogisticRegression<f64>);
 unsafe impl Send for FittedLogisticRegressionPipeline {}
 unsafe impl Sync for FittedLogisticRegressionPipeline {}
 
-impl FittedPipelineEstimator for FittedLogisticRegressionPipeline {
+impl FittedPipelineEstimator<f64> for FittedLogisticRegressionPipeline {
     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
         let preds = self.0.predict(x)?;
         Ok(preds.mapv(|v| v as f64))

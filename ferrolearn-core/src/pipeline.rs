@@ -4,10 +4,9 @@
 //! estimator step. Calling [`Fit::fit`] on a pipeline fits each step in
 //! sequence, producing a [`FittedPipeline`] that implements [`Predict`].
 //!
-//! The dynamic pipeline constrains all intermediate data to
-//! [`ndarray::Array2<f64>`] so that heterogeneous steps can be composed
-//! via trait objects. A compile-time typed pipeline (zero-cost, generic)
-//! is planned for Phase 3.
+//! The pipeline is generic over the float type `F`, supporting both `f32`
+//! and `f64` data. All steps in a pipeline must use the same float type.
+//! The type parameter defaults to `f64` for backward compatibility.
 //!
 //! # Examples
 //!
@@ -19,19 +18,19 @@
 //! // A trivial identity transformer for demonstration.
 //! struct IdentityTransformer;
 //!
-//! impl PipelineTransformer for IdentityTransformer {
+//! impl PipelineTransformer<f64> for IdentityTransformer {
 //!     fn fit_pipeline(
 //!         &self,
 //!         x: &Array2<f64>,
 //!         _y: &Array1<f64>,
-//!     ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+//!     ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
 //!         Ok(Box::new(FittedIdentity))
 //!     }
 //! }
 //!
 //! struct FittedIdentity;
 //!
-//! impl FittedPipelineTransformer for FittedIdentity {
+//! impl FittedPipelineTransformer<f64> for FittedIdentity {
 //!     fn transform_pipeline(&self, x: &Array2<f64>) -> Result<Array2<f64>, FerroError> {
 //!         Ok(x.clone())
 //!     }
@@ -40,19 +39,19 @@
 //! // A trivial estimator that predicts the first column.
 //! struct FirstColumnEstimator;
 //!
-//! impl PipelineEstimator for FirstColumnEstimator {
+//! impl PipelineEstimator<f64> for FirstColumnEstimator {
 //!     fn fit_pipeline(
 //!         &self,
 //!         _x: &Array2<f64>,
 //!         _y: &Array1<f64>,
-//!     ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+//!     ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
 //!         Ok(Box::new(FittedFirstColumn))
 //!     }
 //! }
 //!
 //! struct FittedFirstColumn;
 //!
-//! impl FittedPipelineEstimator for FittedFirstColumn {
+//! impl FittedPipelineEstimator<f64> for FittedFirstColumn {
 //!     fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
 //!         Ok(x.column(0).to_owned())
 //!     }
@@ -75,6 +74,7 @@
 //! ```
 
 use ndarray::{Array1, Array2};
+use num_traits::Float;
 
 use crate::error::FerroError;
 use crate::traits::{Fit, Predict};
@@ -85,9 +85,11 @@ use crate::traits::{Fit, Predict};
 
 /// An unfitted transformer step that can participate in a [`Pipeline`].
 ///
-/// Implementors must be able to fit themselves on `Array2<f64>` data and
+/// Implementors must be able to fit themselves on `Array2<F>` data and
 /// return a boxed [`FittedPipelineTransformer`].
-pub trait PipelineTransformer: Send + Sync {
+///
+/// The type parameter `F` is the float type (`f32` or `f64`).
+pub trait PipelineTransformer<F: Float + Send + Sync + 'static>: Send + Sync {
     /// Fit this transformer on the given data.
     ///
     /// # Errors
@@ -95,28 +97,28 @@ pub trait PipelineTransformer: Send + Sync {
     /// Returns a [`FerroError`] if fitting fails.
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError>;
+        x: &Array2<F>,
+        y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineTransformer<F>>, FerroError>;
 }
 
 /// A fitted transformer step in a [`FittedPipeline`].
 ///
-/// Transforms `Array2<f64>` data, producing a new `Array2<f64>`.
-pub trait FittedPipelineTransformer: Send + Sync {
+/// Transforms `Array2<F>` data, producing a new `Array2<F>`.
+pub trait FittedPipelineTransformer<F: Float + Send + Sync + 'static>: Send + Sync {
     /// Transform the input data.
     ///
     /// # Errors
     ///
     /// Returns a [`FerroError`] if the input shape is incompatible.
-    fn transform_pipeline(&self, x: &Array2<f64>) -> Result<Array2<f64>, FerroError>;
+    fn transform_pipeline(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError>;
 }
 
 /// An unfitted estimator step that serves as the final step in a [`Pipeline`].
 ///
-/// Implementors must be able to fit themselves on `Array2<f64>` data and
+/// Implementors must be able to fit themselves on `Array2<F>` data and
 /// return a boxed [`FittedPipelineEstimator`].
-pub trait PipelineEstimator: Send + Sync {
+pub trait PipelineEstimator<F: Float + Send + Sync + 'static>: Send + Sync {
     /// Fit this estimator on the given data.
     ///
     /// # Errors
@@ -124,21 +126,21 @@ pub trait PipelineEstimator: Send + Sync {
     /// Returns a [`FerroError`] if fitting fails.
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError>;
+        x: &Array2<F>,
+        y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineEstimator<F>>, FerroError>;
 }
 
 /// A fitted estimator step in a [`FittedPipeline`].
 ///
-/// Produces `Array1<f64>` predictions from `Array2<f64>` input.
-pub trait FittedPipelineEstimator: Send + Sync {
+/// Produces `Array1<F>` predictions from `Array2<F>` input.
+pub trait FittedPipelineEstimator<F: Float + Send + Sync + 'static>: Send + Sync {
     /// Generate predictions for the input data.
     ///
     /// # Errors
     ///
     /// Returns a [`FerroError`] if the input shape is incompatible.
-    fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError>;
+    fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError>;
 }
 
 // ---------------------------------------------------------------------------
@@ -146,36 +148,37 @@ pub trait FittedPipelineEstimator: Send + Sync {
 // ---------------------------------------------------------------------------
 
 /// A named transformer step in an unfitted pipeline.
-struct TransformStep {
+struct TransformStep<F: Float + Send + Sync + 'static> {
     /// Human-readable name for this step.
     name: String,
     /// The unfitted transformer.
-    step: Box<dyn PipelineTransformer>,
+    step: Box<dyn PipelineTransformer<F>>,
 }
 
 /// A dynamic-dispatch pipeline that composes transformers and a final estimator.
 ///
 /// Steps are added with [`transform_step`](Pipeline::transform_step) and the
 /// final estimator is set with [`estimator_step`](Pipeline::estimator_step).
-/// The pipeline implements [`Fit<Array2<f64>, Array1<f64>>`](Fit) and produces
-/// a [`FittedPipeline`] that implements [`Predict<Array2<f64>>`](Predict).
+/// The pipeline implements [`Fit<Array2<F>, Array1<F>>`](Fit) and produces
+/// a [`FittedPipeline`] that implements [`Predict<Array2<F>>`](Predict).
 ///
-/// All intermediate data flows as `Array2<f64>`.
-pub struct Pipeline {
+/// All intermediate data flows as `Array2<F>`. The type parameter defaults
+/// to `f64` for backward compatibility.
+pub struct Pipeline<F: Float + Send + Sync + 'static = f64> {
     /// Ordered transformer steps.
-    transforms: Vec<TransformStep>,
+    transforms: Vec<TransformStep<F>>,
     /// The final estimator step (name + estimator).
-    estimator: Option<(String, Box<dyn PipelineEstimator>)>,
+    estimator: Option<(String, Box<dyn PipelineEstimator<F>>)>,
 }
 
-impl Pipeline {
+impl<F: Float + Send + Sync + 'static> Pipeline<F> {
     /// Create a new empty pipeline.
     ///
     /// # Examples
     ///
     /// ```
     /// use ferrolearn_core::pipeline::Pipeline;
-    /// let pipeline = Pipeline::new();
+    /// let pipeline = Pipeline::<f64>::new();
     /// ```
     pub fn new() -> Self {
         Self {
@@ -189,7 +192,11 @@ impl Pipeline {
     /// Transformer steps are applied in the order they are added, before
     /// the final estimator step.
     #[must_use]
-    pub fn transform_step(mut self, name: &str, step: Box<dyn PipelineTransformer>) -> Self {
+    pub fn transform_step(
+        mut self,
+        name: &str,
+        step: Box<dyn PipelineTransformer<F>>,
+    ) -> Self {
         self.transforms.push(TransformStep {
             name: name.to_owned(),
             step,
@@ -202,7 +209,11 @@ impl Pipeline {
     /// A pipeline must have exactly one estimator step. Setting a new
     /// estimator replaces any previously set estimator.
     #[must_use]
-    pub fn estimator_step(mut self, name: &str, estimator: Box<dyn PipelineEstimator>) -> Self {
+    pub fn estimator_step(
+        mut self,
+        name: &str,
+        estimator: Box<dyn PipelineEstimator<F>>,
+    ) -> Self {
         self.estimator = Some((name.to_owned(), estimator));
         self
     }
@@ -214,19 +225,19 @@ impl Pipeline {
     /// estimator becomes the pipeline's estimator. This provides the
     /// `Pipeline::new().step("scaler", ...).step("clf", ...)` API.
     #[must_use]
-    pub fn step(self, name: &str, step: Box<dyn PipelineStep>) -> Self {
+    pub fn step(self, name: &str, step: Box<dyn PipelineStep<F>>) -> Self {
         step.add_to_pipeline(self, name)
     }
 }
 
-impl Default for Pipeline {
+impl<F: Float + Send + Sync + 'static> Default for Pipeline<F> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Fit<Array2<f64>, Array1<f64>> for Pipeline {
-    type Fitted = FittedPipeline;
+impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for Pipeline<F> {
+    type Fitted = FittedPipeline<F>;
     type Error = FerroError;
 
     /// Fit the pipeline by fitting each transformer step in order, then
@@ -239,7 +250,7 @@ impl Fit<Array2<f64>, Array1<f64>> for Pipeline {
     ///
     /// Returns [`FerroError::InvalidParameter`] if no estimator step was set.
     /// Propagates any errors from individual step fitting or transforming.
-    fn fit(&self, x: &Array2<f64>, y: &Array1<f64>) -> Result<FittedPipeline, FerroError> {
+    fn fit(&self, x: &Array2<F>, y: &Array1<F>) -> Result<FittedPipeline<F>, FerroError> {
         if self.estimator.is_none() {
             return Err(FerroError::InvalidParameter {
                 name: "estimator".into(),
@@ -276,25 +287,25 @@ impl Fit<Array2<f64>, Array1<f64>> for Pipeline {
 // ---------------------------------------------------------------------------
 
 /// A named fitted transformer step.
-struct FittedTransformStep {
+struct FittedTransformStep<F: Float + Send + Sync + 'static> {
     /// Human-readable name for this step.
     name: String,
     /// The fitted transformer.
-    step: Box<dyn FittedPipelineTransformer>,
+    step: Box<dyn FittedPipelineTransformer<F>>,
 }
 
 /// A fitted pipeline that chains fitted transformers and a fitted estimator.
 ///
 /// Created by calling [`Fit::fit`] on a [`Pipeline`]. Implements
-/// [`Predict<Array2<f64>>`](Predict), producing `Array1<f64>` predictions.
-pub struct FittedPipeline {
+/// [`Predict<Array2<F>>`](Predict), producing `Array1<F>` predictions.
+pub struct FittedPipeline<F: Float + Send + Sync + 'static = f64> {
     /// Fitted transformer steps, in order.
-    transforms: Vec<FittedTransformStep>,
+    transforms: Vec<FittedTransformStep<F>>,
     /// The fitted estimator (name + estimator).
-    estimator: (String, Box<dyn FittedPipelineEstimator>),
+    estimator: (String, Box<dyn FittedPipelineEstimator<F>>),
 }
 
-impl FittedPipeline {
+impl<F: Float + Send + Sync + 'static> FittedPipeline<F> {
     /// Returns the names of all steps (transformers + estimator) in order.
     pub fn step_names(&self) -> Vec<&str> {
         let mut names: Vec<&str> = self.transforms.iter().map(|s| s.name.as_str()).collect();
@@ -303,8 +314,8 @@ impl FittedPipeline {
     }
 }
 
-impl Predict<Array2<f64>> for FittedPipeline {
-    type Output = Array1<f64>;
+impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedPipeline<F> {
+    type Output = Array1<F>;
     type Error = FerroError;
 
     /// Generate predictions by transforming the input through each fitted
@@ -313,7 +324,7 @@ impl Predict<Array2<f64>> for FittedPipeline {
     /// # Errors
     ///
     /// Propagates any errors from transformer or estimator steps.
-    fn predict(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
+    fn predict(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let mut current_x = x.clone();
 
         for ts in &self.transforms {
@@ -337,21 +348,23 @@ impl Predict<Array2<f64>> for FittedPipeline {
 ///
 /// For convenience, use [`as_transform_step`] and [`as_estimator_step`]
 /// to wrap your types.
-pub trait PipelineStep: Send + Sync {
+pub trait PipelineStep<F: Float + Send + Sync + 'static>: Send + Sync {
     /// Add this step to the pipeline under the given name.
     ///
     /// Transformer steps are added as intermediate transform steps.
     /// Estimator steps are set as the final estimator.
-    fn add_to_pipeline(self: Box<Self>, pipeline: Pipeline, name: &str) -> Pipeline;
+    fn add_to_pipeline(self: Box<Self>, pipeline: Pipeline<F>, name: &str) -> Pipeline<F>;
 }
 
 /// Wraps a [`PipelineTransformer`] to implement [`PipelineStep`].
 ///
 /// Created by [`as_transform_step`].
-pub struct TransformerStepWrapper(Box<dyn PipelineTransformer>);
+pub struct TransformerStepWrapper<F: Float + Send + Sync + 'static>(
+    Box<dyn PipelineTransformer<F>>,
+);
 
-impl PipelineStep for TransformerStepWrapper {
-    fn add_to_pipeline(self: Box<Self>, pipeline: Pipeline, name: &str) -> Pipeline {
+impl<F: Float + Send + Sync + 'static> PipelineStep<F> for TransformerStepWrapper<F> {
+    fn add_to_pipeline(self: Box<Self>, pipeline: Pipeline<F>, name: &str) -> Pipeline<F> {
         pipeline.transform_step(name, self.0)
     }
 }
@@ -359,10 +372,12 @@ impl PipelineStep for TransformerStepWrapper {
 /// Wraps a [`PipelineEstimator`] to implement [`PipelineStep`].
 ///
 /// Created by [`as_estimator_step`].
-pub struct EstimatorStepWrapper(Box<dyn PipelineEstimator>);
+pub struct EstimatorStepWrapper<F: Float + Send + Sync + 'static>(
+    Box<dyn PipelineEstimator<F>>,
+);
 
-impl PipelineStep for EstimatorStepWrapper {
-    fn add_to_pipeline(self: Box<Self>, pipeline: Pipeline, name: &str) -> Pipeline {
+impl<F: Float + Send + Sync + 'static> PipelineStep<F> for EstimatorStepWrapper<F> {
+    fn add_to_pipeline(self: Box<Self>, pipeline: Pipeline<F>, name: &str) -> Pipeline<F> {
         pipeline.estimator_step(name, self.0)
     }
 }
@@ -374,10 +389,12 @@ impl PipelineStep for EstimatorStepWrapper {
 ///
 /// ```
 /// use ferrolearn_core::pipeline::{Pipeline, as_transform_step};
-/// // Assuming `my_scaler` implements PipelineTransformer:
+/// // Assuming `my_scaler` implements PipelineTransformer<f64>:
 /// // let pipeline = Pipeline::new().step("scaler", as_transform_step(my_scaler));
 /// ```
-pub fn as_transform_step(t: impl PipelineTransformer + 'static) -> Box<dyn PipelineStep> {
+pub fn as_transform_step<F: Float + Send + Sync + 'static>(
+    t: impl PipelineTransformer<F> + 'static,
+) -> Box<dyn PipelineStep<F>> {
     Box::new(TransformerStepWrapper(Box::new(t)))
 }
 
@@ -388,10 +405,12 @@ pub fn as_transform_step(t: impl PipelineTransformer + 'static) -> Box<dyn Pipel
 ///
 /// ```
 /// use ferrolearn_core::pipeline::{Pipeline, as_estimator_step};
-/// // Assuming `my_model` implements PipelineEstimator:
+/// // Assuming `my_model` implements PipelineEstimator<f64>:
 /// // let pipeline = Pipeline::new().step("model", as_estimator_step(my_model));
 /// ```
-pub fn as_estimator_step(e: impl PipelineEstimator + 'static) -> Box<dyn PipelineStep> {
+pub fn as_estimator_step<F: Float + Send + Sync + 'static>(
+    e: impl PipelineEstimator<F> + 'static,
+) -> Box<dyn PipelineStep<F>> {
     Box::new(EstimatorStepWrapper(Box::new(e)))
 }
 
@@ -408,19 +427,19 @@ mod tests {
     /// A trivial transformer that doubles all values.
     struct DoublingTransformer;
 
-    impl PipelineTransformer for DoublingTransformer {
+    impl PipelineTransformer<f64> for DoublingTransformer {
         fn fit_pipeline(
             &self,
             _x: &Array2<f64>,
             _y: &Array1<f64>,
-        ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+        ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
             Ok(Box::new(FittedDoublingTransformer))
         }
     }
 
     struct FittedDoublingTransformer;
 
-    impl FittedPipelineTransformer for FittedDoublingTransformer {
+    impl FittedPipelineTransformer<f64> for FittedDoublingTransformer {
         fn transform_pipeline(&self, x: &Array2<f64>) -> Result<Array2<f64>, FerroError> {
             Ok(x.mapv(|v| v * 2.0))
         }
@@ -429,21 +448,66 @@ mod tests {
     /// A trivial estimator that sums each row.
     struct SumEstimator;
 
-    impl PipelineEstimator for SumEstimator {
+    impl PipelineEstimator<f64> for SumEstimator {
         fn fit_pipeline(
             &self,
             _x: &Array2<f64>,
             _y: &Array1<f64>,
-        ) -> Result<Box<dyn FittedPipelineEstimator>, FerroError> {
+        ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
             Ok(Box::new(FittedSumEstimator))
         }
     }
 
     struct FittedSumEstimator;
 
-    impl FittedPipelineEstimator for FittedSumEstimator {
+    impl FittedPipelineEstimator<f64> for FittedSumEstimator {
         fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
             let sums: Vec<f64> = x.rows().into_iter().map(|row| row.sum()).collect();
+            Ok(Array1::from_vec(sums))
+        }
+    }
+
+    // -- f32 test fixtures ---------------------------------------------------
+
+    /// A trivial f32 transformer that doubles all values.
+    struct DoublingTransformerF32;
+
+    impl PipelineTransformer<f32> for DoublingTransformerF32 {
+        fn fit_pipeline(
+            &self,
+            _x: &Array2<f32>,
+            _y: &Array1<f32>,
+        ) -> Result<Box<dyn FittedPipelineTransformer<f32>>, FerroError> {
+            Ok(Box::new(FittedDoublingTransformerF32))
+        }
+    }
+
+    struct FittedDoublingTransformerF32;
+
+    impl FittedPipelineTransformer<f32> for FittedDoublingTransformerF32 {
+        fn transform_pipeline(&self, x: &Array2<f32>) -> Result<Array2<f32>, FerroError> {
+            Ok(x.mapv(|v| v * 2.0))
+        }
+    }
+
+    /// A trivial f32 estimator that sums each row.
+    struct SumEstimatorF32;
+
+    impl PipelineEstimator<f32> for SumEstimatorF32 {
+        fn fit_pipeline(
+            &self,
+            _x: &Array2<f32>,
+            _y: &Array1<f32>,
+        ) -> Result<Box<dyn FittedPipelineEstimator<f32>>, FerroError> {
+            Ok(Box::new(FittedSumEstimatorF32))
+        }
+    }
+
+    struct FittedSumEstimatorF32;
+
+    impl FittedPipelineEstimator<f32> for FittedSumEstimatorF32 {
+        fn predict_pipeline(&self, x: &Array2<f32>) -> Result<Array1<f32>, FerroError> {
+            let sums: Vec<f32> = x.rows().into_iter().map(|row| row.sum()).collect();
             Ok(Array1::from_vec(sums))
         }
     }
@@ -469,6 +533,24 @@ mod tests {
     }
 
     #[test]
+    fn test_pipeline_f32_fit_predict() {
+        let pipeline = Pipeline::<f32>::new()
+            .transform_step("doubler", Box::new(DoublingTransformerF32))
+            .estimator_step("sum", Box::new(SumEstimatorF32));
+
+        let x =
+            Array2::from_shape_vec((2, 3), vec![1.0f32, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+        let y = Array1::from_vec(vec![0.0f32, 1.0]);
+
+        let fitted = pipeline.fit(&x, &y).unwrap();
+        let preds = fitted.predict(&x).unwrap();
+
+        assert_eq!(preds.len(), 2);
+        assert!((preds[0] - 12.0).abs() < 1e-5);
+        assert!((preds[1] - 30.0).abs() < 1e-5);
+    }
+
+    #[test]
     fn test_pipeline_step_builder() {
         let pipeline = Pipeline::new()
             .step("doubler", as_transform_step(DoublingTransformer))
@@ -486,7 +568,8 @@ mod tests {
 
     #[test]
     fn test_pipeline_no_estimator_returns_error() {
-        let pipeline = Pipeline::new().transform_step("doubler", Box::new(DoublingTransformer));
+        let pipeline =
+            Pipeline::new().transform_step("doubler", Box::new(DoublingTransformer));
 
         let x = Array2::<f64>::zeros((2, 3));
         let y = Array1::from_vec(vec![0.0, 1.0]);
@@ -545,7 +628,7 @@ mod tests {
 
     #[test]
     fn test_pipeline_default() {
-        let pipeline = Pipeline::default();
+        let pipeline = Pipeline::<f64>::default();
         let x = Array2::<f64>::zeros((2, 3));
         let y = Array1::from_vec(vec![0.0, 1.0]);
         // Should error because no estimator.
@@ -557,7 +640,9 @@ mod tests {
         fn assert_send_sync<T: Send + Sync>() {}
         // Pipeline itself is Send+Sync because it only stores
         // Send+Sync trait objects.
-        assert_send_sync::<Pipeline>();
-        assert_send_sync::<FittedPipeline>();
+        assert_send_sync::<Pipeline<f64>>();
+        assert_send_sync::<Pipeline<f32>>();
+        assert_send_sync::<FittedPipeline<f64>>();
+        assert_send_sync::<FittedPipeline<f32>>();
     }
 }

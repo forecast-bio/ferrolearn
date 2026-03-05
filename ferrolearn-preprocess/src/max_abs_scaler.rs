@@ -222,7 +222,7 @@ impl<F: Float + Send + Sync + 'static> FitTransform<Array2<F>> for MaxAbsScaler<
 // Pipeline integration (f64 specialisation)
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer for MaxAbsScaler<f64> {
+impl PipelineTransformer<f64> for MaxAbsScaler<f64> {
     /// Fit the scaler using the pipeline interface.
     ///
     /// The `y` argument is ignored; it exists only for API compatibility.
@@ -234,13 +234,13 @@ impl PipelineTransformer for MaxAbsScaler<f64> {
         &self,
         x: &Array2<f64>,
         _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer>, FerroError> {
+    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
         let fitted = self.fit(x, &())?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineTransformer for FittedMaxAbsScaler<f64> {
+impl FittedPipelineTransformer<f64> for FittedMaxAbsScaler<f64> {
     /// Transform data using the pipeline interface.
     ///
     /// # Errors
