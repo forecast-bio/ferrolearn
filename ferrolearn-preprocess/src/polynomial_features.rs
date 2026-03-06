@@ -205,10 +205,10 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for PolynomialFeatur
 }
 
 // ---------------------------------------------------------------------------
-// Pipeline integration (f64 specialisation)
+// Pipeline integration (generic)
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer<f64> for PolynomialFeatures<f64> {
+impl<F: Float + Send + Sync + 'static> PipelineTransformer<F> for PolynomialFeatures<F> {
     /// Fit the polynomial features transformer using the pipeline interface.
     ///
     /// Because `PolynomialFeatures` is stateless, this simply boxes `self`
@@ -219,20 +219,20 @@ impl PipelineTransformer<f64> for PolynomialFeatures<f64> {
     /// This implementation never returns an error.
     fn fit_pipeline(
         &self,
-        _x: &Array2<f64>,
-        _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
+        _x: &Array2<F>,
+        _y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineTransformer<F>>, FerroError> {
         Ok(Box::new(self.clone()))
     }
 }
 
-impl FittedPipelineTransformer<f64> for PolynomialFeatures<f64> {
+impl<F: Float + Send + Sync + 'static> FittedPipelineTransformer<F> for PolynomialFeatures<F> {
     /// Transform data using the pipeline interface.
     ///
     /// # Errors
     ///
     /// Propagates errors from [`Transform::transform`].
-    fn transform_pipeline(&self, x: &Array2<f64>) -> Result<Array2<f64>, FerroError> {
+    fn transform_pipeline(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
         self.transform(x)
     }
 }

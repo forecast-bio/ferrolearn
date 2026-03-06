@@ -45,7 +45,7 @@ use ferrolearn_core::introspection::HasCoefficients;
 use ferrolearn_core::pipeline::{FittedPipelineEstimator, PipelineEstimator};
 use ferrolearn_core::traits::{Fit, PartialFit, Predict};
 use ndarray::{Array1, Array2, ScalarOperand};
-use num_traits::Float;
+use num_traits::{Float, FromPrimitive, ToPrimitive};
 use rand::SeedableRng;
 use rand::seq::SliceRandom;
 
@@ -987,30 +987,38 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> HasCoefficients<F>
     }
 }
 
-// Pipeline integration for f64.
-impl PipelineEstimator<f64> for SGDClassifier<f64> {
+// Pipeline integration.
+impl<F> PipelineEstimator<F> for SGDClassifier<F>
+where
+    F: Float + ToPrimitive + FromPrimitive + ScalarOperand + Send + Sync + 'static,
+{
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
-        let y_usize: Array1<usize> = y.mapv(|v| v as usize);
+        x: &Array2<F>,
+        y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineEstimator<F>>, FerroError> {
+        let y_usize: Array1<usize> = y.mapv(|v| v.to_usize().unwrap_or(0));
         let fitted = self.fit(x, &y_usize)?;
         Ok(Box::new(FittedSGDClassifierPipeline(fitted)))
     }
 }
 
-/// Wrapper for pipeline integration that converts predictions to f64.
-struct FittedSGDClassifierPipeline(FittedSGDClassifier<f64>);
+/// Wrapper for pipeline integration that converts predictions to float.
+struct FittedSGDClassifierPipeline<F>(FittedSGDClassifier<F>)
+where
+    F: Float + Send + Sync + 'static;
 
 // Safety: inner type fields are Send + Sync.
-unsafe impl Send for FittedSGDClassifierPipeline {}
-unsafe impl Sync for FittedSGDClassifierPipeline {}
+unsafe impl<F> Send for FittedSGDClassifierPipeline<F> where F: Float + Send + Sync + 'static {}
+unsafe impl<F> Sync for FittedSGDClassifierPipeline<F> where F: Float + Send + Sync + 'static {}
 
-impl FittedPipelineEstimator<f64> for FittedSGDClassifierPipeline {
-    fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
+impl<F> FittedPipelineEstimator<F> for FittedSGDClassifierPipeline<F>
+where
+    F: Float + ToPrimitive + FromPrimitive + ScalarOperand + Send + Sync + 'static,
+{
+    fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| v as f64))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
     }
 }
 
@@ -1500,20 +1508,26 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> HasCoefficients<F>
     }
 }
 
-// Pipeline integration for f64.
-impl PipelineEstimator<f64> for SGDRegressor<f64> {
+// Pipeline integration.
+impl<F> PipelineEstimator<F> for SGDRegressor<F>
+where
+    F: Float + ScalarOperand + Send + Sync + 'static,
+{
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
+        x: &Array2<F>,
+        y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineEstimator<F>>, FerroError> {
         let fitted = self.fit(x, y)?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineEstimator<f64> for FittedSGDRegressor<f64> {
-    fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
+impl<F> FittedPipelineEstimator<F> for FittedSGDRegressor<F>
+where
+    F: Float + ScalarOperand + Send + Sync + 'static,
+{
+    fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         self.predict(x)
     }
 }

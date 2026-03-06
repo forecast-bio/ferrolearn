@@ -488,8 +488,11 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> HasCoefficients<F>
     }
 }
 
-// Pipeline integration for f64.
-impl PipelineEstimator<f64> for BayesianRidge<f64> {
+// Pipeline integration.
+impl<F> PipelineEstimator<F> for BayesianRidge<F>
+where
+    F: Float + FromPrimitive + ScalarOperand + Send + Sync + 'static,
+{
     /// Fit the model and return it as a boxed pipeline estimator.
     ///
     /// # Errors
@@ -497,21 +500,24 @@ impl PipelineEstimator<f64> for BayesianRidge<f64> {
     /// Propagates any [`FerroError`] from `fit`.
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
+        x: &Array2<F>,
+        y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineEstimator<F>>, FerroError> {
         let fitted = self.fit(x, y)?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineEstimator<f64> for FittedBayesianRidge<f64> {
+impl<F> FittedPipelineEstimator<F> for FittedBayesianRidge<F>
+where
+    F: Float + ScalarOperand + Send + Sync + 'static,
+{
     /// Generate predictions via the pipeline interface.
     ///
     /// # Errors
     ///
     /// Propagates any [`FerroError`] from `predict`.
-    fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
+    fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         self.predict(x)
     }
 }

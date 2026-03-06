@@ -38,7 +38,7 @@ use ferrolearn_core::error::FerroError;
 use ferrolearn_core::pipeline::{FittedPipelineEstimator, PipelineEstimator};
 use ferrolearn_core::traits::{Fit, Predict, Transform};
 use ndarray::{Array1, Array2};
-use num_traits::Float;
+use num_traits::{Float, NumCast};
 
 // ---------------------------------------------------------------------------
 // LDA (unfitted)
@@ -578,10 +578,10 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedLDA<F> {
 }
 
 // ---------------------------------------------------------------------------
-// Pipeline integration (f64 specialisation)
+// Pipeline integration (generic)
 // ---------------------------------------------------------------------------
 
-impl PipelineEstimator<f64> for LDA<f64> {
+impl<F: Float + Send + Sync + 'static> PipelineEstimator<F> for LDA<F> {
     /// Fit LDA using the pipeline interface.
     ///
     /// # Errors
@@ -589,27 +589,23 @@ impl PipelineEstimator<f64> for LDA<f64> {
     /// Propagates errors from [`Fit::fit`].
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineEstimator<f64>>, FerroError> {
-        let y_usize: Array1<usize> = y.mapv(|v| v as usize);
+        x: &Array2<F>,
+        y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineEstimator<F>>, FerroError> {
+        let y_usize: Array1<usize> = y.mapv(|v| v.to_usize().unwrap_or(0));
         let fitted = self.fit(x, &y_usize)?;
         Ok(Box::new(FittedLDAPipeline(fitted)))
     }
 }
 
-/// Wrapper for pipeline integration that converts predictions to `f64`.
-struct FittedLDAPipeline(FittedLDA<f64>);
+/// Wrapper for pipeline integration that converts predictions to float.
+struct FittedLDAPipeline<F>(FittedLDA<F>);
 
-// Safety: the inner type is Send + Sync.
-unsafe impl Send for FittedLDAPipeline {}
-unsafe impl Sync for FittedLDAPipeline {}
-
-impl FittedPipelineEstimator<f64> for FittedLDAPipeline {
-    /// Predict via the pipeline interface, returning `f64` class labels.
-    fn predict_pipeline(&self, x: &Array2<f64>) -> Result<Array1<f64>, FerroError> {
+impl<F: Float + Send + Sync + 'static> FittedPipelineEstimator<F> for FittedLDAPipeline<F> {
+    /// Predict via the pipeline interface, returning float class labels.
+    fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| v as f64))
+        Ok(preds.mapv(|v| NumCast::from(v).unwrap_or(F::nan())))
     }
 }
 

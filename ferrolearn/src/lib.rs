@@ -48,11 +48,11 @@ pub use ferrolearn_core::{
 /// use ferrolearn::prelude::*;
 /// ```
 pub mod prelude {
+    pub use ferrolearn_core::introspection::{HasClasses, HasCoefficients, HasFeatureImportances};
     pub use ferrolearn_core::pipeline::Pipeline;
+    pub use ferrolearn_core::streaming::StreamingFitter;
     pub use ferrolearn_core::{
         Backend, Dataset, DefaultBackend, FerroError, FerroResult, Fit, FitTransform, PartialFit,
         Predict, Transform,
     };
-    pub use ferrolearn_core::introspection::{HasClasses, HasCoefficients, HasFeatureImportances};
-    pub use ferrolearn_core::streaming::StreamingFitter;
 }

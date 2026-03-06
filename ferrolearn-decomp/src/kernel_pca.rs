@@ -597,10 +597,10 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedKernelPCA<
 }
 
 // ---------------------------------------------------------------------------
-// Pipeline integration (f64 specialisation)
+// Pipeline integration (generic)
 // ---------------------------------------------------------------------------
 
-impl PipelineTransformer<f64> for KernelPCA<f64> {
+impl<F: Float + Send + Sync + 'static> PipelineTransformer<F> for KernelPCA<F> {
     /// Fit KernelPCA using the pipeline interface.
     ///
     /// The `y` argument is ignored; Kernel PCA is unsupervised.
@@ -610,21 +610,21 @@ impl PipelineTransformer<f64> for KernelPCA<f64> {
     /// Propagates errors from [`Fit::fit`].
     fn fit_pipeline(
         &self,
-        x: &Array2<f64>,
-        _y: &Array1<f64>,
-    ) -> Result<Box<dyn FittedPipelineTransformer<f64>>, FerroError> {
+        x: &Array2<F>,
+        _y: &Array1<F>,
+    ) -> Result<Box<dyn FittedPipelineTransformer<F>>, FerroError> {
         let fitted = self.fit(x, &())?;
         Ok(Box::new(fitted))
     }
 }
 
-impl FittedPipelineTransformer<f64> for FittedKernelPCA<f64> {
+impl<F: Float + Send + Sync + 'static> FittedPipelineTransformer<F> for FittedKernelPCA<F> {
     /// Transform data using the pipeline interface.
     ///
     /// # Errors
     ///
     /// Propagates errors from [`Transform::transform`].
-    fn transform_pipeline(&self, x: &Array2<f64>) -> Result<Array2<f64>, FerroError> {
+    fn transform_pipeline(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
         self.transform(x)
     }
 }
