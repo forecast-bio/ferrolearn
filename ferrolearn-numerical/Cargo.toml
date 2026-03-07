@@ -1,0 +1,24 @@
+[package]
+name = "ferrolearn-numerical"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Numerical foundations for the ferrolearn ML framework: sparse eigensolvers, graph algorithms, distributions, optimization, interpolation, and quadrature"
+readme = "README.md"
+keywords = ["numerical", "eigenvalue", "optimization", "statistics", "machine-learning"]
+categories = ["science", "mathematics", "algorithms"]
+
+[dependencies]
+ndarray.workspace = true
+num-traits.workspace = true
+thiserror.workspace = true
+sprs.workspace = true
+rand.workspace = true
+rand_distr.workspace = true
+statrs.workspace = true
+
+[dev-dependencies]
+approx.workspace = true
+rand_xoshiro.workspace = true

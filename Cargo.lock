@@ -681,9 +681,11 @@ dependencies = [
  "ferrolearn-linear",
  "ferrolearn-metrics",
  "ferrolearn-neighbors",
+ "ferrolearn-numerical",
  "ferrolearn-preprocess",
  "ferrolearn-tree",
  "ndarray",
+ "sprs",
 ]
 
 [[package]]
@@ -838,6 +840,21 @@ dependencies = [
  "rand 0.9.2",
  "rayon",
  "serde_json",
+]
+
+[[package]]
+name = "ferrolearn-numerical"
+version = "0.1.0"
+dependencies = [
+ "approx 0.5.1",
+ "ndarray",
+ "num-traits",
+ "rand 0.9.2",
+ "rand_distr 0.5.1",
+ "rand_xoshiro",
+ "sprs",
+ "statrs",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

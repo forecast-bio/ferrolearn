@@ -17,7 +17,9 @@ ferrolearn-preprocess.workspace = true
 ferrolearn-metrics.workspace = true
 ferrolearn-datasets.workspace = true
 ferrolearn-kernel.workspace = true
+ferrolearn-numerical.workspace = true
 ndarray.workspace = true
+sprs.workspace = true
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
@@ -44,4 +46,8 @@ harness = false
 
 [[bench]]
 name = "kernel_regression"
+harness = false
+
+[[bench]]
+name = "numerical"
 harness = false
