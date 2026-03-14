@@ -6,8 +6,17 @@
   "priority": "medium",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-14T18:40:08.231628327Z",
-  "updated_at": "2026-03-14T18:40:09.921736975Z",
+  "updated_at": "2026-03-14T18:40:17.962632145Z",
   "labels": [
     "enhancement"
+  ],
+  "comments": [
+    {
+      "id": 5,
+      "author": "anon-2101b8a8",
+      "content": "Updating BENCHMARKS.md with fresh numbers, bumping crate versions for ferrolearn-cluster, ferrolearn-preprocess, ferrolearn-model-sel, ferrolearn-numerical, then committing everything.",
+      "created_at": "2026-03-14T18:40:17.962631426Z",
+      "kind": "plan"
+    }
   ]
 }
