@@ -44,7 +44,7 @@ use ferrolearn_core::traits::Fit;
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use std::cmp::Ordering;
-use std::collections::BinaryHeap;
+use std::collections::{BinaryHeap, HashMap};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper: ordered float wrapper for the priority queue
@@ -99,18 +99,23 @@ pub struct OPTICS<F> {
     /// Xi steep-point threshold used by [`FittedOPTICS::extract_clusters`].
     /// A value in `(0, 1)`.  Defaults to `0.05`.
     pub xi: F,
+    /// Minimum number of points required for a cluster to be kept.
+    /// Clusters smaller than this are relabelled as noise (`-1`).
+    /// Defaults to `None`, meaning use `min_samples`.
+    pub min_cluster_size: Option<usize>,
 }
 
 impl<F: Float> OPTICS<F> {
     /// Create a new `OPTICS` with the given `min_samples`.
     ///
-    /// Defaults: `max_eps = F::infinity()`, `xi = 0.05`.
+    /// Defaults: `max_eps = F::infinity()`, `xi = 0.05`, `min_cluster_size = None`.
     #[must_use]
     pub fn new(min_samples: usize) -> Self {
         Self {
             min_samples,
             max_eps: F::infinity(),
             xi: F::from(0.05).unwrap_or_else(|| F::from(5e-2).unwrap()),
+            min_cluster_size: None,
         }
     }
 
@@ -129,6 +134,17 @@ impl<F: Float> OPTICS<F> {
         self.xi = xi;
         self
     }
+
+    /// Set the minimum cluster size.
+    ///
+    /// Clusters with fewer than `min_cluster_size` points are relabelled as
+    /// noise (`-1`).  When `None` (the default), `min_samples` is used as
+    /// the minimum cluster size, matching scikit-learn's default behaviour.
+    #[must_use]
+    pub fn with_min_cluster_size(mut self, size: usize) -> Self {
+        self.min_cluster_size = Some(size);
+        self
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -138,7 +154,7 @@ impl<F: Float> OPTICS<F> {
 /// Fitted OPTICS model.
 ///
 /// Stores the reachability ordering, reachability distances, core distances,
-/// and cluster labels (extracted via the Xi method).
+/// predecessor tracking, and cluster labels (extracted via the Xi method).
 ///
 /// OPTICS does **not** implement [`Predict`](ferrolearn_core::Predict).
 #[derive(Debug, Clone)]
@@ -155,6 +171,12 @@ pub struct FittedOPTICS<F> {
     /// Cluster label for each training sample (0-indexed for clusters; `-1`
     /// for noise).  Extracted using the Xi method.
     labels_: Array1<isize>,
+    /// Predecessor for each point in the OPTICS ordering.
+    /// `predecessors_[i] = Some(j)` means point `i` was reached from point `j`.
+    /// The first point in each connected component has `None`.
+    predecessors_: Vec<Option<usize>>,
+    /// The `min_samples` value used during fitting (needed for Xi extraction).
+    min_samples_: usize,
 }
 
 impl<F: Float> FittedOPTICS<F> {
@@ -182,6 +204,16 @@ impl<F: Float> FittedOPTICS<F> {
     #[must_use]
     pub fn labels(&self) -> &Array1<isize> {
         &self.labels_
+    }
+
+    /// Return the predecessors for each point.
+    ///
+    /// `predecessors()[i] = Some(j)` means point `i` was reached from point `j`
+    /// during the OPTICS ordering phase. The first point in each connected
+    /// component has `None`.
+    #[must_use]
+    pub fn predecessors(&self) -> &[Option<usize>] {
+        &self.predecessors_
     }
 
     /// Return the number of clusters found (excluding noise).
@@ -217,7 +249,9 @@ impl<F: Float> FittedOPTICS<F> {
         Ok(xi_cluster_extraction(
             &self.ordering_,
             &self.reachability_,
+            &self.predecessors_,
             xi,
+            self.min_samples_,
         ))
     }
 }
@@ -296,17 +330,22 @@ fn core_distance<F: Float>(x: &Array2<F>, idx: usize, max_eps: F, min_samples: u
     }
 }
 
-/// Update the seed list with neighbours that have improved reachability.
+/// Update the seed list with neighbours that have improved reachability,
+/// and track predecessors.
 ///
 /// For each unprocessed neighbour `q`, the new reachability distance is
 /// `max(core_dist_p, dist(p, q))`.  If this improves the current value, the
-/// seed list is updated.
+/// seed list is updated and `current_point` is recorded as the predecessor
+/// of `q`.
+#[allow(clippy::too_many_arguments)]
 fn update_seeds<F: Float>(
     core_dist_p: F,
+    current_point: usize,
     neighbors: &[usize],
     neighbor_dists: &[F],
     processed: &[bool],
     reachability: &mut Array1<F>,
+    predecessors: &mut [Option<usize>],
     seeds: &mut BinaryHeap<SeedEntry<F>>,
 ) {
     for (i, &q) in neighbors.iter().enumerate() {
@@ -320,6 +359,7 @@ fn update_seeds<F: Float>(
         };
         if new_reach < reachability[q] {
             reachability[q] = new_reach;
+            predecessors[q] = Some(current_point);
             seeds.push(SeedEntry {
                 reach_dist: new_reach,
                 idx: q,
@@ -328,17 +368,94 @@ fn update_seeds<F: Float>(
     }
 }
 
+/// A steep-down area (SDA) tracked during Xi extraction.
+#[derive(Debug, Clone)]
+struct SteepDownArea {
+    start: usize,
+    end: usize,
+    mib: f64,
+}
+
+/// Extend a steep region (downward or upward) maximally.
+///
+/// `steep_point[i]` is true if position `i` is steep in the primary direction.
+/// `xward_point[i]` is true if the reachability is moving in the *opposite*
+/// direction.  We allow up to `min_samples` consecutive non-steep positions
+/// that are still going in the correct direction.
+fn extend_region(
+    steep_point: &[bool],
+    xward_point: &[bool],
+    start: usize,
+    min_samples: usize,
+) -> usize {
+    let n = steep_point.len();
+    let mut non_xward_points = 0usize;
+    let mut index = start;
+    let mut end = start;
+
+    while index < n {
+        if steep_point[index] {
+            non_xward_points = 0;
+            end = index;
+        } else if !xward_point[index] {
+            // Not steep, but still going in the right direction.
+            non_xward_points += 1;
+            if non_xward_points > min_samples {
+                break;
+            }
+        } else {
+            // Going the wrong direction — stop.
+            return end;
+        }
+        index += 1;
+    }
+    end
+}
+
+/// Predecessor correction (Algorithm 2 of Schubert & Gertz 2018).
+///
+/// Returns `Some((c_start, c_end))` if the corrected cluster is valid,
+/// or `None` if predecessor correction eliminates it.
+fn correct_predecessor(
+    r_plot: &[f64],
+    pred_plot: &[Option<usize>],
+    ordering: &[usize],
+    mut s: usize,
+    mut e: usize,
+) -> Option<(usize, usize)> {
+    while s < e {
+        if r_plot[s] > r_plot[e] {
+            return Some((s, e));
+        }
+        let p_e = pred_plot[ordering[e]];
+        for i in s..e {
+            if p_e == Some(ordering[i]) {
+                return Some((s, e));
+            }
+        }
+        e -= 1;
+    }
+    None
+}
+
 /// Xi-method cluster extraction from the reachability plot.
 ///
-/// This is a simplified implementation:
-/// - Find steep-down points (reachability drops by >= xi factor).
-/// - Find steep-up points (reachability rises by >= xi factor).
-/// - Match them to form clusters.
-/// - Points not covered by any cluster are noise (-1).
+/// Implements Figure 19 of the OPTICS paper (Ankerst et al., 1999) with
+/// corrections from Schubert & Gertz (2018).  This matches sklearn's
+/// `cluster_optics_xi` implementation.
+///
+/// The algorithm:
+/// 1. Builds steep-up/steep-down boolean arrays from the reachability plot.
+/// 2. Iterates through steep points, extending them into *areas*.
+/// 3. Maintains a stack of steep-down areas (SDAs) with max-in-between (MIB).
+/// 4. When encountering a steep-up area, attempts to match it with each SDA.
+/// 5. Applies boundary correction and predecessor correction per cluster.
 fn xi_cluster_extraction<F: Float>(
     ordering: &[usize],
     reachability: &Array1<F>,
+    predecessors: &[Option<usize>],
     xi: F,
+    min_samples: usize,
 ) -> Array1<isize> {
     let n_ordered = ordering.len();
     let n_total = reachability.len();
@@ -347,77 +464,289 @@ fn xi_cluster_extraction<F: Float>(
         return Array1::from_elem(n_total, -1isize);
     }
 
-    // Build a reachability vector in ordering order, replacing infinity with
-    // a sentinel large value for easier comparison.
-    // We use the maximum finite reachability as our "infinity" sentinel.
-    let max_finite = reachability
-        .iter()
-        .filter(|v| v.is_finite())
-        .cloned()
-        .fold(F::zero(), |acc, v| if v > acc { v } else { acc });
-
-    let r_ord: Vec<F> = ordering
+    // Build the reachability plot in ordering order (as f64 for simplicity).
+    // Append +inf sentinel at the end (helps detect clusters at the tail).
+    let mut r_plot: Vec<f64> = ordering
         .iter()
         .map(|&i| {
             let v = reachability[i];
             if v.is_finite() {
-                v
+                v.to_f64().unwrap_or(f64::INFINITY)
             } else {
-                max_finite + F::one()
+                f64::INFINITY
             }
         })
         .collect();
+    r_plot.push(f64::INFINITY);
 
-    // Identify steep-down and steep-up positions.
-    // A position i is steep-down if r_ord[i+1] <= (1 - xi) * r_ord[i].
-    // A position i is steep-up   if r_ord[i]   <= (1 - xi) * r_ord[i-1].
-    let one_minus_xi = F::one() - xi;
+    // Predecessor plot in ordering order.
+    let pred_plot: Vec<Option<usize>> = ordering.iter().map(|&i| predecessors[i]).collect();
 
-    let mut steep_down: Vec<usize> = Vec::new();
-    let mut steep_up: Vec<usize> = Vec::new();
+    let xi_f64 = xi.to_f64().unwrap_or(0.05);
+    let xi_complement = 1.0 - xi_f64;
+    let min_samples = min_samples.max(1);
 
-    for i in 0..(n_ordered.saturating_sub(1)) {
-        if r_ord[i] == F::zero() {
+    // Compute steep_upward, steep_downward, upward, downward arrays.
+    // ratio[i] = r_plot[i] / r_plot[i+1]
+    let n_plot = r_plot.len() - 1; // last element is the sentinel
+    let mut steep_upward = vec![false; n_plot];
+    let mut steep_downward = vec![false; n_plot];
+    let mut upward = vec![false; n_plot];
+    let mut downward = vec![false; n_plot];
+
+    for i in 0..n_plot {
+        if r_plot[i + 1] == 0.0 {
+            // Avoid division by zero; treat as downward.
+            if r_plot[i] > 0.0 {
+                steep_downward[i] = true;
+                downward[i] = true;
+            }
             continue;
         }
-        let ratio_next = r_ord[i + 1] / r_ord[i];
-        if ratio_next <= one_minus_xi {
-            steep_down.push(i);
+        let ratio = r_plot[i] / r_plot[i + 1];
+        if ratio <= xi_complement {
+            steep_upward[i] = true;
+        }
+        if ratio >= 1.0 / xi_complement {
+            steep_downward[i] = true;
+        }
+        if ratio > 1.0 {
+            downward[i] = true;
+        }
+        if ratio < 1.0 {
+            upward[i] = true;
         }
     }
-    for i in 1..n_ordered {
-        if r_ord[i - 1] == F::zero() {
+
+    // Main loop: Figure 19 of the OPTICS paper.
+    let mut sdas: Vec<SteepDownArea> = Vec::new();
+    let mut clusters: Vec<(usize, usize)> = Vec::new();
+    let mut index = 0usize;
+    let mut mib = 0.0_f64;
+
+    // Collect indices that are steep upward or steep downward.
+    let steep_indices: Vec<usize> = (0..n_plot)
+        .filter(|&i| steep_upward[i] || steep_downward[i])
+        .collect();
+
+    for &steep_index in &steep_indices {
+        if steep_index < index {
             continue;
         }
-        let ratio_prev = r_ord[i] / r_ord[i - 1];
-        // Steep up: r[i] / r[i-1] >= 1/(1-xi)
-        if ratio_prev >= F::one() / one_minus_xi {
-            steep_up.push(i);
+
+        // Update MIB with the max reachability between the last processed
+        // index and the current steep index.
+        for k in index..=steep_index {
+            if r_plot[k] > mib {
+                mib = r_plot[k];
+            }
         }
-    }
 
-    // Build cluster intervals by matching steep-down starts with steep-up ends.
-    let mut labels = Array1::from_elem(n_total, -1isize);
-    let mut cluster_id: isize = 0;
+        if steep_downward[steep_index] {
+            // --- Steep downward area ---
+            // Filter existing SDAs whose start reachability * xi_complement < mib.
+            sdas = update_filter_sdas(sdas, mib, xi_complement, &r_plot);
 
-    for &sd in &steep_down {
-        // Look for the nearest steep-up point that comes after sd.
-        if let Some(&su) = steep_up.iter().find(|&&su| su > sd) {
-            // The cluster spans ordering positions [sd, su].
-            let start = sd;
-            let end = su;
-            if end > start {
-                for &pt in ordering[start..=end].iter() {
-                    if labels[pt] == -1 {
-                        labels[pt] = cluster_id;
+            let d_start = steep_index;
+            let d_end = extend_region(&steep_downward, &upward, d_start, min_samples);
+            sdas.push(SteepDownArea {
+                start: d_start,
+                end: d_end,
+                mib: 0.0,
+            });
+            index = d_end + 1;
+            if index < r_plot.len() {
+                mib = r_plot[index];
+            }
+        } else {
+            // --- Steep upward area ---
+            sdas = update_filter_sdas(sdas, mib, xi_complement, &r_plot);
+
+            let u_start = steep_index;
+            let u_end = extend_region(&steep_upward, &downward, u_start, min_samples);
+            index = u_end + 1;
+            if index < r_plot.len() {
+                mib = r_plot[index];
+            }
+
+            // Try to form clusters by matching this upward area with each SDA.
+            let mut u_clusters: Vec<(usize, usize)> = Vec::new();
+            for sda in &sdas {
+                let mut c_start = sda.start;
+                let c_end_initial = u_end;
+
+                // Line (**), sc2*: skip if the point after the cluster end
+                // times xi_complement is less than the SDA's MIB.
+                let r_after = if c_end_initial + 1 < r_plot.len() {
+                    r_plot[c_end_initial + 1]
+                } else {
+                    f64::INFINITY
+                };
+                if r_after * xi_complement < sda.mib {
+                    continue;
+                }
+
+                // Definition 11, criterion 4: boundary correction.
+                let d_max = r_plot[sda.start];
+                let mut c_end = c_end_initial;
+
+                if d_max * xi_complement >= r_after {
+                    // Adjust start: find the first index from the left
+                    // at a similar level as the end.
+                    while c_start < sda.end
+                        && c_start + 1 < r_plot.len()
+                        && r_plot[c_start + 1] > r_after
+                    {
+                        c_start += 1;
+                    }
+                } else if r_after * xi_complement >= d_max {
+                    // Adjust end: find the first index from the right
+                    // at a similar level as the start.
+                    while c_end > u_start && c_end > 0 && r_plot[c_end - 1] > d_max {
+                        c_end -= 1;
                     }
                 }
-                cluster_id += 1;
+
+                // Predecessor correction.
+                if let Some((cs, ce)) =
+                    correct_predecessor(&r_plot, &pred_plot, ordering, c_start, c_end)
+                {
+                    c_start = cs;
+                    c_end = ce;
+                } else {
+                    continue;
+                }
+
+                // Definition 11, criterion 3a: minimum size (checked later
+                // by filter_small_clusters, but we can skip tiny ones here).
+                if c_end < c_start + 1 {
+                    continue;
+                }
+
+                // Definition 11, criterion 1: c_start must be within the SDA.
+                if c_start > sda.end {
+                    continue;
+                }
+
+                // Definition 11, criterion 2: c_end must be within the SUA.
+                if c_end < u_start {
+                    continue;
+                }
+
+                u_clusters.push((c_start, c_end));
+            }
+
+            // Add smaller clusters first (so larger encompassing clusters
+            // come after when we process them).
+            u_clusters.reverse();
+            clusters.extend(u_clusters);
+        }
+    }
+
+    // Convert cluster intervals to labels.
+    // Clusters are ordered with smaller (leaf) clusters before larger
+    // encompassing ones.  A cluster interval is assigned a label ONLY if
+    // all positions in [c_start, c_end] are currently unassigned (-1).
+    // This selects the leaf-level clusters from the hierarchy.
+    //
+    // Labels are initially in ordering-space; we remap to point-space at the
+    // end.
+    let mut ord_labels = vec![-1isize; n_ordered];
+    let mut label = 0isize;
+    for &(c_start, c_end) in &clusters {
+        let end = c_end.min(n_ordered - 1);
+        // Only assign if the entire interval is unassigned.
+        let all_unassigned = (c_start..=end).all(|pos| ord_labels[pos] == -1);
+        if all_unassigned {
+            for pos in c_start..=end {
+                ord_labels[pos] = label;
+            }
+            label += 1;
+        }
+    }
+
+    // Remap from ordering-space labels to point-space labels.
+    let mut labels = Array1::from_elem(n_total, -1isize);
+    for (ord_pos, &pt) in ordering.iter().enumerate() {
+        labels[pt] = ord_labels[ord_pos];
+    }
+
+    labels
+}
+
+/// Update and filter steep-down areas based on maximum-in-between (MIB).
+///
+/// Removes SDAs whose start reachability * xi_complement is less than the
+/// current MIB.  Updates the MIB of surviving SDAs.
+fn update_filter_sdas(
+    sdas: Vec<SteepDownArea>,
+    mib: f64,
+    xi_complement: f64,
+    r_plot: &[f64],
+) -> Vec<SteepDownArea> {
+    if mib.is_infinite() {
+        return Vec::new();
+    }
+    let mut result: Vec<SteepDownArea> = sdas
+        .into_iter()
+        .filter(|sda| mib <= r_plot[sda.start] * xi_complement)
+        .collect();
+    for sda in &mut result {
+        if mib > sda.mib {
+            sda.mib = mib;
+        }
+    }
+    result
+}
+
+/// Filter small clusters and renumber labels to be contiguous.
+///
+/// Clusters with fewer than `min_cluster_size` points are relabelled as
+/// noise (`-1`). Remaining clusters are renumbered `0, 1, 2, ...`.
+fn filter_small_clusters(labels: &mut Array1<isize>, min_cluster_size: usize) {
+    // Count cluster sizes.
+    let mut cluster_sizes: HashMap<isize, usize> = HashMap::new();
+    for &l in labels.iter() {
+        if l >= 0 {
+            *cluster_sizes.entry(l).or_insert(0) += 1;
+        }
+    }
+
+    // Relabel small clusters as noise.
+    for label in labels.iter_mut() {
+        if *label >= 0 {
+            if let Some(&size) = cluster_sizes.get(label) {
+                if size < min_cluster_size {
+                    *label = -1;
+                }
             }
         }
     }
 
-    labels
+    // Renumber clusters to be contiguous.
+    let mut unique_labels: Vec<isize> = cluster_sizes
+        .keys()
+        .filter(|&&k| {
+            cluster_sizes
+                .get(&k)
+                .is_some_and(|&sz| sz >= min_cluster_size)
+        })
+        .copied()
+        .collect();
+    unique_labels.sort_unstable();
+
+    let mut remap: HashMap<isize, isize> = HashMap::new();
+    for (new_id, &old_id) in unique_labels.iter().enumerate() {
+        remap.insert(old_id, new_id as isize);
+    }
+
+    for label in labels.iter_mut() {
+        if *label >= 0 {
+            if let Some(&new_id) = remap.get(label) {
+                *label = new_id;
+            }
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -475,6 +804,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for OPTICS<F> {
         let mut core_distances = Array1::from_elem(n_samples, F::infinity());
         let mut processed = vec![false; n_samples];
         let mut ordering: Vec<usize> = Vec::with_capacity(n_samples);
+        let mut predecessors: Vec<Option<usize>> = vec![None; n_samples];
 
         // Pre-compute core distances.
         for i in 0..n_samples {
@@ -501,10 +831,12 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for OPTICS<F> {
             let (nbrs, nbr_dists) = get_neighbors(x, start, self.max_eps);
             update_seeds(
                 core_distances[start],
+                start,
                 &nbrs,
                 &nbr_dists,
                 &processed,
                 &mut reachability,
+                &mut predecessors,
                 &mut seeds,
             );
 
@@ -526,10 +858,12 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for OPTICS<F> {
                     let (p_nbrs, p_nbr_dists) = get_neighbors(x, p, self.max_eps);
                     update_seeds(
                         core_distances[p],
+                        p,
                         &p_nbrs,
                         &p_nbr_dists,
                         &processed,
                         &mut reachability,
+                        &mut predecessors,
                         &mut seeds,
                     );
                 }
@@ -537,13 +871,25 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for OPTICS<F> {
         }
 
         // Extract cluster labels via the Xi method.
-        let labels = xi_cluster_extraction(&ordering, &reachability, self.xi);
+        let mut labels = xi_cluster_extraction(
+            &ordering,
+            &reachability,
+            &predecessors,
+            self.xi,
+            self.min_samples,
+        );
+
+        // Apply min_cluster_size filtering.
+        let min_size = self.min_cluster_size.unwrap_or(self.min_samples);
+        filter_small_clusters(&mut labels, min_size);
 
         Ok(FittedOPTICS {
             ordering_: ordering,
             reachability_: reachability,
             core_distances_: core_distances,
             labels_: labels,
+            predecessors_: predecessors,
+            min_samples_: self.min_samples,
         })
     }
 }
@@ -763,5 +1109,60 @@ mod tests {
                 assert!(r <= max_eps + 1e-10);
             }
         }
+    }
+
+    #[test]
+    fn test_predecessors_length() {
+        let x = three_blobs();
+        let fitted = OPTICS::<f64>::new(2).fit(&x, &()).unwrap();
+        assert_eq!(fitted.predecessors().len(), 9);
+    }
+
+    #[test]
+    fn test_first_point_has_no_predecessor() {
+        let x = three_blobs();
+        let fitted = OPTICS::<f64>::new(2).fit(&x, &()).unwrap();
+        let first = fitted.ordering()[0];
+        assert!(
+            fitted.predecessors()[first].is_none(),
+            "first point in ordering should have no predecessor"
+        );
+    }
+
+    #[test]
+    fn test_min_cluster_size_filters_small_clusters() {
+        // Create data where one "cluster" is just 2 points and others are larger.
+        let x = Array2::from_shape_vec(
+            (8, 2),
+            vec![
+                0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 0.05, 0.05, // cluster of 4
+                10.0, 10.0, 10.05, 10.0, // cluster of 2
+                20.0, 20.0, 20.05, 20.0, // cluster of 2
+            ],
+        )
+        .unwrap();
+
+        let fitted = OPTICS::<f64>::new(2)
+            .with_min_cluster_size(3)
+            .fit(&x, &())
+            .unwrap();
+
+        // The small clusters (size 2) should be filtered out as noise.
+        for &l in fitted.labels().iter() {
+            if l >= 0 {
+                // Count how many points share this label.
+                let count = fitted.labels().iter().filter(|&&c| c == l).count();
+                assert!(
+                    count >= 3,
+                    "cluster with label {l} has only {count} points, expected >= 3"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_with_min_cluster_size_builder() {
+        let optics = OPTICS::<f64>::new(5).with_min_cluster_size(10);
+        assert_eq!(optics.min_cluster_size, Some(10));
     }
 }

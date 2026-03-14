@@ -1,0 +1,59 @@
+{
+  "description": "LabelEncoder fixture from scikit-learn",
+  "sklearn_version": "1.7.2",
+  "random_state": null,
+  "input": {
+    "labels": [
+      "cat",
+      "dog",
+      "bird",
+      "cat",
+      "bird",
+      "dog",
+      "dog",
+      "cat",
+      "bird",
+      "cat",
+      "dog",
+      "bird",
+      "cat",
+      "dog",
+      "bird",
+      "cat",
+      "dog",
+      "bird",
+      "cat",
+      "dog"
+    ]
+  },
+  "params": {},
+  "expected": {
+    "classes": [
+      "bird",
+      "cat",
+      "dog"
+    ],
+    "transformed": [
+      1,
+      2,
+      0,
+      1,
+      0,
+      2,
+      2,
+      1,
+      0,
+      1,
+      2,
+      0,
+      1,
+      2,
+      0,
+      1,
+      2,
+      0,
+      1,
+      2
+    ]
+  }
+}

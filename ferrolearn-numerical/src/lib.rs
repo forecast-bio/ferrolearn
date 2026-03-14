@@ -12,7 +12,8 @@
 //! - **[`distributions`]** — Unified interface to statistical distributions
 //!   (Normal, Chi-squared, F, t, Beta, Gamma, Dirichlet) with PDF/CDF/PPF.
 //! - **[`optimize`]** — Trust-region Newton-CG optimizer for smooth
-//!   unconstrained minimization.
+//!   unconstrained minimization, plus Brent's method for 1-D bounded
+//!   minimization.
 //! - **[`interpolate`]** — Cubic spline interpolation with natural and
 //!   not-a-knot boundary conditions.
 //! - **[`integrate`]** — Adaptive numerical quadrature (Simpson and

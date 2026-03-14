@@ -4,9 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased] - 2026-03-14
+
+### Added
+- Expand oracle test coverage to 59 tests across 11 crates (28 new fixtures, 28 new tests)
+- Add `brent_bounded` 1-D minimizer to ferrolearn-numerical (Brent's method with bounded interval)
+- Add oracle tests for MultinomialNB, BernoulliNB, ComplementNB
+- Add oracle tests for MiniBatchKMeans, MeanShift, GaussianMixture, OPTICS, Birch, SpectralClustering
+- Add oracle tests for MaxAbsScaler, Normalizer, Binarizer, PolynomialFeatures, OneHotEncoder, LabelEncoder, QuantileTransformer, KBinsDiscretizer, SimpleImputer, PowerTransformer
+- Add oracle tests for StratifiedKFold, TimeSeriesSplit
+- Add oracle tests for ROC AUC, log loss, clustering metrics, extended regression metrics
+- Add oracle tests for CubicSpline, statistical distributions, sparse eigendecomposition
+
+### Fixed
+- Fix OPTICS Xi cluster extraction: rewrite to use steep-down areas with MIB tracking, region extension, and predecessor correction (matching sklearn's Figure 19 algorithm)
+- Fix Birch final clustering: replace KMeans (naive init) with AgglomerativeClustering Ward linkage, eliminating initialization-dependent convergence failures
+- Fix PowerTransformer lambda optimization: replace 201-point grid search (0.03 step) with Brent's method for continuous-precision optimization matching sklearn
+- Fix StratifiedKFold remainder distribution: use round-robin fold offset across classes for balanced fold sizes (was front-loading extras to first folds)
+
 ## [0.1.0] - 2026-03-04
 
 ### Added
+- Add missing scipy-equivalent numerical foundations (#19)
 - Resolve open questions in kernel regression design document (#18)
 - Add kernel regression design document for ferrolearn-kernel crate (#17)
 - Add Pipeline support for f32 data (generic over float type) (#14)

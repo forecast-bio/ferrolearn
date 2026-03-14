@@ -328,17 +328,32 @@ impl StratifiedKFold {
 
         // For each class, assign its samples to folds in round-robin fashion.
         // fold_test_indices[fold] accumulates the test indices for that fold.
+        //
+        // A global `fold_offset` rotates which folds receive the extra samples
+        // when `class_count % n_splits != 0`. This matches sklearn's behaviour
+        // and avoids front-loading the first few folds.
         let mut fold_test_indices: Vec<Vec<usize>> = vec![Vec::new(); self.n_splits];
+        let mut fold_offset: usize = 0;
         for class in &classes {
             let idx = &class_indices[class];
             let base = idx.len() / self.n_splits;
             let extra = idx.len() % self.n_splits;
             let mut pos = 0;
             for (fold_idx, bucket) in fold_test_indices.iter_mut().enumerate() {
-                let size = base + if fold_idx < extra { 1 } else { 0 };
+                // This fold gets an extra sample if it falls within the `extra`
+                // slots starting at `fold_offset` (wrapping around).
+                let gets_extra = if extra > 0 {
+                    // Distance from fold_offset, modulo n_splits
+                    let d = (fold_idx + self.n_splits - fold_offset) % self.n_splits;
+                    d < extra
+                } else {
+                    false
+                };
+                let size = base + if gets_extra { 1 } else { 0 };
                 bucket.extend_from_slice(&idx[pos..pos + size]);
                 pos += size;
             }
+            fold_offset = (fold_offset + extra) % self.n_splits;
         }
 
         // Build (train, test) pairs.

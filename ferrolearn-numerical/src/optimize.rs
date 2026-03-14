@@ -1,7 +1,7 @@
-//! Unconstrained optimization algorithms for smooth objectives.
+//! Optimization algorithms for smooth objectives.
 //!
 //! This module provides scipy.optimize equivalents for the ferrolearn ML
-//! framework. Two optimizers are available:
+//! framework. Three optimizers are available:
 //!
 //! - **[`NewtonCG`]** — Truncated Newton with conjugate-gradient inner loop
 //!   and backtracking line search. Good for large-scale smooth problems when
@@ -9,9 +9,14 @@
 //! - **[`TrustRegionNCG`]** — Trust-region Newton-CG using the Steihaug-Toint
 //!   CG subproblem solver. More robust than line-search Newton-CG, especially
 //!   near saddle points or in ill-conditioned regions.
+//! - **[`brent_bounded`]** — Brent's method for 1-D bounded minimization on
+//!   an interval `[a, b]`. Combines golden-section search with parabolic
+//!   interpolation for superlinear convergence. Equivalent to
+//!   `scipy.optimize.minimize_scalar(method='bounded')`.
 //!
-//! Both optimizers require a closure that returns the objective value and
-//! gradient, and a second closure that computes Hessian-vector products.
+//! The Newton-CG and Trust-Region optimizers require a closure that returns
+//! the objective value and gradient, and a second closure that computes
+//! Hessian-vector products.
 //!
 //! # Example
 //!
@@ -566,6 +571,188 @@ fn dot(a: &Array1<f64>, b: &Array1<f64>) -> f64 {
 }
 
 // ---------------------------------------------------------------------------
+// Brent's method for 1-D bounded minimization
+// ---------------------------------------------------------------------------
+
+/// Result of a 1-D minimization.
+///
+/// Contains the minimizer, function value at the minimizer, the number of
+/// function evaluations, and a flag indicating convergence.
+#[derive(Debug, Clone)]
+pub struct Minimize1DResult {
+    /// The minimizer x*.
+    pub x: f64,
+    /// The function value f(x*).
+    pub fun: f64,
+    /// Number of function evaluations.
+    pub nfev: usize,
+    /// Whether the optimization converged.
+    pub success: bool,
+}
+
+/// Minimize a scalar function on the interval `[a, b]` using Brent's method.
+///
+/// Combines golden-section search with parabolic interpolation for
+/// superlinear convergence. Matches
+/// `scipy.optimize.minimize_scalar(method='bounded')`.
+///
+/// # Arguments
+///
+/// - `f` — the scalar objective function to minimize.
+/// - `a` — lower bound of the search interval.
+/// - `b` — upper bound of the search interval.
+/// - `tol` — convergence tolerance on the bracket width.
+/// - `max_iter` — maximum number of iterations.
+///
+/// # Panics
+///
+/// Does not panic. If `a >= b`, the function still proceeds but the result
+/// may be trivial.
+///
+/// # Example
+///
+/// ```
+/// use ferrolearn_numerical::optimize::brent_bounded;
+///
+/// let result = brent_bounded(|x| x * x, -1.0, 2.0, 1e-10, 500);
+/// assert!(result.success);
+/// assert!((result.x).abs() < 1e-8);
+/// ```
+#[must_use]
+pub fn brent_bounded<F>(f: F, a: f64, b: f64, tol: f64, max_iter: usize) -> Minimize1DResult
+where
+    F: Fn(f64) -> f64,
+{
+    // Golden ratio constant: (3 - sqrt(5)) / 2 ≈ 0.381966
+    let golden = 0.5 * (3.0 - 5.0_f64.sqrt());
+
+    let (mut lo, mut hi) = if a < b { (a, b) } else { (b, a) };
+
+    // x is the point with the least function value found so far.
+    // w is the point with the second least value.
+    // v is the previous value of w.
+    let mut x = lo + golden * (hi - lo);
+    let mut fx = f(x);
+    let mut nfev = 1_usize;
+
+    let mut w = x;
+    let mut fw = fx;
+    let mut v = x;
+    let mut fv = fx;
+
+    // e is the distance moved on the step before last.
+    // d is the most recent step.
+    let mut e = 0.0_f64;
+    let mut d = 0.0_f64;
+
+    for _iter in 0..max_iter {
+        let midpoint = 0.5 * (lo + hi);
+        let tol1 = tol * x.abs() + 1e-10;
+        let tol2 = 2.0 * tol1;
+
+        // Convergence check: bracket is narrow enough.
+        if (x - midpoint).abs() <= tol2 - 0.5 * (hi - lo) {
+            return Minimize1DResult {
+                x,
+                fun: fx,
+                nfev,
+                success: true,
+            };
+        }
+
+        // Try parabolic interpolation.
+        let mut use_golden = true;
+
+        if e.abs() > tol1 {
+            // Fit a parabola through x, v, w.
+            let r = (x - w) * (fx - fv);
+            let q = (x - v) * (fx - fw);
+            let mut p = (x - v) * q - (x - w) * r;
+            let mut q = 2.0 * (q - r);
+
+            if q > 0.0 {
+                p = -p;
+            } else {
+                q = -q;
+            }
+
+            // Accept parabolic step if it is:
+            // 1. Within the bracket [lo, hi]
+            // 2. Smaller than half the previous step (ensures superlinear convergence)
+            if p.abs() < (0.5 * q * e).abs() && p > q * (lo - x) && p < q * (hi - x) {
+                d = p / q;
+                let u = x + d;
+
+                // Don't evaluate too close to the endpoints.
+                if (u - lo) < tol2 || (hi - u) < tol2 {
+                    d = if x < midpoint { tol1 } else { -tol1 };
+                }
+                use_golden = false;
+            }
+        }
+
+        if use_golden {
+            // Golden section step.
+            e = if x < midpoint { hi - x } else { lo - x };
+            d = golden * e;
+        } else {
+            e = d;
+        }
+
+        // Evaluate the function at the new point.
+        let u = if d.abs() >= tol1 {
+            x + d
+        } else if d > 0.0 {
+            x + tol1
+        } else {
+            x - tol1
+        };
+
+        let fu = f(u);
+        nfev += 1;
+
+        // Update the bracket and best points.
+        if fu <= fx {
+            if u < x {
+                hi = x;
+            } else {
+                lo = x;
+            }
+            v = w;
+            fv = fw;
+            w = x;
+            fw = fx;
+            x = u;
+            fx = fu;
+        } else {
+            if u < x {
+                lo = u;
+            } else {
+                hi = u;
+            }
+
+            if fu <= fw || (w - x).abs() < 1e-30 {
+                v = w;
+                fv = fw;
+                w = u;
+                fw = fu;
+            } else if fu <= fv || (v - x).abs() < 1e-30 || (v - w).abs() < 1e-30 {
+                v = u;
+                fv = fu;
+            }
+        }
+    }
+
+    // Did not converge within max_iter, return best found.
+    Minimize1DResult {
+        x,
+        fun: fx,
+        nfev,
+        success: false,
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -749,5 +936,37 @@ mod tests {
             !result2.converged,
             "should not converge with only 1 iteration from a distant start"
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // Brent bounded 1-D minimization tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn brent_minimize_x_squared() {
+        // Minimize x^2 on [-1, 2] → minimum at x = 0.
+        let result = super::brent_bounded(|x| x * x, -1.0, 2.0, 1e-10, 500);
+        assert!(result.success, "should converge");
+        assert_abs_diff_eq!(result.x, 0.0, epsilon = 1e-8);
+        assert_abs_diff_eq!(result.fun, 0.0, epsilon = 1e-15);
+    }
+
+    #[test]
+    fn brent_minimize_shifted_quadratic() {
+        // Minimize (x - 1.5)^2 on [0, 3] → minimum at x = 1.5.
+        let result = super::brent_bounded(|x| (x - 1.5) * (x - 1.5), 0.0, 3.0, 1e-10, 500);
+        assert!(result.success, "should converge");
+        assert_abs_diff_eq!(result.x, 1.5, epsilon = 1e-8);
+        assert_abs_diff_eq!(result.fun, 0.0, epsilon = 1e-15);
+    }
+
+    #[test]
+    fn brent_minimize_sin() {
+        // Minimize sin(x) on [3, 6] → minimum at x = 3π/2 ≈ 4.71239.
+        let result = super::brent_bounded(|x| x.sin(), 3.0, 6.0, 1e-10, 500);
+        assert!(result.success, "should converge");
+        let expected = 1.5 * std::f64::consts::PI;
+        assert_abs_diff_eq!(result.x, expected, epsilon = 1e-8);
+        assert_abs_diff_eq!(result.fun, -1.0, epsilon = 1e-10);
     }
 }

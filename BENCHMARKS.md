@@ -2,9 +2,9 @@
 
 **ferrolearn vs. scikit-learn — benchmark comparison**
 
-Measured on Linux 6.6.87 (WSL2), AMD64. Rust benchmarks use [Criterion](https://github.com/bls12-381/criterion.rs) with statistical analysis; Python benchmarks use median wall-clock time over 20 iterations. scikit-learn 1.7.2, ferrolearn 0.1.0, Rust 1.85 (edition 2024).
+Measured on Linux 6.6.87 (WSL2), AMD64. Rust benchmarks use [Criterion](https://github.com/bls12-381/criterion.rs) with statistical analysis; Python benchmarks use median wall-clock time over 20 iterations. scikit-learn 1.7.2, ferrolearn 0.1.x, Rust 1.85 (edition 2024).
 
-All comparisons use identical dataset sizes, hyperparameters, and random seeds. Updated 2026-03-05 after performance optimization pass (faer eigen for PCA, Rayon-parallel KNN predict, work-based KMeans threshold).
+All comparisons use identical dataset sizes, hyperparameters, and random seeds. Updated 2026-03-14 after oracle test coverage expansion and bug fix pass (OPTICS Xi extraction, Birch AgglomerativeClustering, PowerTransformer Brent's method, StratifiedKFold round-robin).
 
 ---
 
@@ -54,9 +54,9 @@ At small-to-medium scale, ferrolearn eliminates Python call overhead entirely �
 
 | Algorithm | Dataset | sklearn | ferrolearn | Speedup |
 |-----------|---------|---------|------------|---------|
-| **LogisticRegression** | 50 x 5 | 834 us | 17 us | **49x** |
-| | 1K x 10 | 1.3 ms | 434 us | **3.0x** |
-| | 10K x 100 | 1,090 ms | 11.6 ms | **94x** |
+| **LogisticRegression** | 50 x 5 | 1.2 ms | 16 us | **75x** |
+| | 1K x 10 | 1.9 ms | 418 us | **4.5x** |
+| | 10K x 100 | 762 ms | 11.2 ms | **68x** |
 | **DecisionTree** | 50 x 5 | 543 us | 5.2 us | **104x** |
 | | 1K x 10 | 4.6 ms | 242 us | **19x** |
 | | 10K x 100 | 1,040 ms | 33.1 ms | **31x** |
@@ -70,7 +70,7 @@ At small-to-medium scale, ferrolearn eliminates Python call overhead entirely �
 | | 1K x 10 | 547 us | 396 us | **1.4x** |
 | | 10K x 100 | 755 us | 15.4 ms | 0.05x |
 
-LogisticRegression at 10K x 100 shows a **94x speedup** — ferrolearn's L-BFGS optimizer runs entirely in Rust without Python callback overhead.
+LogisticRegression at 10K x 100 shows a **68x speedup** — ferrolearn's L-BFGS optimizer runs entirely in Rust without Python callback overhead.
 
 RandomForest training shows **6.8-49x speedups** driven by Rayon's work-stealing thread pool vs. scikit-learn's joblib.
 
@@ -80,9 +80,9 @@ KNN fit at 10K x 100 is slower because ferrolearn builds a ball tree eagerly dur
 
 | Algorithm | Dataset | sklearn | ferrolearn | Speedup |
 |-----------|---------|---------|------------|---------|
-| **LogisticRegression** | 50 x 5 | 35 us | 0.37 us | **95x** |
-| | 1K x 10 | 38 us | 12 us | **3.2x** |
-| | 10K x 100 | 4.0 ms | 186 us | **22x** |
+| **LogisticRegression** | 50 x 5 | 67 us | 0.36 us | **186x** |
+| | 1K x 10 | 37 us | 6.8 us | **5.4x** |
+| | 10K x 100 | 4.3 ms | 181 us | **24x** |
 | **DecisionTree** | 50 x 5 | 40 us | 0.20 us | **200x** |
 | | 1K x 10 | 62 us | 3.9 us | **16x** |
 | | 10K x 100 | 990 us | 40 us | **25x** |
@@ -129,24 +129,24 @@ Regressor predict is pure matrix multiply — ferrolearn's ndarray BLAS path del
 | **StandardScaler** transform | 50 x 5 | 32 us | 0.22 us | **145x** |
 | | 1K x 10 | 92 us | 8.7 us | **11x** |
 | | 10K x 100 | 1.3 ms | 1.2 ms | **1.1x** |
-| **PCA** fit | 50 x 5 | 302 us | 2.2 us | **137x** |
-| | 1K x 10 | 331 us | 26 us | **13x** |
-| | 10K x 100 | 15.7 ms | 7.3 ms | **2.2x** |
-| **PCA** transform | 50 x 5 | 67 us | 0.32 us | **209x** |
-| | 1K x 10 | 84 us | 8.7 us | **9.7x** |
-| | 10K x 100 | 2.2 ms | 1.0 ms | **2.2x** |
+| **PCA** fit | 50 x 5 | 278 us | 2.2 us | **126x** |
+| | 1K x 10 | 316 us | 26 us | **12x** |
+| | 10K x 100 | 43.9 ms | 7.5 ms | **5.8x** |
+| **PCA** transform | 50 x 5 | 61 us | 0.31 us | **197x** |
+| | 1K x 10 | 84 us | 8.8 us | **9.5x** |
+| | 10K x 100 | 4.0 ms | 1.1 ms | **3.6x** |
 
-PCA fit at 10K x 100 now uses faer's optimized self-adjoint eigensolver instead of the previous hand-rolled Jacobi decomposition — going from **103ms to 7.3ms** (14x internal improvement), and now **2.2x faster than sklearn's LAPACK SVD**.
+PCA fit at 10K x 100 uses faer's optimized self-adjoint eigensolver — **5.8x faster than sklearn's LAPACK SVD**.
 
 ### Clustering (fit)
 
 | Algorithm | Dataset | sklearn | ferrolearn | Speedup |
 |-----------|---------|---------|------------|---------|
-| **KMeans** | 50 x 5 | 2.1 ms | 8.0 us | **263x** |
-| | 1K x 10 | 3.6 ms | 722 us | **5.0x** |
-| | 10K x 100 | 255 ms | 19.5 ms | **13x** |
+| **KMeans** | 50 x 5 | 1.7 ms | 7.9 us | **215x** |
+| | 1K x 10 | 3.6 ms | 694 us | **5.2x** |
+| | 10K x 100 | 272 ms | 18.7 ms | **14.6x** |
 
-KMeans now uses a work-based parallel threshold (`n_samples * n_features >= 100K`) instead of a fixed sample count. At 1K x 10, this correctly uses the serial path, going from **12.5ms to 722us** — a 17x internal improvement and now **5.0x faster than sklearn**.
+KMeans now uses a work-based parallel threshold (`n_samples * n_features >= 100K`) instead of a fixed sample count. At 1K x 10, this correctly uses the serial path — **5.2x faster than sklearn**.
 
 ### Metrics
 
@@ -342,15 +342,15 @@ On the **medium-scale benchmark (10K samples, 100 features)** — the most repre
 | Category | Geometric mean speedup |
 |----------|----------------------|
 | Regressors (fit) | **2.3x** |
-| Classifiers (fit) | **18x** |
-| Classifier predict | **10x** |
+| Classifiers (fit) | **15x** |
+| Classifier predict | **12x** |
 | Regressor predict | **22x** |
-| Transformers | **2.3x** |
-| Clustering | **13x** |
+| Transformers | **3.5x** |
+| Clustering | **14.6x** |
 | Metrics | **5.5x** |
 | Kernel regression | **2.8x – 27x** |
 | Numerical (vs scipy) | **1.6x – 143x** |
-| **Overall geomean** | **9.4x** |
+| **Overall geomean** | **9.8x** |
 
 Ferrolearn delivers scikit-learn's ergonomics with Rust's performance, safety, and deployment story. It's not a wrapper around C extensions pretending to be Python — it's ML done right, from the ground up.
 

@@ -207,9 +207,10 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for PowerTransformer<F
 
     /// Fit the transformer by estimating the optimal lambda per feature.
     ///
-    /// Uses a grid search over lambda values in `[-3, 3]` with 201 candidate
-    /// values, selecting the lambda that maximises the log-likelihood of the
-    /// Yeo-Johnson transformed column following a normal distribution.
+    /// Uses Brent's method to minimize the negative log-likelihood on the
+    /// interval `[-3, 3]`, selecting the lambda that maximises the
+    /// log-likelihood of the Yeo-Johnson transformed column following a
+    /// normal distribution.
     ///
     /// # Errors
     ///
@@ -227,28 +228,35 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for PowerTransformer<F
         let n_features = x.ncols();
         let mut lambdas = Array1::zeros(n_features);
 
-        // Grid search: 201 candidate lambdas in [-3, 3]
-        let n_candidates = 201_usize;
-        let lambda_min = F::from(-3.0_f64).unwrap_or(F::zero());
-        let lambda_max = F::from(3.0_f64).unwrap_or(F::one());
-        let step = (lambda_max - lambda_min) / F::from(n_candidates - 1).unwrap_or(F::one());
-
         for j in 0..n_features {
-            let col: Vec<F> = x.column(j).iter().copied().collect();
+            // Convert column to f64 for the Brent optimizer.
+            let col_f64: Vec<f64> = x
+                .column(j)
+                .iter()
+                .copied()
+                .map(|v| v.to_f64().unwrap_or(0.0))
+                .collect();
 
-            let mut best_ll = F::neg_infinity();
-            let mut best_lambda = F::one(); // default lambda
+            // Minimize the negative log-likelihood using Brent's method.
+            let result = ferrolearn_numerical::optimize::brent_bounded(
+                |lambda| {
+                    let lam = F::from(lambda).unwrap_or(F::one());
+                    // Convert column back to generic F for the log-likelihood.
+                    let col_f: Vec<F> = col_f64
+                        .iter()
+                        .map(|&v| F::from(v).unwrap_or(F::zero()))
+                        .collect();
+                    let ll = log_likelihood_yj(&col_f, lam);
+                    // Negate: minimize negative log-likelihood = maximize log-likelihood.
+                    -ll.to_f64().unwrap_or(f64::INFINITY)
+                },
+                -3.0,
+                3.0,
+                1e-8,
+                500,
+            );
 
-            for k in 0..n_candidates {
-                let lambda = lambda_min + step * F::from(k).unwrap_or(F::zero());
-                let ll = log_likelihood_yj(&col, lambda);
-                if ll > best_ll {
-                    best_ll = ll;
-                    best_lambda = lambda;
-                }
-            }
-
-            lambdas[j] = best_lambda;
+            lambdas[j] = F::from(result.x).unwrap_or(F::one());
         }
 
         // If standardize, compute mean and std of transformed data

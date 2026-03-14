@@ -11,8 +11,8 @@
 //!    `N`, linear sum `LS`, and squared sum `SS`.
 //! 2. A new point is inserted into the closest leaf subcluster. If the
 //!    subcluster radius exceeds `threshold`, the leaf is split.
-//! 3. If `n_clusters` is set, run K-Means on the subcluster centroids
-//!    to produce the final labels.
+//! 3. If `n_clusters` is set, run Agglomerative Clustering (Ward linkage)
+//!    on the subcluster centroids to produce the final labels.
 //!
 //! # Examples
 //!
@@ -33,6 +33,7 @@
 //! assert_eq!(fitted.labels().len(), 6);
 //! ```
 
+use crate::agglomerative::{AgglomerativeClustering, Linkage};
 use ferrolearn_core::error::FerroError;
 use ferrolearn_core::traits::Fit;
 use ndarray::{Array1, Array2};
@@ -316,71 +317,6 @@ fn find_closest_pair<F: Float>(subclusters: &[ClusteringFeature<F>]) -> (usize, 
     (best_i, best_j)
 }
 
-/// Simple K-Means on subcluster centroids for the final clustering step.
-fn kmeans_on_centroids<F: Float>(centroids: &[Vec<F>], k: usize, max_iter: usize) -> Vec<usize> {
-    let n = centroids.len();
-    if n == 0 || k == 0 {
-        return vec![0; n];
-    }
-    let k = k.min(n);
-
-    // Initialize centers: pick first k centroids.
-    let mut centers: Vec<Vec<F>> = centroids[..k].to_vec();
-    let mut labels = vec![0usize; n];
-    let n_features = centroids[0].len();
-
-    for _ in 0..max_iter {
-        let mut changed = false;
-
-        // Assign step.
-        for (i, centroid) in centroids.iter().enumerate() {
-            let mut best_label = 0;
-            let mut best_dist = F::max_value();
-            for (c, center) in centers.iter().enumerate() {
-                let d: F = centroid
-                    .iter()
-                    .zip(center.iter())
-                    .fold(F::zero(), |acc, (&a, &b)| acc + (a - b) * (a - b));
-                if d < best_dist {
-                    best_dist = d;
-                    best_label = c;
-                }
-            }
-            if labels[i] != best_label {
-                labels[i] = best_label;
-                changed = true;
-            }
-        }
-
-        if !changed {
-            break;
-        }
-
-        // Update step.
-        let mut new_centers = vec![vec![F::zero(); n_features]; k];
-        let mut counts = vec![0usize; k];
-        for (i, label) in labels.iter().enumerate() {
-            counts[*label] += 1;
-            for (j, &val) in centroids[i].iter().enumerate() {
-                new_centers[*label][j] = new_centers[*label][j] + val;
-            }
-        }
-        for c in 0..k {
-            if counts[c] > 0 {
-                let cnt = F::from(counts[c]).unwrap_or(F::one());
-                for val in new_centers[c].iter_mut().take(n_features) {
-                    *val = *val / cnt;
-                }
-            } else {
-                new_centers[c] = centers[c].clone();
-            }
-        }
-        centers = new_centers;
-    }
-
-    labels
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Trait impl: Fit
 // ─────────────────────────────────────────────────────────────────────────────
@@ -454,9 +390,21 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for Birch<F> {
         let mut labels = Array1::zeros(n_samples);
 
         if let Some(k) = self.n_clusters {
-            // Run K-Means on the subcluster centroids.
-            let subcluster_labels = kmeans_on_centroids(&centroids, k, 100);
-            n_clusters = k.min(n_subclusters);
+            // Run AgglomerativeClustering (Ward linkage) on the subcluster
+            // centroids. This is what sklearn does and avoids the bad
+            // convergence that naive-init KMeans produces when the CF-tree
+            // inserts subclusters sequentially from the same spatial region.
+            let k_actual = k.min(n_subclusters);
+            let agglo = AgglomerativeClustering::<F>::new(k_actual).with_linkage(Linkage::Ward);
+            let fitted_agglo = agglo.fit(&subcluster_centers, &()).map_err(|e| {
+                FerroError::NumericalInstability {
+                    message: format!(
+                        "agglomerative clustering on subcluster centroids failed: {e}"
+                    ),
+                }
+            })?;
+            let subcluster_labels = fitted_agglo.labels();
+            n_clusters = k_actual;
 
             // Map each point to the final label through its subcluster.
             for (sc_idx, sc) in subclusters.iter().enumerate() {
