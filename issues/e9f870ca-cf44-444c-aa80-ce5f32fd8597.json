@@ -6,8 +6,17 @@
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-14T17:49:18.175137473Z",
-  "updated_at": "2026-03-14T17:49:19.531011925Z",
+  "updated_at": "2026-03-14T17:49:27.243700402Z",
   "labels": [
     "bug"
+  ],
+  "comments": [
+    {
+      "id": 4,
+      "author": "anon-2101b8a8",
+      "content": "Fixing 4 bugs: (1) OPTICS — add predecessor tracking + min_cluster_size + fix steep matching, (2) Birch — replace KMeans with AgglomerativeClustering Ward, (3) PowerTransformer — add Brent's method to ferrolearn-numerical + use it, (4) StratifiedKFold — round-robin fold_offset for remainder distribution",
+      "created_at": "2026-03-14T17:49:27.243699785Z",
+      "kind": "plan"
+    }
   ]
 }
