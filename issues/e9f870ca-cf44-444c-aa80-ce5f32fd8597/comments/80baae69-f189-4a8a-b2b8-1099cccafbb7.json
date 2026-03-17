@@ -1,0 +1,8 @@
+{
+  "uuid": "80baae69-f189-4a8a-b2b8-1099cccafbb7",
+  "issue_uuid": "e9f870ca-cf44-444c-aa80-ce5f32fd8597",
+  "author": "anon-2101b8a8",
+  "content": "Fixing 4 bugs: (1) OPTICS — add predecessor tracking + min_cluster_size + fix steep matching, (2) Birch — replace KMeans with AgglomerativeClustering Ward, (3) PowerTransformer — add Brent's method to ferrolearn-numerical + use it, (4) StratifiedKFold — round-robin fold_offset for remainder distribution",
+  "created_at": "2026-03-14T17:49:27.243699785Z",
+  "kind": "plan"
+}

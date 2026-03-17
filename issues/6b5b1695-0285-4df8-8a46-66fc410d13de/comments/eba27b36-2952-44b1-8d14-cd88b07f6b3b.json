@@ -1,0 +1,8 @@
+{
+  "uuid": "eba27b36-2952-44b1-8d14-cd88b07f6b3b",
+  "issue_uuid": "6b5b1695-0285-4df8-8a46-66fc410d13de",
+  "author": "anon-2101b8a8",
+  "content": "Plan: extend scripts/generate_fixtures.py with ~35 new generators for 6 crates (bayes, cluster, preprocess, model-sel, metrics, numerical), generate JSON fixtures, then write/extend oracle_tests.rs in each crate. All Python deps available (sklearn 1.7.2, numpy 2.3.5, scipy 1.16.3).",
+  "created_at": "2026-03-14T17:04:59.849296550Z",
+  "kind": "plan"
+}

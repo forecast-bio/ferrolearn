@@ -1,0 +1,8 @@
+{
+  "uuid": "994697c2-2b99-403c-a626-553ce899db23",
+  "issue_uuid": "9bf702c4-84ac-47ff-ae8e-025677fa2017",
+  "author": "anon-2101b8a8",
+  "content": "Updating BENCHMARKS.md with fresh numbers, bumping crate versions for ferrolearn-cluster, ferrolearn-preprocess, ferrolearn-model-sel, ferrolearn-numerical, then committing everything.",
+  "created_at": "2026-03-14T18:40:17.962631426Z",
+  "kind": "plan"
+}
