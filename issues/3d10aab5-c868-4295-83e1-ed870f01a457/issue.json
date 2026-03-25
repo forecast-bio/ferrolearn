@@ -1,0 +1,11 @@
+{
+  "uuid": "3d10aab5-c868-4295-83e1-ed870f01a457",
+  "display_id": 34,
+  "title": "Add ExtraTreesClassifier ensemble of extremely randomized trees",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "68e20e54-43c5-4d5a-a06c-9ed19c15c86e",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:11:25.900116829Z",
+  "updated_at": "2026-03-25T15:11:25.900116829Z"
+}
