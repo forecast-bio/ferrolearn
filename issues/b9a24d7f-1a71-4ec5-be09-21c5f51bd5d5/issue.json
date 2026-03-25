@@ -1,0 +1,11 @@
+{
+  "uuid": "b9a24d7f-1a71-4ec5-be09-21c5f51bd5d5",
+  "display_id": 154,
+  "title": "Add RepeatedKFold and RepeatedStratifiedKFold splitters",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "0051aba8-ca7d-40c0-84ba-c31a6c515ec5",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:24:14.638783085Z",
+  "updated_at": "2026-03-25T15:24:14.638783085Z"
+}
