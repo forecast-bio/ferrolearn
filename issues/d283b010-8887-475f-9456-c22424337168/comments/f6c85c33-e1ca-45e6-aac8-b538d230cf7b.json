@@ -1,0 +1,8 @@
+{
+  "uuid": "f6c85c33-e1ca-45e6-aac8-b538d230cf7b",
+  "issue_uuid": "d283b010-8887-475f-9456-c22424337168",
+  "author": "anon-2101b8a8",
+  "content": "Plan: bump all modified crate versions from 0.1.x to 0.2.0 to reflect the major feature additions across 5 batches",
+  "created_at": "2026-03-25T22:15:57.778689954Z",
+  "kind": "plan"
+}
