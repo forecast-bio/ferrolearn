@@ -3,11 +3,12 @@
   "display_id": 59,
   "title": "Add NearestNeighbors unsupervised neighbor search estimator",
   "description": "Pure kneighbors/radius_neighbors queries without classification/regression, foundation for graph transformers.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:14:05.511473978Z",
-  "updated_at": "2026-03-25T15:14:07.385944093Z",
+  "updated_at": "2026-03-25T16:14:35.556682383Z",
+  "closed_at": "2026-03-25T16:14:35.556682383Z",
   "labels": [
     "feature"
   ]
