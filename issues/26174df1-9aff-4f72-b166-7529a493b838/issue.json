@@ -1,0 +1,11 @@
+{
+  "uuid": "26174df1-9aff-4f72-b166-7529a493b838",
+  "display_id": 115,
+  "title": "Add stateless preprocessing functions (scale, robust_scale, minmax_scale, etc.)",
+  "description": "Convenience functions: scale, robust_scale, minmax_scale, maxabs_scale, normalize, power_transform, quantile_transform, binarize, label_binarize, add_dummy_feature.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:20:47.045882663Z",
+  "updated_at": "2026-03-25T15:20:47.045882663Z"
+}
