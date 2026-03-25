@@ -2,12 +2,13 @@
   "uuid": "c1d7d6b1-dede-42e9-9e0d-2a97a5a1fc54",
   "display_id": 209,
   "title": "Add MultiOutputRegressor for multi-target regression",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "740e1463-da16-4503-b65a-5d1eafe82ab7",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:28:58.086881823Z",
-  "updated_at": "2026-03-25T15:28:59.792932135Z",
+  "updated_at": "2026-03-25T16:34:14.784939831Z",
+  "closed_at": "2026-03-25T16:34:14.784939831Z",
   "labels": [
     "feature"
   ]
