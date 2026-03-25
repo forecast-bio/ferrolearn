@@ -1,0 +1,11 @@
+{
+  "uuid": "37f3152d-a874-4585-a0c0-005a2bc7dfc0",
+  "display_id": 30,
+  "title": "Improve SGDClassifier/SGDRegressor with momentum and additional penalties",
+  "description": "Add Nesterov momentum, L1/elasticnet penalties, warm_start, class_weight, sample_weight.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:11:02.223052509Z",
+  "updated_at": "2026-03-25T15:11:02.223052509Z"
+}
