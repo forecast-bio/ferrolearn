@@ -1,0 +1,11 @@
+{
+  "uuid": "fe66ce84-1713-4c74-988d-c846f7d69a20",
+  "display_id": 68,
+  "title": "Add CategoricalNB for categorical feature classification",
+  "description": "Naive Bayes for features with multiple discrete categories (e.g., car brand, day of week).",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:15:37.011230811Z",
+  "updated_at": "2026-03-25T15:15:37.011230811Z"
+}
