@@ -1,0 +1,11 @@
+{
+  "uuid": "3e420814-d80d-41b5-9c4f-75e97feefc9f",
+  "display_id": 93,
+  "title": "Add LabelBinarizer for one-vs-rest label binarization",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "fce8f093-b733-44db-a9ee-42e0ee606ab2",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:18:00.403006166Z",
+  "updated_at": "2026-03-25T15:18:00.403006166Z"
+}
