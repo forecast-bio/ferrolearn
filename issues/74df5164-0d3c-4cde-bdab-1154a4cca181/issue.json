@@ -3,11 +3,12 @@
   "display_id": 139,
   "title": "Add auc function for area under arbitrary curve",
   "description": "General-purpose area under curve computation via trapezoidal rule.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:23:05.166386942Z",
-  "updated_at": "2026-03-25T15:23:06.887342219Z",
+  "updated_at": "2026-03-25T16:14:13.057164706Z",
+  "closed_at": "2026-03-25T16:14:13.057164706Z",
   "labels": [
     "feature"
   ]
