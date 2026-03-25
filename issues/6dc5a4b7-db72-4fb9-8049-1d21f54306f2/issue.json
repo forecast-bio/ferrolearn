@@ -1,0 +1,11 @@
+{
+  "uuid": "6dc5a4b7-db72-4fb9-8049-1d21f54306f2",
+  "display_id": 147,
+  "title": "Add pairwise_kernels computation",
+  "description": "Compute pairwise kernel matrices (RBF, polynomial, linear, etc.).",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:23:44.861921144Z",
+  "updated_at": "2026-03-25T15:23:44.861921144Z"
+}
