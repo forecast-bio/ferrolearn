@@ -1,0 +1,11 @@
+{
+  "uuid": "68e20e54-43c5-4d5a-a06c-9ed19c15c86e",
+  "display_id": 31,
+  "title": "Add ExtraTrees (extremely randomized trees) classifier and regressor",
+  "description": "ExtraTreeClassifier, ExtraTreeRegressor, ExtraTreesClassifier, ExtraTreesRegressor — random split thresholds instead of exhaustive search.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:11:08.065364047Z",
+  "updated_at": "2026-03-25T15:11:08.065364047Z"
+}
