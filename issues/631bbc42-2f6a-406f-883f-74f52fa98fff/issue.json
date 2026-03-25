@@ -2,12 +2,13 @@
   "uuid": "631bbc42-2f6a-406f-883f-74f52fa98fff",
   "display_id": 174,
   "title": "Add LinearSVR optimized linear support vector regressor",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "b75ce0b1-20fd-4821-839f-012ebcfd0db2",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:25:46.583290670Z",
-  "updated_at": "2026-03-25T15:25:48.347303677Z",
+  "updated_at": "2026-03-25T16:33:31.543700583Z",
+  "closed_at": "2026-03-25T16:33:31.543700583Z",
   "labels": [
     "feature"
   ]
