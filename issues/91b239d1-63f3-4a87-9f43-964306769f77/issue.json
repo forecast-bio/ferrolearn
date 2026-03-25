@@ -1,0 +1,11 @@
+{
+  "uuid": "91b239d1-63f3-4a87-9f43-964306769f77",
+  "display_id": 112,
+  "title": "Add FeatureHasher generic feature hashing",
+  "description": "Generic dimensionality reduction via feature hashing.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:20:32.804355046Z",
+  "updated_at": "2026-03-25T15:20:32.804355046Z"
+}
