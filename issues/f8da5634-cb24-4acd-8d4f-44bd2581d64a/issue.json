@@ -2,12 +2,13 @@
   "uuid": "f8da5634-cb24-4acd-8d4f-44bd2581d64a",
   "display_id": 156,
   "title": "Add GroupKFold group-aware cross-validation splitter",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "0051aba8-ca7d-40c0-84ba-c31a6c515ec5",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:24:30.448040363Z",
-  "updated_at": "2026-03-25T15:24:33.133879102Z",
+  "updated_at": "2026-03-25T15:47:32.551061419Z",
+  "closed_at": "2026-03-25T15:47:32.551061419Z",
   "labels": [
     "feature"
   ]
