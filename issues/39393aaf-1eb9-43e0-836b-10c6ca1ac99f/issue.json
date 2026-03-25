@@ -2,12 +2,13 @@
   "uuid": "39393aaf-1eb9-43e0-836b-10c6ca1ac99f",
   "display_id": 155,
   "title": "Add ShuffleSplit and StratifiedShuffleSplit random splitters",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "0051aba8-ca7d-40c0-84ba-c31a6c515ec5",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:24:18.501437033Z",
-  "updated_at": "2026-03-25T15:24:28.095552481Z",
+  "updated_at": "2026-03-25T15:47:30.883940411Z",
+  "closed_at": "2026-03-25T15:47:30.883940411Z",
   "labels": [
     "feature"
   ]
