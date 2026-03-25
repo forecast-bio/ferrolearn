@@ -1,0 +1,11 @@
+{
+  "uuid": "45eaf5f2-623e-4504-8d84-79e7941a2869",
+  "display_id": 90,
+  "title": "Add MiniBatchDictionaryLearning online sparse coding",
+  "description": "Stream-based dictionary learning for large datasets.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:17:44.924549582Z",
+  "updated_at": "2026-03-25T15:17:44.924549582Z"
+}
