@@ -2,12 +2,13 @@
   "uuid": "4a7a437d-525c-4055-8377-884d743bda50",
   "display_id": 98,
   "title": "Add chi2 chi-squared test for non-negative features",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "17f26087-5919-4589-8747-b421b18f0847",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:18:29.737987151Z",
-  "updated_at": "2026-03-25T15:18:32.877496861Z",
+  "updated_at": "2026-03-25T16:34:00.804075434Z",
+  "closed_at": "2026-03-25T16:34:00.804075434Z",
   "labels": [
     "feature"
   ]
