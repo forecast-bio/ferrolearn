@@ -3,11 +3,12 @@
   "display_id": 65,
   "title": "Add distance metric generalization beyond Euclidean",
   "description": "Support minkowski (p-norm), manhattan, chebyshev, and custom distance metrics in neighbor search.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:14:34.254337730Z",
-  "updated_at": "2026-03-25T15:14:47.325394054Z",
+  "updated_at": "2026-03-25T17:03:08.535924726Z",
+  "closed_at": "2026-03-25T17:03:08.535924726Z",
   "labels": [
     "enhancement"
   ]
