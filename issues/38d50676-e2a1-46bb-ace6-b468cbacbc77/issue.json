@@ -1,0 +1,11 @@
+{
+  "uuid": "38d50676-e2a1-46bb-ace6-b468cbacbc77",
+  "display_id": 36,
+  "title": "Add BaggingClassifier and BaggingRegressor generic bagging meta-estimators",
+  "description": "Generic bootstrap aggregation for any base estimator, not just decision trees.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:11:37.203668445Z",
+  "updated_at": "2026-03-25T15:11:37.203668445Z"
+}
