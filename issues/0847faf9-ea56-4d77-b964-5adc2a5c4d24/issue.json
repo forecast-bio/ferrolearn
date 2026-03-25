@@ -1,0 +1,11 @@
+{
+  "uuid": "0847faf9-ea56-4d77-b964-5adc2a5c4d24",
+  "display_id": 164,
+  "title": "Add learning_curve function for training size analysis",
+  "description": "Compute training and validation scores at varying training set sizes.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:25:06.901661037Z",
+  "updated_at": "2026-03-25T15:25:06.901661037Z"
+}
