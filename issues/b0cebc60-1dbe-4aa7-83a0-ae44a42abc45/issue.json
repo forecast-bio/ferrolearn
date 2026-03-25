@@ -1,0 +1,11 @@
+{
+  "uuid": "b0cebc60-1dbe-4aa7-83a0-ae44a42abc45",
+  "display_id": 103,
+  "title": "Add GenericUnivariateSelect configurable univariate filter",
+  "description": "Base class allowing custom score function and mode selection for feature filtering.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:19:04.744038952Z",
+  "updated_at": "2026-03-25T15:19:04.744038952Z"
+}
