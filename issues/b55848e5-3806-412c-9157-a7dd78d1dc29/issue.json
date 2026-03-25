@@ -1,0 +1,11 @@
+{
+  "uuid": "b55848e5-3806-412c-9157-a7dd78d1dc29",
+  "display_id": 217,
+  "title": "Add DummyClassifier baseline classifier",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "cf69d1f2-b82f-4fe5-a0aa-cdd94d3f423b",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:29:33.717601219Z",
+  "updated_at": "2026-03-25T15:29:33.717601219Z"
+}
