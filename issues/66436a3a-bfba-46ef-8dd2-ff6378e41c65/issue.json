@@ -1,0 +1,11 @@
+{
+  "uuid": "66436a3a-bfba-46ef-8dd2-ff6378e41c65",
+  "display_id": 13,
+  "title": "Add LARS family (Lars, LassoLars, LassoLarsCV, LassoLarsIC)",
+  "description": "Least Angle Regression and LARS-based Lasso solver with cross-validated and information-criterion variants.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:09:13.134300663Z",
+  "updated_at": "2026-03-25T15:09:13.134300663Z"
+}
