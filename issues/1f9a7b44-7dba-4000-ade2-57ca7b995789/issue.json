@@ -1,0 +1,11 @@
+{
+  "uuid": "1f9a7b44-7dba-4000-ade2-57ca7b995789",
+  "display_id": 165,
+  "title": "Add validation_curve function for hyperparameter analysis",
+  "description": "Compute training and validation scores at varying hyperparameter values.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:25:10.479043820Z",
+  "updated_at": "2026-03-25T15:25:10.479043820Z"
+}
