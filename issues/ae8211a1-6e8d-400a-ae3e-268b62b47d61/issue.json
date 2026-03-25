@@ -3,11 +3,12 @@
   "display_id": 72,
   "title": "Add AffinityPropagation clustering",
   "description": "Message-passing clustering that automatically determines number of clusters without k parameter.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:15:58.977619510Z",
-  "updated_at": "2026-03-25T15:16:00.790940736Z",
+  "updated_at": "2026-03-25T16:14:38.367148257Z",
+  "closed_at": "2026-03-25T16:14:38.367148257Z",
   "labels": [
     "feature"
   ]
