@@ -1,0 +1,11 @@
+{
+  "uuid": "91ebae34-5097-4a81-a491-6811a9349206",
+  "display_id": 108,
+  "title": "Add TfidfVectorizer end-to-end TF-IDF from raw text",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "f0a3c217-153a-4743-b674-27cf891ae480",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:19:41.205685794Z",
+  "updated_at": "2026-03-25T15:19:41.205685794Z"
+}
