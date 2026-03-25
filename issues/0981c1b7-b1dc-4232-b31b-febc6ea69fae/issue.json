@@ -1,0 +1,11 @@
+{
+  "uuid": "0981c1b7-b1dc-4232-b31b-febc6ea69fae",
+  "display_id": 59,
+  "title": "Add NearestNeighbors unsupervised neighbor search estimator",
+  "description": "Pure kneighbors/radius_neighbors queries without classification/regression, foundation for graph transformers.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:14:05.511473978Z",
+  "updated_at": "2026-03-25T15:14:05.511473978Z"
+}
