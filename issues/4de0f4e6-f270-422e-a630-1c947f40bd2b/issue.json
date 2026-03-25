@@ -1,0 +1,11 @@
+{
+  "uuid": "4de0f4e6-f270-422e-a630-1c947f40bd2b",
+  "display_id": 104,
+  "title": "Add SelectFromModel feature selection from fitted model importances",
+  "description": "Select features based on coef_ or feature_importances_ from any fitted estimator.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:19:11.633940491Z",
+  "updated_at": "2026-03-25T15:19:11.633940491Z"
+}
