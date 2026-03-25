@@ -3,11 +3,12 @@
   "display_id": 13,
   "title": "Add LARS family (Lars, LassoLars, LassoLarsCV, LassoLarsIC)",
   "description": "Least Angle Regression and LARS-based Lasso solver with cross-validated and information-criterion variants.",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:09:13.134300663Z",
-  "updated_at": "2026-03-25T15:09:16.600933063Z",
+  "updated_at": "2026-03-25T22:14:18.279058640Z",
+  "closed_at": "2026-03-25T22:14:18.279058640Z",
   "labels": [
     "feature"
   ]
