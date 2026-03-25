@@ -1,0 +1,11 @@
+{
+  "uuid": "5f5a67d4-155c-4fc2-8ba1-56af1a642e21",
+  "display_id": 158,
+  "title": "Add StratifiedGroupKFold combined stratified+group split",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "0051aba8-ca7d-40c0-84ba-c31a6c515ec5",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:24:40.811344903Z",
+  "updated_at": "2026-03-25T15:24:40.811344903Z"
+}
