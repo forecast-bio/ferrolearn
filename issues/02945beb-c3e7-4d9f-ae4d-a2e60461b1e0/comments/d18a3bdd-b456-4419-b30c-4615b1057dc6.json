@@ -1,0 +1,8 @@
+{
+  "uuid": "d18a3bdd-b456-4419-b30c-4615b1057dc6",
+  "issue_uuid": "02945beb-c3e7-4d9f-ae4d-a2e60461b1e0",
+  "author": "anon-4d887991",
+  "content": "Plan: implement CategoricalNB following the same pattern as MultinomialNB — unfitted/fitted split, Fit/Predict/HasClasses traits, predict_proba method",
+  "created_at": "2026-03-25T15:39:35.967521257Z",
+  "kind": "plan"
+}
