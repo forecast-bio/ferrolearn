@@ -3,11 +3,12 @@
   "display_id": 92,
   "title": "Add LabelBinarizer and MultiLabelBinarizer",
   "description": "Multilabel one-vs-rest binarization and multi-hot label encoding.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:17:55.453086819Z",
-  "updated_at": "2026-03-25T15:17:57.700994478Z",
+  "updated_at": "2026-03-25T16:33:47.862583432Z",
+  "closed_at": "2026-03-25T16:33:47.862583432Z",
   "labels": [
     "feature"
   ]
