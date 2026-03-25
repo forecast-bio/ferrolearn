@@ -2,12 +2,13 @@
   "uuid": "7f154613-0d65-42b5-ab23-2f3d391cdb70",
   "display_id": 26,
   "title": "Add PoissonRegressor for count data regression",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "c835837b-109c-44dc-b405-94dd52896ec4",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:10:40.256071611Z",
-  "updated_at": "2026-03-25T15:10:43.682028287Z",
+  "updated_at": "2026-03-25T22:14:26.985551631Z",
+  "closed_at": "2026-03-25T22:14:26.985551631Z",
   "labels": [
     "feature"
   ]
