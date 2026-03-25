@@ -2,12 +2,13 @@
   "uuid": "feb5c4a5-0ea1-45a8-b650-7248c69d8e6c",
   "display_id": 87,
   "title": "Add SparsePCA with L1-penalized components",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "b60bb1a1-f1fe-4442-8086-a6ee44de53af",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:17:29.421231309Z",
-  "updated_at": "2026-03-25T15:17:31.614958160Z",
+  "updated_at": "2026-03-25T16:55:46.891097583Z",
+  "closed_at": "2026-03-25T16:55:46.891097583Z",
   "labels": [
     "feature"
   ]
