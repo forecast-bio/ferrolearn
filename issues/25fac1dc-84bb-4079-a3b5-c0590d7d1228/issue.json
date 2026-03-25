@@ -1,0 +1,11 @@
+{
+  "uuid": "25fac1dc-84bb-4079-a3b5-c0590d7d1228",
+  "display_id": 56,
+  "title": "Add RadiusNeighborsClassifier and RadiusNeighborsRegressor",
+  "description": "Classify/regress using all neighbors within a given radius, with outlier_label handling.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:13:46.018469024Z",
+  "updated_at": "2026-03-25T15:13:46.018469024Z"
+}
