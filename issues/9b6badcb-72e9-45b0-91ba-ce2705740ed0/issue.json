@@ -1,0 +1,11 @@
+{
+  "uuid": "9b6badcb-72e9-45b0-91ba-ce2705740ed0",
+  "display_id": 188,
+  "title": "Add BernoulliRBM restricted Boltzmann machine",
+  "description": "Generative stochastic neural network for unsupervised feature learning.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:27:06.802927624Z",
+  "updated_at": "2026-03-25T15:27:06.802927624Z"
+}
