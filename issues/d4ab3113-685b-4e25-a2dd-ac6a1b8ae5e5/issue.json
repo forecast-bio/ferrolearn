@@ -1,0 +1,11 @@
+{
+  "uuid": "d4ab3113-685b-4e25-a2dd-ac6a1b8ae5e5",
+  "display_id": 47,
+  "title": "Add RandomTreesEmbedding unsupervised feature transformation",
+  "description": "Use random tree leaf indices as sparse feature representation.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:12:33.375578580Z",
+  "updated_at": "2026-03-25T15:12:33.375578580Z"
+}
