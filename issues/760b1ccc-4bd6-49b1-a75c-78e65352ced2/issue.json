@@ -2,12 +2,13 @@
   "uuid": "760b1ccc-4bd6-49b1-a75c-78e65352ced2",
   "display_id": 119,
   "title": "Add cohen_kappa_score inter-rater agreement",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "39011877-6d20-4c84-9261-63a7f2f1fe49",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:21:06.183262378Z",
-  "updated_at": "2026-03-25T15:21:08.242394006Z",
+  "updated_at": "2026-03-25T15:48:27.364352072Z",
+  "closed_at": "2026-03-25T15:48:27.364352072Z",
   "labels": [
     "feature"
   ]
