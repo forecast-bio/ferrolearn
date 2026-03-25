@@ -2,12 +2,13 @@
   "uuid": "d244d0d9-dd88-4413-9d3d-5e12383ed4a4",
   "display_id": 96,
   "title": "Add f_classif ANOVA F-statistic for classification",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "17f26087-5919-4589-8747-b421b18f0847",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:18:18.218736084Z",
-  "updated_at": "2026-03-25T15:18:20.873397876Z",
+  "updated_at": "2026-03-25T16:33:57.089655970Z",
+  "closed_at": "2026-03-25T16:33:57.089655970Z",
   "labels": [
     "feature"
   ]
