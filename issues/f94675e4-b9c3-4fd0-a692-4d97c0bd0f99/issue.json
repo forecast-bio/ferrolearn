@@ -1,0 +1,11 @@
+{
+  "uuid": "f94675e4-b9c3-4fd0-a692-4d97c0bd0f99",
+  "display_id": 144,
+  "title": "Add pairwise_distances with configurable metrics",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "7aa7afb3-dbcd-47f5-97d0-9abd345aaafb",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:23:28.240767360Z",
+  "updated_at": "2026-03-25T15:23:28.240767360Z"
+}
