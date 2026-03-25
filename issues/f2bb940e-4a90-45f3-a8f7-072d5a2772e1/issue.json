@@ -2,12 +2,13 @@
   "uuid": "f2bb940e-4a90-45f3-a8f7-072d5a2772e1",
   "display_id": 38,
   "title": "Add BaggingRegressor generic bagging meta-estimator",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "38d50676-e2a1-46bb-ace6-b468cbacbc77",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:11:46.897652857Z",
-  "updated_at": "2026-03-25T15:11:50.616198498Z",
+  "updated_at": "2026-03-25T16:32:38.163508627Z",
+  "closed_at": "2026-03-25T16:32:38.163508627Z",
   "labels": [
     "feature"
   ]
