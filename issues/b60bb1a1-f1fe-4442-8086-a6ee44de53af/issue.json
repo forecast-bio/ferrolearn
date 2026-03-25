@@ -1,0 +1,11 @@
+{
+  "uuid": "b60bb1a1-f1fe-4442-8086-a6ee44de53af",
+  "display_id": 86,
+  "title": "Add SparsePCA and MiniBatchSparsePCA",
+  "description": "L1-penalized PCA for sparse interpretable component loadings.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:17:23.611806932Z",
+  "updated_at": "2026-03-25T15:17:23.611806932Z"
+}
