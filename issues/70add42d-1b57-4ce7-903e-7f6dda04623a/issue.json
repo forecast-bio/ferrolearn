@@ -1,0 +1,11 @@
+{
+  "uuid": "70add42d-1b57-4ce7-903e-7f6dda04623a",
+  "display_id": 89,
+  "title": "Add MiniBatchNMF online non-negative matrix factorization",
+  "description": "Streaming NMF for large-scale matrix factorization.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:17:38.779153862Z",
+  "updated_at": "2026-03-25T15:17:38.779153862Z"
+}
