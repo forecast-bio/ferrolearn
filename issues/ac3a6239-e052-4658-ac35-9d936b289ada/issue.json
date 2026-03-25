@@ -1,0 +1,11 @@
+{
+  "uuid": "ac3a6239-e052-4658-ac35-9d936b289ada",
+  "display_id": 122,
+  "title": "Add brier_score_loss and hinge_loss",
+  "description": "Probabilistic prediction error and hinge loss for classification.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:21:19.062592883Z",
+  "updated_at": "2026-03-25T15:21:19.062592883Z"
+}
