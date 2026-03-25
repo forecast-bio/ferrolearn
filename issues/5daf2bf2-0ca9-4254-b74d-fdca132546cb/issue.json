@@ -3,11 +3,12 @@
   "display_id": 203,
   "title": "Add multi-class strategies (OneVsRestClassifier, OneVsOneClassifier)",
   "description": "Meta-estimators for multi-class classification via binary decomposition.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:28:33.433511643Z",
-  "updated_at": "2026-03-25T15:28:35.431149245Z",
+  "updated_at": "2026-03-25T16:34:02.734906265Z",
+  "closed_at": "2026-03-25T16:34:02.734906265Z",
   "labels": [
     "feature"
   ]
