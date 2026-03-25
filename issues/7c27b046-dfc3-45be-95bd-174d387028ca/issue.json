@@ -1,0 +1,11 @@
+{
+  "uuid": "7c27b046-dfc3-45be-95bd-174d387028ca",
+  "display_id": 125,
+  "title": "Add multilabel_confusion_matrix",
+  "description": "Per-label confusion matrices for multilabel classification.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:21:31.453752723Z",
+  "updated_at": "2026-03-25T15:21:31.453752723Z"
+}
