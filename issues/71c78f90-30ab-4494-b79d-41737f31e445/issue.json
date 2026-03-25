@@ -3,11 +3,12 @@
   "display_id": 81,
   "title": "Add cross-decomposition module (PLSRegression, PLSCanonical, CCA, PLSSVD)",
   "description": "Partial Least Squares and Canonical Correlation Analysis — common in chemometrics and bioinformatics.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:16:53.071583501Z",
-  "updated_at": "2026-03-25T15:16:56.443717160Z",
+  "updated_at": "2026-03-25T16:14:42.789095648Z",
+  "closed_at": "2026-03-25T16:14:42.789095648Z",
   "labels": [
     "feature"
   ]
