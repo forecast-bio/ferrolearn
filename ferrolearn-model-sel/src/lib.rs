@@ -8,6 +8,13 @@
 //! - [`train_test_split`] — shuffle and split data into train/test sets.
 //! - [`KFold`] — k-fold cross-validation splitter.
 //! - [`StratifiedKFold`] — stratified k-fold that preserves class balance.
+//! - [`LeaveOneOut`] — leave-one-out cross-validation (n folds, 1 test sample each).
+//! - [`LeavePOut`] — leave-p-out cross-validation (all C(n, p) combinations).
+//! - [`RepeatedKFold`] — repeated k-fold with different shuffles per repeat.
+//! - [`RepeatedStratifiedKFold`] — repeated stratified k-fold.
+//! - [`ShuffleSplit`] — random train/test splits.
+//! - [`StratifiedShuffleSplit`] — stratified random train/test splits.
+//! - [`GroupKFold`] — k-fold where groups are kept together.
 //! - [`cross_val_score`] — evaluate a pipeline using cross-validation.
 //! - [`GridSearchCV`] — exhaustive hyperparameter search over a parameter grid.
 //! - [`RandomizedSearchCV`] — randomized hyperparameter search over distributions.
@@ -50,7 +57,11 @@ pub mod split;
 pub mod time_series_split;
 
 pub use calibration::{CalibratedClassifierCV, CalibrationMethod, FittedCalibratedClassifierCV};
-pub use cross_validation::{CrossValidator, KFold, StratifiedKFold, cross_val_score};
+pub use cross_validation::{
+    CrossValidator, GroupKFold, KFold, LeaveOneOut, LeavePOut, RepeatedKFold,
+    RepeatedStratifiedKFold, ShuffleSplit, StratifiedKFold, StratifiedShuffleSplit,
+    cross_val_score,
+};
 pub use grid_search::{CvResults, GridSearchCV};
 pub use halving_grid_search::HalvingGridSearchCV;
 pub use param_grid::{ParamSet, ParamValue};

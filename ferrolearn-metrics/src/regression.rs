@@ -9,6 +9,10 @@
 //! - [`r2_score`] — coefficient of determination
 //! - [`mean_absolute_percentage_error`] — mean of absolute percentage errors
 //! - [`explained_variance_score`] — fraction of variance explained by the model
+//! - [`median_absolute_error`] — median of absolute residuals (robust to outliers)
+//! - [`max_error`] — maximum absolute error (worst-case prediction)
+//! - [`mean_squared_log_error`] — MSE on log-transformed values
+//! - [`root_mean_squared_log_error`] — square root of MSLE
 //!
 //! All functions are generic over `F: num_traits::Float + Send + Sync + 'static`.
 
@@ -380,6 +384,235 @@ where
 }
 
 // ---------------------------------------------------------------------------
+// median_absolute_error
+// ---------------------------------------------------------------------------
+
+/// Compute the median absolute error.
+///
+/// `MedAE = median(|y_true - y_pred|)`
+///
+/// Unlike MAE, the median is robust to outliers.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth target values.
+/// * `y_pred` — predicted values.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::regression::median_absolute_error;
+/// use ndarray::array;
+///
+/// let y_true = array![1.0_f64, 2.0, 3.0, 100.0];
+/// let y_pred = array![1.0_f64, 2.0, 3.0, 3.0];
+/// let medae = median_absolute_error(&y_true, &y_pred).unwrap();
+/// // errors: [0, 0, 0, 97] — median of sorted [0,0,0,97] = (0+0)/2 = 0
+/// assert!((medae - 0.0).abs() < 1e-10);
+/// ```
+pub fn median_absolute_error<F>(y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_same_length(
+        y_true,
+        y_pred,
+        "median_absolute_error: y_true vs y_pred",
+    )?;
+    let n = y_true.len();
+    check_non_empty(n, "median_absolute_error")?;
+
+    let mut errors: Vec<F> = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .map(|(&t, &p)| (t - p).abs())
+        .collect();
+    errors.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+    let median = if n % 2 == 0 {
+        (errors[n / 2 - 1] + errors[n / 2]) / F::from(2.0).unwrap()
+    } else {
+        errors[n / 2]
+    };
+
+    Ok(median)
+}
+
+// ---------------------------------------------------------------------------
+// max_error
+// ---------------------------------------------------------------------------
+
+/// Compute the maximum absolute error.
+///
+/// `max_error = max |y_true - y_pred|`
+///
+/// This metric captures the worst-case prediction error.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth target values.
+/// * `y_pred` — predicted values.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::regression::max_error;
+/// use ndarray::array;
+///
+/// let y_true = array![1.0_f64, 2.0, 3.0];
+/// let y_pred = array![1.5_f64, 2.0, 5.0];
+/// let me = max_error(&y_true, &y_pred).unwrap();
+/// assert!((me - 2.0).abs() < 1e-10);
+/// ```
+pub fn max_error<F>(y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_same_length(y_true, y_pred, "max_error: y_true vs y_pred")?;
+    let n = y_true.len();
+    check_non_empty(n, "max_error")?;
+
+    let max = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .map(|(&t, &p)| (t - p).abs())
+        .fold(F::zero(), |acc, v| if v > acc { v } else { acc });
+
+    Ok(max)
+}
+
+// ---------------------------------------------------------------------------
+// mean_squared_log_error
+// ---------------------------------------------------------------------------
+
+/// Compute the mean squared logarithmic error (MSLE).
+///
+/// `MSLE = (1/n) * sum (log(1 + y_true) - log(1 + y_pred))^2`
+///
+/// This metric is useful for targets with exponential growth where you
+/// want to penalize under-prediction more than over-prediction. All values
+/// must be non-negative.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth target values (must be non-negative).
+/// * `y_pred` — predicted values (must be non-negative).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] if any value is negative.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::regression::mean_squared_log_error;
+/// use ndarray::array;
+///
+/// let y_true = array![1.0_f64, 2.0, 3.0];
+/// let y_pred = array![1.0_f64, 2.0, 3.0];
+/// let msle = mean_squared_log_error(&y_true, &y_pred).unwrap();
+/// assert!((msle - 0.0).abs() < 1e-10);
+/// ```
+pub fn mean_squared_log_error<F>(y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_same_length(
+        y_true,
+        y_pred,
+        "mean_squared_log_error: y_true vs y_pred",
+    )?;
+    let n = y_true.len();
+    check_non_empty(n, "mean_squared_log_error")?;
+
+    let one = F::one();
+
+    for (i, &v) in y_true.iter().enumerate() {
+        if v < F::zero() {
+            return Err(FerroError::InvalidParameter {
+                name: "y_true".into(),
+                reason: format!(
+                    "mean_squared_log_error requires non-negative values, found negative at index {i}"
+                ),
+            });
+        }
+    }
+    for (i, &v) in y_pred.iter().enumerate() {
+        if v < F::zero() {
+            return Err(FerroError::InvalidParameter {
+                name: "y_pred".into(),
+                reason: format!(
+                    "mean_squared_log_error requires non-negative predictions, found negative at index {i}"
+                ),
+            });
+        }
+    }
+
+    let sum = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .fold(F::zero(), |acc, (&t, &p)| {
+            let diff = (one + t).ln() - (one + p).ln();
+            acc + diff * diff
+        });
+
+    Ok(sum / F::from(n).unwrap())
+}
+
+// ---------------------------------------------------------------------------
+// root_mean_squared_log_error
+// ---------------------------------------------------------------------------
+
+/// Compute the root mean squared logarithmic error (RMSLE).
+///
+/// `RMSLE = sqrt(MSLE) = sqrt((1/n) * sum (log(1 + y_true) - log(1 + y_pred))^2)`
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth target values (must be non-negative).
+/// * `y_pred` — predicted values (must be non-negative).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] if any value is negative.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::regression::root_mean_squared_log_error;
+/// use ndarray::array;
+///
+/// let y_true = array![1.0_f64, 2.0, 3.0];
+/// let y_pred = array![1.0_f64, 2.0, 3.0];
+/// let rmsle = root_mean_squared_log_error(&y_true, &y_pred).unwrap();
+/// assert!((rmsle - 0.0).abs() < 1e-10);
+/// ```
+pub fn root_mean_squared_log_error<F>(
+    y_true: &Array1<F>,
+    y_pred: &Array1<F>,
+) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    let msle = mean_squared_log_error(y_true, y_pred)?;
+    Ok(msle.sqrt())
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -638,6 +871,190 @@ mod tests {
         let evs = explained_variance_score(&y_true, &y_pred).unwrap();
         let r2 = r2_score(&y_true, &y_pred).unwrap();
         assert_abs_diff_eq!(evs, r2, epsilon = 1e-10);
+    }
+
+    // -----------------------------------------------------------------------
+    // median_absolute_error
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_median_absolute_error_perfect() {
+        let y = array![1.0_f64, 2.0, 3.0];
+        assert_abs_diff_eq!(
+            median_absolute_error(&y, &y).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_median_absolute_error_odd() {
+        let y_true = array![1.0_f64, 2.0, 3.0];
+        let y_pred = array![1.5_f64, 2.0, 2.0];
+        // errors: [0.5, 0.0, 1.0], sorted: [0.0, 0.5, 1.0], median = 0.5
+        assert_abs_diff_eq!(
+            median_absolute_error(&y_true, &y_pred).unwrap(),
+            0.5,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_median_absolute_error_even() {
+        let y_true = array![1.0_f64, 2.0, 3.0, 4.0];
+        let y_pred = array![1.0_f64, 2.0, 5.0, 6.0];
+        // errors: [0, 0, 2, 2], sorted: [0, 0, 2, 2], median = (0+2)/2 = 1
+        assert_abs_diff_eq!(
+            median_absolute_error(&y_true, &y_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_median_absolute_error_robust_to_outlier() {
+        let y_true = array![1.0_f64, 2.0, 3.0, 4.0, 5.0];
+        let y_pred = array![1.0_f64, 2.0, 3.0, 4.0, 1000.0];
+        // errors: [0, 0, 0, 0, 995], sorted, median = 0.0
+        assert_abs_diff_eq!(
+            median_absolute_error(&y_true, &y_pred).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_median_absolute_error_empty() {
+        let y_true = Array1::<f64>::from_vec(vec![]);
+        let y_pred = Array1::<f64>::from_vec(vec![]);
+        assert!(median_absolute_error(&y_true, &y_pred).is_err());
+    }
+
+    #[test]
+    fn test_median_absolute_error_shape_mismatch() {
+        let y_true = array![1.0_f64, 2.0];
+        let y_pred = array![1.0_f64];
+        assert!(median_absolute_error(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // max_error
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_max_error_perfect() {
+        let y = array![1.0_f64, 2.0, 3.0];
+        assert_abs_diff_eq!(max_error(&y, &y).unwrap(), 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_max_error_basic() {
+        let y_true = array![1.0_f64, 2.0, 3.0];
+        let y_pred = array![1.5_f64, 2.0, 5.0];
+        assert_abs_diff_eq!(max_error(&y_true, &y_pred).unwrap(), 2.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_max_error_negative_residual() {
+        let y_true = array![5.0_f64, 2.0];
+        let y_pred = array![1.0_f64, 2.0];
+        assert_abs_diff_eq!(max_error(&y_true, &y_pred).unwrap(), 4.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_max_error_empty() {
+        let y_true = Array1::<f64>::from_vec(vec![]);
+        let y_pred = Array1::<f64>::from_vec(vec![]);
+        assert!(max_error(&y_true, &y_pred).is_err());
+    }
+
+    #[test]
+    fn test_max_error_shape_mismatch() {
+        let y_true = array![1.0_f64, 2.0];
+        let y_pred = array![1.0_f64];
+        assert!(max_error(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // mean_squared_log_error
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_msle_perfect() {
+        let y = array![1.0_f64, 2.0, 3.0];
+        assert_abs_diff_eq!(
+            mean_squared_log_error(&y, &y).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_msle_basic() {
+        let y_true = array![3.0_f64, 5.0, 2.5, 7.0];
+        let y_pred = array![2.5_f64, 5.0, 4.0, 8.0];
+        // manual: (ln(4)-ln(3.5))^2 + 0 + (ln(3.5)-ln(5))^2 + (ln(8)-ln(9))^2
+        let expected = ((4.0_f64.ln() - 3.5_f64.ln()).powi(2)
+            + 0.0
+            + (3.5_f64.ln() - 5.0_f64.ln()).powi(2)
+            + (8.0_f64.ln() - 9.0_f64.ln()).powi(2))
+            / 4.0;
+        assert_abs_diff_eq!(
+            mean_squared_log_error(&y_true, &y_pred).unwrap(),
+            expected,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_msle_negative_y_true() {
+        let y_true = array![-1.0_f64, 2.0];
+        let y_pred = array![1.0_f64, 2.0];
+        assert!(mean_squared_log_error(&y_true, &y_pred).is_err());
+    }
+
+    #[test]
+    fn test_msle_negative_y_pred() {
+        let y_true = array![1.0_f64, 2.0];
+        let y_pred = array![1.0_f64, -2.0];
+        assert!(mean_squared_log_error(&y_true, &y_pred).is_err());
+    }
+
+    #[test]
+    fn test_msle_empty() {
+        let y_true = Array1::<f64>::from_vec(vec![]);
+        let y_pred = Array1::<f64>::from_vec(vec![]);
+        assert!(mean_squared_log_error(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // root_mean_squared_log_error
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_rmsle_perfect() {
+        let y = array![1.0_f64, 2.0, 3.0];
+        assert_abs_diff_eq!(
+            root_mean_squared_log_error(&y, &y).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_rmsle_consistent_with_msle() {
+        let y_true = array![3.0_f64, 5.0, 2.5, 7.0];
+        let y_pred = array![2.5_f64, 5.0, 4.0, 8.0];
+        let msle = mean_squared_log_error(&y_true, &y_pred).unwrap();
+        let rmsle = root_mean_squared_log_error(&y_true, &y_pred).unwrap();
+        assert_abs_diff_eq!(rmsle, msle.sqrt(), epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_rmsle_empty() {
+        let y_true = Array1::<f64>::from_vec(vec![]);
+        let y_pred = Array1::<f64>::from_vec(vec![]);
+        assert!(root_mean_squared_log_error(&y_true, &y_pred).is_err());
     }
 }
 

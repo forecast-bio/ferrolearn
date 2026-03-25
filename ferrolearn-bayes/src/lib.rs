@@ -2,7 +2,7 @@
 //!
 //! Naive Bayes classifiers for the ferrolearn machine learning framework.
 //!
-//! This crate provides four Naive Bayes variants:
+//! This crate provides five Naive Bayes variants:
 //!
 //! - **[`GaussianNB`]** — Assumes Gaussian-distributed features. Suitable for
 //!   continuous data.
@@ -10,6 +10,8 @@
 //!   Features must be non-negative.
 //! - **[`BernoulliNB`]** — For binary/boolean features. Optional binarization
 //!   threshold.
+//! - **[`CategoricalNB`]** — For categorical features where each column takes
+//!   on one of several discrete values. Laplace-smoothed.
 //! - **[`ComplementNB`]** — A Multinomial NB variant that uses complement-class
 //!   statistics; better suited for imbalanced datasets.
 //!
@@ -45,12 +47,14 @@
 //! ```
 
 pub mod bernoulli;
+pub mod categorical;
 pub mod complement;
 pub mod gaussian;
 pub mod multinomial;
 
 // Re-export all public types at the crate root.
 pub use bernoulli::{BernoulliNB, FittedBernoulliNB};
+pub use categorical::{CategoricalNB, FittedCategoricalNB};
 pub use complement::{ComplementNB, FittedComplementNB};
 pub use gaussian::{FittedGaussianNB, GaussianNB};
 pub use multinomial::{FittedMultinomialNB, MultinomialNB};

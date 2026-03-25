@@ -15,6 +15,10 @@
 //!   native NaN support, and optional best-first (leaf-wise) growth.
 //! - **[`AdaBoostClassifier`]** — Adaptive Boosting using decision tree stumps with
 //!   SAMME and SAMME.R algorithms.
+//! - **[`ExtraTreeClassifier`]** / **[`ExtraTreeRegressor`]** — Extremely randomized
+//!   trees where split thresholds are chosen randomly rather than via exhaustive search.
+//! - **[`ExtraTreesClassifier`]** / **[`ExtraTreesRegressor`]** — Ensembles of
+//!   extremely randomized trees with Rayon parallel fitting. No bootstrap by default.
 //!
 //! # Design
 //!
@@ -39,6 +43,8 @@
 
 pub mod adaboost;
 pub mod decision_tree;
+pub mod extra_tree;
+pub mod extra_trees_ensemble;
 pub mod gradient_boosting;
 pub mod hist_gradient_boosting;
 pub mod random_forest;
@@ -48,6 +54,13 @@ pub use adaboost::{AdaBoostAlgorithm, AdaBoostClassifier, FittedAdaBoostClassifi
 pub use decision_tree::{
     ClassificationCriterion, DecisionTreeClassifier, DecisionTreeRegressor,
     FittedDecisionTreeClassifier, FittedDecisionTreeRegressor, Node, RegressionCriterion,
+};
+pub use extra_tree::{
+    ExtraTreeClassifier, ExtraTreeRegressor, FittedExtraTreeClassifier, FittedExtraTreeRegressor,
+};
+pub use extra_trees_ensemble::{
+    ExtraTreesClassifier, ExtraTreesRegressor, FittedExtraTreesClassifier,
+    FittedExtraTreesRegressor,
 };
 pub use gradient_boosting::{
     ClassificationLoss, FittedGradientBoostingClassifier, FittedGradientBoostingRegressor,

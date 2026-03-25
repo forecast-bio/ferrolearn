@@ -7,9 +7,19 @@
 //! - [`precision_score`] — positive predictive value
 //! - [`recall_score`] — sensitivity / true positive rate
 //! - [`f1_score`] — harmonic mean of precision and recall
+//! - [`fbeta_score`] — weighted harmonic mean of precision and recall
+//! - [`balanced_accuracy_score`] — mean of per-class recall
+//! - [`matthews_corrcoef`] — Matthew's correlation coefficient
+//! - [`cohen_kappa_score`] — inter-rater agreement corrected for chance
 //! - [`roc_auc_score`] — area under the ROC curve (binary classification)
 //! - [`confusion_matrix`] — matrix of true/predicted class counts
 //! - [`log_loss`] — cross-entropy loss for probabilistic classifiers
+//! - [`brier_score_loss`] — mean squared error of probability estimates
+//! - [`hinge_loss`] — average hinge loss for SVM-style classifiers
+//! - [`hamming_loss`] — fraction of labels that differ
+//! - [`jaccard_score`] — intersection over union
+//! - [`zero_one_loss`] — fraction or count of misclassifications
+//! - [`classification_report`] — formatted text report of per-class metrics
 
 use ferrolearn_core::FerroError;
 use ndarray::{Array1, Array2};
@@ -710,6 +720,850 @@ fn aggregate_f1(
 }
 
 // ---------------------------------------------------------------------------
+// Generalized fbeta_score
+// ---------------------------------------------------------------------------
+
+/// Compute the F-beta score.
+///
+/// The F-beta score is the weighted harmonic mean of precision and recall:
+///
+/// ```text
+/// F_beta = (1 + beta^2) * (precision * recall) / (beta^2 * precision + recall)
+/// ```
+///
+/// When `beta = 1.0`, this is equivalent to the F1 score. A `beta < 1` weighs
+/// precision higher; `beta > 1` weighs recall higher.
+///
+/// # Arguments
+///
+/// * `y_true`  — ground-truth class labels.
+/// * `y_pred`  — predicted class labels.
+/// * `beta`    — weight of recall in the combined score (must be positive).
+/// * `average` — aggregation strategy (see [`Average`]).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] if `beta <= 0` or if
+/// `Average::Binary` is requested for non-binary labels.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::{fbeta_score, Average};
+/// use ndarray::array;
+///
+/// let y_true = array![0usize, 1, 1, 0, 1];
+/// let y_pred = array![0usize, 1, 0, 0, 1];
+/// // beta=1 should match F1
+/// let fb = fbeta_score(&y_true, &y_pred, 1.0, Average::Binary).unwrap();
+/// assert!((fb - 0.8).abs() < 1e-10);
+/// ```
+pub fn fbeta_score(
+    y_true: &Array1<usize>,
+    y_pred: &Array1<usize>,
+    beta: f64,
+    average: Average,
+) -> Result<f64, FerroError> {
+    let n = y_true.len();
+    check_same_length(n, y_pred.len(), "fbeta_score: y_true vs y_pred")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "fbeta_score".into(),
+        });
+    }
+    if beta <= 0.0 {
+        return Err(FerroError::InvalidParameter {
+            name: "beta".into(),
+            reason: format!("fbeta_score: beta must be positive, got {beta}"),
+        });
+    }
+
+    let classes = unique_classes(y_true, y_pred);
+    let (tp, fp, fn_count) = per_class_counts(y_true, y_pred, &classes);
+    let beta2 = beta * beta;
+
+    aggregate_fbeta(
+        &tp,
+        &fp,
+        &fn_count,
+        y_true,
+        &classes,
+        beta2,
+        average,
+        "fbeta_score",
+    )
+}
+
+/// Aggregate per-class F-beta counts into a single score.
+#[allow(clippy::too_many_arguments)]
+fn aggregate_fbeta(
+    tp: &[usize],
+    fp: &[usize],
+    fn_count: &[usize],
+    y_true: &Array1<usize>,
+    classes: &[usize],
+    beta2: f64,
+    average: Average,
+    context: &str,
+) -> Result<f64, FerroError> {
+    let fbeta_from_counts = |t: f64, f_p: f64, f_n: f64| -> f64 {
+        let prec = safe_div(t, t + f_p);
+        let rec = safe_div(t, t + f_n);
+        safe_div((1.0 + beta2) * prec * rec, beta2 * prec + rec)
+    };
+
+    match average {
+        Average::Binary => {
+            if classes.len() != 2 {
+                return Err(FerroError::InvalidParameter {
+                    name: "average".into(),
+                    reason: format!(
+                        "{context}: Average::Binary requires exactly 2 classes, found {}",
+                        classes.len()
+                    ),
+                });
+            }
+            Ok(fbeta_from_counts(
+                tp[1] as f64,
+                fp[1] as f64,
+                fn_count[1] as f64,
+            ))
+        }
+        Average::Macro => {
+            let sum: f64 = tp
+                .iter()
+                .zip(fp.iter())
+                .zip(fn_count.iter())
+                .map(|((&t, &f_p), &f_n)| fbeta_from_counts(t as f64, f_p as f64, f_n as f64))
+                .sum();
+            Ok(sum / classes.len() as f64)
+        }
+        Average::Micro => {
+            let total_tp: f64 = tp.iter().sum::<usize>() as f64;
+            let total_fp: f64 = fp.iter().sum::<usize>() as f64;
+            let total_fn: f64 = fn_count.iter().sum::<usize>() as f64;
+            Ok(fbeta_from_counts(total_tp, total_fp, total_fn))
+        }
+        Average::Weighted => {
+            let n = y_true.len() as f64;
+            let mut weighted_sum = 0.0_f64;
+            for (k, &c) in classes.iter().enumerate() {
+                let support = y_true.iter().filter(|&&v| v == c).count();
+                let fb = fbeta_from_counts(tp[k] as f64, fp[k] as f64, fn_count[k] as f64);
+                weighted_sum += fb * support as f64;
+            }
+            Ok(weighted_sum / n)
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// balanced_accuracy_score
+// ---------------------------------------------------------------------------
+
+/// Compute the balanced accuracy score.
+///
+/// Balanced accuracy is the macro-averaged recall — the mean of per-class
+/// recall values:
+///
+/// ```text
+/// balanced_accuracy = (1/K) * sum_k recall_k
+/// ```
+///
+/// This metric is useful for imbalanced datasets, as it gives equal weight
+/// to each class regardless of support.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth class labels.
+/// * `y_pred` — predicted class labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::balanced_accuracy_score;
+/// use ndarray::array;
+///
+/// let y_true = array![0usize, 0, 0, 1, 1];
+/// let y_pred = array![0usize, 0, 0, 1, 0];
+/// let ba = balanced_accuracy_score(&y_true, &y_pred).unwrap();
+/// // recall_0 = 3/3 = 1.0, recall_1 = 1/2 = 0.5 => balanced = 0.75
+/// assert!((ba - 0.75).abs() < 1e-10);
+/// ```
+pub fn balanced_accuracy_score(
+    y_true: &Array1<usize>,
+    y_pred: &Array1<usize>,
+) -> Result<f64, FerroError> {
+    let n = y_true.len();
+    check_same_length(n, y_pred.len(), "balanced_accuracy_score: y_true vs y_pred")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "balanced_accuracy_score".into(),
+        });
+    }
+
+    let classes = unique_classes(y_true, y_pred);
+    let (tp, _fp, fn_count) = per_class_counts(y_true, y_pred, &classes);
+
+    let sum_recall: f64 = tp
+        .iter()
+        .zip(fn_count.iter())
+        .map(|(&t, &f_n)| safe_div(t as f64, (t + f_n) as f64))
+        .sum();
+
+    Ok(sum_recall / classes.len() as f64)
+}
+
+// ---------------------------------------------------------------------------
+// matthews_corrcoef (MCC)
+// ---------------------------------------------------------------------------
+
+/// Compute Matthew's Correlation Coefficient (MCC).
+///
+/// For binary classification with TP, TN, FP, FN:
+///
+/// ```text
+/// MCC = (TP*TN - FP*FN) / sqrt((TP+FP)(TP+FN)(TN+FP)(TN+FN))
+/// ```
+///
+/// For multiclass classification, the generalized formula based on the
+/// confusion matrix `C` is used:
+///
+/// ```text
+/// MCC = (c * s - sum_k p_k * t_k) /
+///       sqrt((s^2 - sum_k p_k^2) * (s^2 - sum_k t_k^2))
+/// ```
+///
+/// where `c = sum_k C[k,k]` (trace), `s = sum(C)` (total samples),
+/// `p_k = sum_j C[k,j]` (row sum), `t_k = sum_j C[j,k]` (column sum).
+///
+/// MCC ranges from -1 to +1. A value of +1 indicates perfect prediction,
+/// 0 indicates random prediction, and -1 indicates inverse prediction.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth class labels.
+/// * `y_pred` — predicted class labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::matthews_corrcoef;
+/// use ndarray::array;
+///
+/// let y_true = array![0usize, 0, 1, 1];
+/// let y_pred = array![0usize, 0, 1, 1];
+/// let mcc = matthews_corrcoef(&y_true, &y_pred).unwrap();
+/// assert!((mcc - 1.0).abs() < 1e-10);
+/// ```
+pub fn matthews_corrcoef(
+    y_true: &Array1<usize>,
+    y_pred: &Array1<usize>,
+) -> Result<f64, FerroError> {
+    let cm = confusion_matrix(y_true, y_pred)?;
+    let k = cm.nrows();
+
+    // Total number of samples.
+    let s: f64 = cm.iter().sum::<usize>() as f64;
+    // Trace (correctly classified).
+    let c: f64 = (0..k).map(|i| cm[[i, i]]).sum::<usize>() as f64;
+    // Row sums p_k and column sums t_k.
+    let p: Vec<f64> = (0..k)
+        .map(|i| (0..k).map(|j| cm[[i, j]]).sum::<usize>() as f64)
+        .collect();
+    let t: Vec<f64> = (0..k)
+        .map(|j| (0..k).map(|i| cm[[i, j]]).sum::<usize>() as f64)
+        .collect();
+
+    let sum_pk_tk: f64 = p.iter().zip(t.iter()).map(|(&pi, &ti)| pi * ti).sum();
+    let sum_pk2: f64 = p.iter().map(|&pi| pi * pi).sum();
+    let sum_tk2: f64 = t.iter().map(|&ti| ti * ti).sum();
+
+    let numerator = c * s - sum_pk_tk;
+    let denom_sq = (s * s - sum_pk2) * (s * s - sum_tk2);
+
+    if denom_sq <= 0.0 {
+        return Ok(0.0);
+    }
+
+    Ok(numerator / denom_sq.sqrt())
+}
+
+// ---------------------------------------------------------------------------
+// cohen_kappa_score
+// ---------------------------------------------------------------------------
+
+/// Compute Cohen's kappa statistic.
+///
+/// Cohen's kappa measures inter-rater agreement, corrected for chance:
+///
+/// ```text
+/// kappa = (p_o - p_e) / (1 - p_e)
+/// ```
+///
+/// where `p_o` is the observed agreement (accuracy) and `p_e` is the
+/// expected agreement by chance.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth class labels.
+/// * `y_pred` — predicted class labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::cohen_kappa_score;
+/// use ndarray::array;
+///
+/// let y_true = array![0usize, 0, 1, 1, 2, 2];
+/// let y_pred = array![0usize, 0, 1, 1, 2, 2];
+/// let kappa = cohen_kappa_score(&y_true, &y_pred).unwrap();
+/// assert!((kappa - 1.0).abs() < 1e-10);
+/// ```
+pub fn cohen_kappa_score(
+    y_true: &Array1<usize>,
+    y_pred: &Array1<usize>,
+) -> Result<f64, FerroError> {
+    let cm = confusion_matrix(y_true, y_pred)?;
+    let k = cm.nrows();
+    let n = y_true.len() as f64;
+
+    // Observed agreement: fraction of matching labels.
+    let p_o: f64 = (0..k).map(|i| cm[[i, i]]).sum::<usize>() as f64 / n;
+
+    // Expected agreement by chance: sum_k (row_sum_k / n) * (col_sum_k / n).
+    let p_e: f64 = (0..k)
+        .map(|i| {
+            let row_sum = (0..k).map(|j| cm[[i, j]]).sum::<usize>() as f64;
+            let col_sum = (0..k).map(|j| cm[[j, i]]).sum::<usize>() as f64;
+            (row_sum / n) * (col_sum / n)
+        })
+        .sum();
+
+    if (1.0 - p_e).abs() < f64::EPSILON {
+        // Perfect expected agreement — kappa is undefined, return 1.0 by
+        // convention (everyone agrees and chance would predict 100% agreement).
+        return Ok(1.0);
+    }
+
+    Ok((p_o - p_e) / (1.0 - p_e))
+}
+
+// ---------------------------------------------------------------------------
+// classification_report
+// ---------------------------------------------------------------------------
+
+/// Generate a text classification report.
+///
+/// Returns a formatted string containing per-class precision, recall, F1-score
+/// and support, along with the macro average and weighted average rows.
+///
+/// The output format matches the familiar scikit-learn `classification_report`
+/// layout.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth class labels.
+/// * `y_pred` — predicted class labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::classification_report;
+/// use ndarray::array;
+///
+/// let y_true = array![0usize, 1, 1, 0, 1];
+/// let y_pred = array![0usize, 1, 0, 0, 1];
+/// let report = classification_report(&y_true, &y_pred).unwrap();
+/// assert!(report.contains("precision"));
+/// assert!(report.contains("recall"));
+/// ```
+pub fn classification_report(
+    y_true: &Array1<usize>,
+    y_pred: &Array1<usize>,
+) -> Result<String, FerroError> {
+    let n = y_true.len();
+    check_same_length(n, y_pred.len(), "classification_report: y_true vs y_pred")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "classification_report".into(),
+        });
+    }
+
+    let classes = unique_classes(y_true, y_pred);
+    let (tp, fp, fn_count) = per_class_counts(y_true, y_pred, &classes);
+
+    let mut lines = Vec::new();
+
+    // Header.
+    lines.push(format!(
+        "{:>12}  {:>9}  {:>9}  {:>9}  {:>9}",
+        "", "precision", "recall", "f1-score", "support"
+    ));
+    lines.push(String::new());
+
+    let mut macro_prec = 0.0_f64;
+    let mut macro_rec = 0.0_f64;
+    let mut macro_f1 = 0.0_f64;
+    let mut weighted_prec = 0.0_f64;
+    let mut weighted_rec = 0.0_f64;
+    let mut weighted_f1 = 0.0_f64;
+    let total_support = n;
+
+    for (k, &c) in classes.iter().enumerate() {
+        let support = y_true.iter().filter(|&&v| v == c).count();
+        let prec = safe_div(tp[k] as f64, (tp[k] + fp[k]) as f64);
+        let rec = safe_div(tp[k] as f64, (tp[k] + fn_count[k]) as f64);
+        let f1 = safe_div(2.0 * prec * rec, prec + rec);
+
+        lines.push(format!(
+            "{:>12}  {:>9.2}  {:>9.2}  {:>9.2}  {:>9}",
+            c, prec, rec, f1, support
+        ));
+
+        macro_prec += prec;
+        macro_rec += rec;
+        macro_f1 += f1;
+
+        let w = support as f64;
+        weighted_prec += prec * w;
+        weighted_rec += rec * w;
+        weighted_f1 += f1 * w;
+    }
+
+    let k = classes.len() as f64;
+    macro_prec /= k;
+    macro_rec /= k;
+    macro_f1 /= k;
+    weighted_prec /= total_support as f64;
+    weighted_rec /= total_support as f64;
+    weighted_f1 /= total_support as f64;
+
+    lines.push(String::new());
+    lines.push(format!(
+        "{:>12}  {:>9.2}  {:>9.2}  {:>9.2}  {:>9}",
+        "accuracy",
+        "",
+        "",
+        accuracy_score(y_true, y_pred)?,
+        total_support
+    ));
+    lines.push(format!(
+        "{:>12}  {:>9.2}  {:>9.2}  {:>9.2}  {:>9}",
+        "macro avg", macro_prec, macro_rec, macro_f1, total_support
+    ));
+    lines.push(format!(
+        "{:>12}  {:>9.2}  {:>9.2}  {:>9.2}  {:>9}",
+        "weighted avg", weighted_prec, weighted_rec, weighted_f1, total_support
+    ));
+
+    Ok(lines.join("\n"))
+}
+
+// ---------------------------------------------------------------------------
+// brier_score_loss
+// ---------------------------------------------------------------------------
+
+/// Compute the Brier score loss for binary classification.
+///
+/// The Brier score measures the mean squared difference between predicted
+/// probabilities and the actual binary outcomes:
+///
+/// ```text
+/// Brier = (1/n) * sum (y_true - y_prob)^2
+/// ```
+///
+/// A Brier score of 0 indicates perfect probabilistic predictions, while 1
+/// is the worst possible score.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth binary labels (0 or 1).
+/// * `y_prob` — predicted probability of the positive class (class 1).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] if `y_true` contains values
+/// other than 0 or 1.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::brier_score_loss;
+/// use ndarray::array;
+///
+/// let y_true = array![0usize, 1, 1, 0];
+/// let y_prob = array![0.1, 0.9, 0.8, 0.2];
+/// let brier = brier_score_loss(&y_true, &y_prob).unwrap();
+/// assert!(brier < 0.1);
+/// ```
+pub fn brier_score_loss(
+    y_true: &Array1<usize>,
+    y_prob: &Array1<f64>,
+) -> Result<f64, FerroError> {
+    let n = y_true.len();
+    check_same_length(n, y_prob.len(), "brier_score_loss: y_true vs y_prob")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "brier_score_loss".into(),
+        });
+    }
+
+    for &label in y_true.iter() {
+        if label > 1 {
+            return Err(FerroError::InvalidParameter {
+                name: "y_true".into(),
+                reason: format!(
+                    "brier_score_loss requires binary labels (0 or 1), found label {label}"
+                ),
+            });
+        }
+    }
+
+    let sum: f64 = y_true
+        .iter()
+        .zip(y_prob.iter())
+        .map(|(&t, &p)| {
+            let diff = t as f64 - p;
+            diff * diff
+        })
+        .sum();
+
+    Ok(sum / n as f64)
+}
+
+// ---------------------------------------------------------------------------
+// hinge_loss
+// ---------------------------------------------------------------------------
+
+/// Compute the average hinge loss.
+///
+/// For binary classification where `y_true` is in `{-1, +1}`:
+///
+/// ```text
+/// hinge_loss = (1/n) * sum max(0, 1 - y_true * y_pred)
+/// ```
+///
+/// Note: unlike most classification functions in this module that use `usize`
+/// labels, hinge loss requires labels in `{-1, +1}` represented as `isize`.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth binary labels (-1 or +1) as `isize`.
+/// * `y_pred` — predicted decision function values (not probabilities).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] if `y_true` contains values
+/// other than -1 or +1.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::hinge_loss;
+/// use ndarray::array;
+///
+/// let y_true = array![-1isize, 1, 1, -1];
+/// let y_pred = array![-2.0, 0.5, 1.5, -0.5];
+/// let loss = hinge_loss(&y_true, &y_pred).unwrap();
+/// // max(0, 1-(-1)(-2))=max(0,-1)=0
+/// // max(0, 1-1*0.5)=0.5
+/// // max(0, 1-1*1.5)=0
+/// // max(0, 1-(-1)(-0.5))=max(0,0.5)=0.5
+/// // mean = (0+0.5+0+0.5)/4 = 0.25
+/// assert!((loss - 0.25).abs() < 1e-10);
+/// ```
+pub fn hinge_loss(y_true: &Array1<isize>, y_pred: &Array1<f64>) -> Result<f64, FerroError> {
+    let n = y_true.len();
+    if n != y_pred.len() {
+        return Err(FerroError::ShapeMismatch {
+            expected: vec![n],
+            actual: vec![y_pred.len()],
+            context: "hinge_loss: y_true vs y_pred".into(),
+        });
+    }
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "hinge_loss".into(),
+        });
+    }
+
+    for (i, &label) in y_true.iter().enumerate() {
+        if label != -1 && label != 1 {
+            return Err(FerroError::InvalidParameter {
+                name: "y_true".into(),
+                reason: format!(
+                    "hinge_loss requires labels in {{-1, +1}}, found {label} at index {i}"
+                ),
+            });
+        }
+    }
+
+    let sum: f64 = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .map(|(&t, &p)| {
+            let margin = 1.0 - (t as f64) * p;
+            if margin > 0.0 { margin } else { 0.0 }
+        })
+        .sum();
+
+    Ok(sum / n as f64)
+}
+
+// ---------------------------------------------------------------------------
+// hamming_loss
+// ---------------------------------------------------------------------------
+
+/// Compute the Hamming loss.
+///
+/// The Hamming loss is the fraction of labels that differ between `y_true`
+/// and `y_pred`:
+///
+/// ```text
+/// hamming_loss = (1/n) * sum (y_true_i != y_pred_i)
+/// ```
+///
+/// This is equivalent to `1 - accuracy_score`.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth class labels.
+/// * `y_pred` — predicted class labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::hamming_loss;
+/// use ndarray::array;
+///
+/// let y_true = array![0usize, 1, 2, 1, 0];
+/// let y_pred = array![0usize, 1, 2, 0, 0];
+/// let loss = hamming_loss(&y_true, &y_pred).unwrap();
+/// assert!((loss - 0.2).abs() < 1e-10);
+/// ```
+pub fn hamming_loss(y_true: &Array1<usize>, y_pred: &Array1<usize>) -> Result<f64, FerroError> {
+    let n = y_true.len();
+    check_same_length(n, y_pred.len(), "hamming_loss: y_true vs y_pred")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "hamming_loss".into(),
+        });
+    }
+    let wrong = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .filter(|&(&t, &p)| t != p)
+        .count();
+    Ok(wrong as f64 / n as f64)
+}
+
+// ---------------------------------------------------------------------------
+// jaccard_score
+// ---------------------------------------------------------------------------
+
+/// Compute the Jaccard similarity score.
+///
+/// The Jaccard similarity for a class is `|intersection| / |union|`, which
+/// equals `TP / (TP + FP + FN)`.
+///
+/// # Arguments
+///
+/// * `y_true`  — ground-truth class labels.
+/// * `y_pred`  — predicted class labels.
+/// * `average` — aggregation strategy (see [`Average`]).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] when `Average::Binary` is
+/// requested but the label set is not binary.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::{jaccard_score, Average};
+/// use ndarray::array;
+///
+/// let y_true = array![0usize, 1, 1, 0, 1];
+/// let y_pred = array![0usize, 1, 0, 0, 1];
+/// let j = jaccard_score(&y_true, &y_pred, Average::Binary).unwrap();
+/// // TP=2, FP=0, FN=1 => 2/(2+0+1)=2/3
+/// assert!((j - 2.0 / 3.0).abs() < 1e-10);
+/// ```
+pub fn jaccard_score(
+    y_true: &Array1<usize>,
+    y_pred: &Array1<usize>,
+    average: Average,
+) -> Result<f64, FerroError> {
+    let n = y_true.len();
+    check_same_length(n, y_pred.len(), "jaccard_score: y_true vs y_pred")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "jaccard_score".into(),
+        });
+    }
+
+    let classes = unique_classes(y_true, y_pred);
+    let (tp, fp, fn_count) = per_class_counts(y_true, y_pred, &classes);
+
+    let jaccard_for_class = |t: f64, f_p: f64, f_n: f64| -> f64 {
+        safe_div(t, t + f_p + f_n)
+    };
+
+    match average {
+        Average::Binary => {
+            if classes.len() != 2 {
+                return Err(FerroError::InvalidParameter {
+                    name: "average".into(),
+                    reason: format!(
+                        "jaccard_score: Average::Binary requires exactly 2 classes, found {}",
+                        classes.len()
+                    ),
+                });
+            }
+            Ok(jaccard_for_class(
+                tp[1] as f64,
+                fp[1] as f64,
+                fn_count[1] as f64,
+            ))
+        }
+        Average::Macro => {
+            let sum: f64 = tp
+                .iter()
+                .zip(fp.iter())
+                .zip(fn_count.iter())
+                .map(|((&t, &f_p), &f_n)| {
+                    jaccard_for_class(t as f64, f_p as f64, f_n as f64)
+                })
+                .sum();
+            Ok(sum / classes.len() as f64)
+        }
+        Average::Micro => {
+            let total_tp: f64 = tp.iter().sum::<usize>() as f64;
+            let total_fp: f64 = fp.iter().sum::<usize>() as f64;
+            let total_fn: f64 = fn_count.iter().sum::<usize>() as f64;
+            Ok(jaccard_for_class(total_tp, total_fp, total_fn))
+        }
+        Average::Weighted => {
+            let n_f = n as f64;
+            let mut weighted_sum = 0.0_f64;
+            for (k, &c) in classes.iter().enumerate() {
+                let support = y_true.iter().filter(|&&v| v == c).count();
+                let j = jaccard_for_class(tp[k] as f64, fp[k] as f64, fn_count[k] as f64);
+                weighted_sum += j * support as f64;
+            }
+            Ok(weighted_sum / n_f)
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// zero_one_loss
+// ---------------------------------------------------------------------------
+
+/// Compute the zero-one classification loss.
+///
+/// When `normalize` is `true` (the default), returns the fraction of
+/// misclassified samples. When `false`, returns the raw count of
+/// misclassifications.
+///
+/// # Arguments
+///
+/// * `y_true`    — ground-truth class labels.
+/// * `y_pred`    — predicted class labels.
+/// * `normalize` — if `true`, return fraction; if `false`, return count.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::classification::zero_one_loss;
+/// use ndarray::array;
+///
+/// let y_true = array![0usize, 1, 2, 1, 0];
+/// let y_pred = array![0usize, 1, 2, 0, 0];
+/// // 1 misclassification out of 5
+/// assert!((zero_one_loss(&y_true, &y_pred, true).unwrap() - 0.2).abs() < 1e-10);
+/// assert!((zero_one_loss(&y_true, &y_pred, false).unwrap() - 1.0).abs() < 1e-10);
+/// ```
+pub fn zero_one_loss(
+    y_true: &Array1<usize>,
+    y_pred: &Array1<usize>,
+    normalize: bool,
+) -> Result<f64, FerroError> {
+    let n = y_true.len();
+    check_same_length(n, y_pred.len(), "zero_one_loss: y_true vs y_pred")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "zero_one_loss".into(),
+        });
+    }
+    let wrong = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .filter(|&(&t, &p)| t != p)
+        .count();
+    if normalize {
+        Ok(wrong as f64 / n as f64)
+    } else {
+        Ok(wrong as f64)
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -1083,6 +1937,389 @@ mod tests {
         let y_true = Array1::<usize>::from_vec(vec![]);
         let y_prob = Array2::<f64>::zeros((0, 2));
         assert!(log_loss(&y_true, &y_prob).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // balanced_accuracy_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_balanced_accuracy_perfect() {
+        let y_true = array![0usize, 0, 1, 1, 2, 2];
+        let y_pred = array![0usize, 0, 1, 1, 2, 2];
+        assert_abs_diff_eq!(
+            balanced_accuracy_score(&y_true, &y_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_balanced_accuracy_imbalanced() {
+        // 3 class-0, 2 class-1. recall_0=1.0, recall_1=0.5 => 0.75
+        let y_true = array![0usize, 0, 0, 1, 1];
+        let y_pred = array![0usize, 0, 0, 1, 0];
+        assert_abs_diff_eq!(
+            balanced_accuracy_score(&y_true, &y_pred).unwrap(),
+            0.75,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_balanced_accuracy_empty() {
+        let y_true = Array1::<usize>::from_vec(vec![]);
+        let y_pred = Array1::<usize>::from_vec(vec![]);
+        assert!(balanced_accuracy_score(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // matthews_corrcoef
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_mcc_perfect_binary() {
+        let y_true = array![0usize, 0, 1, 1];
+        let y_pred = array![0usize, 0, 1, 1];
+        assert_abs_diff_eq!(
+            matthews_corrcoef(&y_true, &y_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_mcc_inverse_binary() {
+        let y_true = array![0usize, 0, 1, 1];
+        let y_pred = array![1usize, 1, 0, 0];
+        assert_abs_diff_eq!(
+            matthews_corrcoef(&y_true, &y_pred).unwrap(),
+            -1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_mcc_random_binary() {
+        // When all predictions are the same class, MCC should be 0
+        let y_true = array![0usize, 0, 1, 1];
+        let y_pred = array![1usize, 1, 1, 1];
+        assert_abs_diff_eq!(
+            matthews_corrcoef(&y_true, &y_pred).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_mcc_multiclass_perfect() {
+        let y_true = array![0usize, 0, 1, 1, 2, 2];
+        let y_pred = array![0usize, 0, 1, 1, 2, 2];
+        assert_abs_diff_eq!(
+            matthews_corrcoef(&y_true, &y_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_mcc_empty() {
+        let y_true = Array1::<usize>::from_vec(vec![]);
+        let y_pred = Array1::<usize>::from_vec(vec![]);
+        assert!(matthews_corrcoef(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // cohen_kappa_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_kappa_perfect() {
+        let y_true = array![0usize, 0, 1, 1, 2, 2];
+        let y_pred = array![0usize, 0, 1, 1, 2, 2];
+        assert_abs_diff_eq!(
+            cohen_kappa_score(&y_true, &y_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_kappa_random() {
+        // When predictions are completely wrong, kappa should be <= 0
+        let y_true = array![0usize, 0, 1, 1];
+        let y_pred = array![1usize, 1, 0, 0];
+        let kappa = cohen_kappa_score(&y_true, &y_pred).unwrap();
+        assert!(kappa <= 0.0, "expected <= 0, got {kappa}");
+    }
+
+    #[test]
+    fn test_kappa_empty() {
+        let y_true = Array1::<usize>::from_vec(vec![]);
+        let y_pred = Array1::<usize>::from_vec(vec![]);
+        assert!(cohen_kappa_score(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // fbeta_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_fbeta_equals_f1_when_beta_1() {
+        let y_true = array![0usize, 1, 1, 0, 1];
+        let y_pred = array![0usize, 1, 0, 0, 1];
+        let f1 = f1_score(&y_true, &y_pred, Average::Binary).unwrap();
+        let fb = fbeta_score(&y_true, &y_pred, 1.0, Average::Binary).unwrap();
+        assert_abs_diff_eq!(f1, fb, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_fbeta_macro() {
+        let y_true = array![0usize, 1, 2, 0, 1, 2];
+        let y_pred = array![0usize, 1, 2, 0, 1, 2];
+        let fb = fbeta_score(&y_true, &y_pred, 0.5, Average::Macro).unwrap();
+        assert_abs_diff_eq!(fb, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_fbeta_invalid_beta() {
+        let y_true = array![0usize, 1];
+        let y_pred = array![0usize, 1];
+        assert!(fbeta_score(&y_true, &y_pred, 0.0, Average::Binary).is_err());
+        assert!(fbeta_score(&y_true, &y_pred, -1.0, Average::Binary).is_err());
+    }
+
+    #[test]
+    fn test_fbeta_empty() {
+        let y_true = Array1::<usize>::from_vec(vec![]);
+        let y_pred = Array1::<usize>::from_vec(vec![]);
+        assert!(fbeta_score(&y_true, &y_pred, 1.0, Average::Macro).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // classification_report
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_classification_report_contains_headers() {
+        let y_true = array![0usize, 1, 1, 0, 1];
+        let y_pred = array![0usize, 1, 0, 0, 1];
+        let report = classification_report(&y_true, &y_pred).unwrap();
+        assert!(report.contains("precision"));
+        assert!(report.contains("recall"));
+        assert!(report.contains("f1-score"));
+        assert!(report.contains("support"));
+        assert!(report.contains("macro avg"));
+        assert!(report.contains("weighted avg"));
+    }
+
+    #[test]
+    fn test_classification_report_empty() {
+        let y_true = Array1::<usize>::from_vec(vec![]);
+        let y_pred = Array1::<usize>::from_vec(vec![]);
+        assert!(classification_report(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // brier_score_loss
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_brier_perfect() {
+        let y_true = array![0usize, 1, 1, 0];
+        let y_prob = array![0.0, 1.0, 1.0, 0.0];
+        assert_abs_diff_eq!(
+            brier_score_loss(&y_true, &y_prob).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_brier_basic() {
+        let y_true = array![0usize, 1, 1, 0];
+        let y_prob = array![0.1, 0.9, 0.8, 0.2];
+        // (0.01 + 0.01 + 0.04 + 0.04) / 4 = 0.025
+        assert_abs_diff_eq!(
+            brier_score_loss(&y_true, &y_prob).unwrap(),
+            0.025,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_brier_invalid_labels() {
+        let y_true = array![0usize, 2, 1];
+        let y_prob = array![0.1, 0.9, 0.8];
+        assert!(brier_score_loss(&y_true, &y_prob).is_err());
+    }
+
+    #[test]
+    fn test_brier_empty() {
+        let y_true = Array1::<usize>::from_vec(vec![]);
+        let y_prob = Array1::<f64>::from_vec(vec![]);
+        assert!(brier_score_loss(&y_true, &y_prob).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // hinge_loss
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_hinge_loss_basic() {
+        let y_true = array![-1isize, 1, 1, -1];
+        let y_pred = array![-2.0, 0.5, 1.5, -0.5];
+        // max(0,1-(-1)(-2))=0, max(0,1-0.5)=0.5, max(0,1-1.5)=0, max(0,1-0.5)=0.5
+        assert_abs_diff_eq!(
+            hinge_loss(&y_true, &y_pred).unwrap(),
+            0.25,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_hinge_loss_perfect() {
+        let y_true = array![1isize, -1, 1, -1];
+        let y_pred = array![2.0, -2.0, 3.0, -3.0];
+        assert_abs_diff_eq!(
+            hinge_loss(&y_true, &y_pred).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_hinge_loss_invalid_labels() {
+        let y_true = array![0isize, 1, -1];
+        let y_pred = array![0.5, 0.5, 0.5];
+        assert!(hinge_loss(&y_true, &y_pred).is_err());
+    }
+
+    #[test]
+    fn test_hinge_loss_empty() {
+        let y_true = Array1::<isize>::from_vec(vec![]);
+        let y_pred = Array1::<f64>::from_vec(vec![]);
+        assert!(hinge_loss(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // hamming_loss
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_hamming_loss_basic() {
+        let y_true = array![0usize, 1, 2, 1, 0];
+        let y_pred = array![0usize, 1, 2, 0, 0];
+        assert_abs_diff_eq!(
+            hamming_loss(&y_true, &y_pred).unwrap(),
+            0.2,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_hamming_loss_perfect() {
+        let y_true = array![0usize, 1, 2];
+        let y_pred = array![0usize, 1, 2];
+        assert_abs_diff_eq!(
+            hamming_loss(&y_true, &y_pred).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_hamming_loss_complement_of_accuracy() {
+        let y_true = array![0usize, 1, 1, 0, 1];
+        let y_pred = array![0usize, 1, 0, 0, 1];
+        let acc = accuracy_score(&y_true, &y_pred).unwrap();
+        let hl = hamming_loss(&y_true, &y_pred).unwrap();
+        assert_abs_diff_eq!(acc + hl, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_hamming_loss_empty() {
+        let y_true = Array1::<usize>::from_vec(vec![]);
+        let y_pred = Array1::<usize>::from_vec(vec![]);
+        assert!(hamming_loss(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // jaccard_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_jaccard_binary() {
+        let y_true = array![0usize, 1, 1, 0, 1];
+        let y_pred = array![0usize, 1, 0, 0, 1];
+        // TP=2, FP=0, FN=1 => J = 2/3
+        assert_abs_diff_eq!(
+            jaccard_score(&y_true, &y_pred, Average::Binary).unwrap(),
+            2.0 / 3.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_jaccard_perfect() {
+        let y_true = array![0usize, 1, 2, 0, 1, 2];
+        let y_pred = array![0usize, 1, 2, 0, 1, 2];
+        assert_abs_diff_eq!(
+            jaccard_score(&y_true, &y_pred, Average::Macro).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_jaccard_empty() {
+        let y_true = Array1::<usize>::from_vec(vec![]);
+        let y_pred = Array1::<usize>::from_vec(vec![]);
+        assert!(jaccard_score(&y_true, &y_pred, Average::Macro).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // zero_one_loss
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_zero_one_loss_normalized() {
+        let y_true = array![0usize, 1, 2, 1, 0];
+        let y_pred = array![0usize, 1, 2, 0, 0];
+        assert_abs_diff_eq!(
+            zero_one_loss(&y_true, &y_pred, true).unwrap(),
+            0.2,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_zero_one_loss_count() {
+        let y_true = array![0usize, 1, 2, 1, 0];
+        let y_pred = array![0usize, 1, 2, 0, 0];
+        assert_abs_diff_eq!(
+            zero_one_loss(&y_true, &y_pred, false).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_zero_one_loss_perfect() {
+        let y_true = array![0usize, 1, 2];
+        let y_pred = array![0usize, 1, 2];
+        assert_abs_diff_eq!(
+            zero_one_loss(&y_true, &y_pred, true).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_zero_one_loss_empty() {
+        let y_true = Array1::<usize>::from_vec(vec![]);
+        let y_pred = Array1::<usize>::from_vec(vec![]);
+        assert!(zero_one_loss(&y_true, &y_pred, true).is_err());
     }
 }
 

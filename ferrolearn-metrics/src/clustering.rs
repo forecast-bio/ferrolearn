@@ -4,12 +4,18 @@
 //! quality of unsupervised clustering results:
 //!
 //! - [`silhouette_score`] — mean silhouette coefficient across all samples
+//! - [`silhouette_samples`] — per-sample silhouette coefficients
 //! - [`adjusted_rand_score`] — Adjusted Rand Index comparing two labelings
 //! - [`adjusted_mutual_info`] — Adjusted Mutual Information between two labelings
 //! - [`davies_bouldin_score`] — Davies-Bouldin index for cluster separation
+//! - [`calinski_harabasz_score`] — Variance Ratio Criterion
+//! - [`homogeneity_score`] — each cluster contains only one class
+//! - [`completeness_score`] — all samples of a class are in one cluster
+//! - [`v_measure_score`] — harmonic mean of homogeneity and completeness
 //!
 //! Noise points (label == -1, as used by DBSCAN) are excluded from all
-//! silhouette computations but are counted in contingency-based metrics.
+//! silhouette and Calinski-Harabasz computations but are counted in
+//! contingency-based metrics.
 
 use ferrolearn_core::FerroError;
 use ndarray::{Array1, Array2};
@@ -717,6 +723,574 @@ where
 }
 
 // ---------------------------------------------------------------------------
+// silhouette_samples
+// ---------------------------------------------------------------------------
+
+/// Compute per-sample Silhouette Coefficients.
+///
+/// For each sample `i` belonging to cluster `C_i`:
+/// - `a(i)` = mean distance from `i` to all other samples in `C_i`
+/// - `b(i)` = mean distance from `i` to samples in the nearest other cluster
+/// - `s(i)` = `(b(i) - a(i)) / max(a(i), b(i))`
+///
+/// Unlike [`silhouette_score`], this returns the per-sample array rather than
+/// the mean. Noise points (label == -1) receive a silhouette value of `0.0`.
+///
+/// # Arguments
+///
+/// * `x`      — feature matrix of shape `(n_samples, n_features)`.
+/// * `labels` — cluster label for each sample. Use `-1` for noise.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != labels.len()`.
+/// Returns [`FerroError::InsufficientSamples`] if there are no samples.
+/// Returns [`FerroError::InvalidParameter`] if there is only one cluster
+/// (after excluding noise).
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::clustering::silhouette_samples;
+/// use ndarray::{array, Array2};
+///
+/// let x = Array2::from_shape_vec((4, 2), vec![
+///     0.0_f64, 0.0,
+///     0.1, 0.1,
+///     10.0, 10.0,
+///     10.1, 10.1,
+/// ]).unwrap();
+/// let labels = array![0isize, 0, 1, 1];
+/// let samples = silhouette_samples(&x, &labels).unwrap();
+/// assert_eq!(samples.len(), 4);
+/// assert!(samples[0] > 0.9);
+/// ```
+pub fn silhouette_samples<F>(x: &Array2<F>, labels: &Array1<isize>) -> Result<Array1<F>, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    let n = x.nrows();
+    check_x_labels_compat(n, labels.len(), "silhouette_samples: x rows vs labels")?;
+
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "silhouette_samples".into(),
+        });
+    }
+
+    let cluster_labels = unique_cluster_labels(labels);
+    let n_clusters = cluster_labels.len();
+
+    if n_clusters < 2 {
+        return Err(FerroError::InvalidParameter {
+            name: "labels".into(),
+            reason: format!(
+                "silhouette_samples requires at least 2 clusters (excluding noise), found {n_clusters}"
+            ),
+        });
+    }
+
+    let cluster_indices: Vec<Vec<usize>> = cluster_labels
+        .iter()
+        .map(|&cl| {
+            labels
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &l)| if l == cl { Some(i) } else { None })
+                .collect()
+        })
+        .collect();
+
+    let label_to_idx = |lbl: isize| -> Option<usize> {
+        cluster_labels
+            .partition_point(|&c| c < lbl)
+            .let_if(|&pos| pos < cluster_labels.len() && cluster_labels[pos] == lbl)
+    };
+
+    let mut result = Array1::from_elem(n, F::zero());
+
+    for i in 0..n {
+        let li = labels[i];
+        if li == -1 {
+            continue; // noise points get 0.0
+        }
+
+        let ci_idx = match label_to_idx(li) {
+            Some(idx) => idx,
+            None => continue,
+        };
+
+        let ci_members = &cluster_indices[ci_idx];
+
+        let a_i = if ci_members.len() <= 1 {
+            F::zero()
+        } else {
+            let mut dist_sum = F::zero();
+            for &j in ci_members {
+                if j == i {
+                    continue;
+                }
+                dist_sum = dist_sum + row_euclidean_dist(x, i, j);
+            }
+            dist_sum / F::from(ci_members.len() - 1).unwrap()
+        };
+
+        let mut b_i = F::infinity();
+        for (k, &cl_k) in cluster_labels.iter().enumerate() {
+            if cl_k == li {
+                continue;
+            }
+            let other_members = &cluster_indices[k];
+            if other_members.is_empty() {
+                continue;
+            }
+            let mut dist_sum = F::zero();
+            for &j in other_members {
+                dist_sum = dist_sum + row_euclidean_dist(x, i, j);
+            }
+            let mean_dist = dist_sum / F::from(other_members.len()).unwrap();
+            if mean_dist < b_i {
+                b_i = mean_dist;
+            }
+        }
+
+        let max_ab = if a_i > b_i { a_i } else { b_i };
+        let s_i = if max_ab == F::zero() {
+            F::zero()
+        } else {
+            (b_i - a_i) / max_ab
+        };
+
+        result[i] = s_i;
+    }
+
+    Ok(result)
+}
+
+// ---------------------------------------------------------------------------
+// calinski_harabasz_score
+// ---------------------------------------------------------------------------
+
+/// Compute the Calinski-Harabasz Index (Variance Ratio Criterion).
+///
+/// The score is the ratio of the between-cluster dispersion to the
+/// within-cluster dispersion:
+///
+/// ```text
+/// CH = (B / (k - 1)) / (W / (n - k))
+/// ```
+///
+/// where `B` is the between-group sum of squares, `W` is the within-group
+/// sum of squares, `k` is the number of clusters, and `n` is the number of
+/// samples.
+///
+/// Higher values indicate better-defined clustering. Noise points (label == -1)
+/// are excluded.
+///
+/// # Arguments
+///
+/// * `x`      — feature matrix of shape `(n_samples, n_features)`.
+/// * `labels` — cluster label for each sample. Use `-1` for noise.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != labels.len()`.
+/// Returns [`FerroError::InsufficientSamples`] if there are fewer than 2
+/// non-noise samples.
+/// Returns [`FerroError::InvalidParameter`] if fewer than 2 clusters are found,
+/// or if `n == k` (which would make the within-group degrees of freedom zero).
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::clustering::calinski_harabasz_score;
+/// use ndarray::{array, Array2};
+///
+/// let x = Array2::from_shape_vec((4, 2), vec![
+///     0.0_f64, 0.0,
+///     0.1, 0.1,
+///     10.0, 10.0,
+///     10.1, 10.1,
+/// ]).unwrap();
+/// let labels = array![0isize, 0, 1, 1];
+/// let score = calinski_harabasz_score(&x, &labels).unwrap();
+/// assert!(score > 100.0); // well-separated clusters
+/// ```
+pub fn calinski_harabasz_score<F>(
+    x: &Array2<F>,
+    labels: &Array1<isize>,
+) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    let n_total = x.nrows();
+    check_x_labels_compat(n_total, labels.len(), "calinski_harabasz_score: x rows vs labels")?;
+
+    let cluster_labels = unique_cluster_labels(labels);
+    let n_clusters = cluster_labels.len();
+
+    if n_clusters < 2 {
+        return Err(FerroError::InvalidParameter {
+            name: "labels".into(),
+            reason: format!(
+                "calinski_harabasz_score requires at least 2 clusters (excluding noise), found {n_clusters}"
+            ),
+        });
+    }
+
+    let n_features = x.ncols();
+
+    // Collect indices per cluster.
+    let cluster_indices: Vec<Vec<usize>> = cluster_labels
+        .iter()
+        .map(|&cl| {
+            labels
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &l)| if l == cl { Some(i) } else { None })
+                .collect()
+        })
+        .collect();
+
+    // Total non-noise samples.
+    let n: usize = cluster_indices.iter().map(|v| v.len()).sum();
+
+    if n < 2 {
+        return Err(FerroError::InsufficientSamples {
+            required: 2,
+            actual: n,
+            context: "calinski_harabasz_score".into(),
+        });
+    }
+
+    if n == n_clusters {
+        return Err(FerroError::InvalidParameter {
+            name: "labels".into(),
+            reason: "calinski_harabasz_score: n_samples equals n_clusters, within-group dispersion is zero".into(),
+        });
+    }
+
+    // Global centroid (non-noise samples only).
+    let mut global_centroid = vec![F::zero(); n_features];
+    for members in &cluster_indices {
+        for &i in members {
+            for f in 0..n_features {
+                global_centroid[f] = global_centroid[f] + x[[i, f]];
+            }
+        }
+    }
+    let n_f = F::from(n).unwrap();
+    for v in &mut global_centroid {
+        *v = *v / n_f;
+    }
+
+    // Per-cluster centroids.
+    let centroids: Vec<Vec<F>> = cluster_indices
+        .iter()
+        .map(|members| {
+            let mut centroid = vec![F::zero(); n_features];
+            for &i in members {
+                for f in 0..n_features {
+                    centroid[f] = centroid[f] + x[[i, f]];
+                }
+            }
+            let cnt = F::from(members.len()).unwrap();
+            centroid.iter_mut().for_each(|v| *v = *v / cnt);
+            centroid
+        })
+        .collect();
+
+    // Between-group sum of squares.
+    let mut b_ss = F::zero();
+    for (k, members) in cluster_indices.iter().enumerate() {
+        let n_k = F::from(members.len()).unwrap();
+        let mut sq_dist = F::zero();
+        for f in 0..n_features {
+            let d = centroids[k][f] - global_centroid[f];
+            sq_dist = sq_dist + d * d;
+        }
+        b_ss = b_ss + n_k * sq_dist;
+    }
+
+    // Within-group sum of squares.
+    let mut w_ss = F::zero();
+    for (k, members) in cluster_indices.iter().enumerate() {
+        for &i in members {
+            let mut sq_dist = F::zero();
+            for f in 0..n_features {
+                let d = x[[i, f]] - centroids[k][f];
+                sq_dist = sq_dist + d * d;
+            }
+            w_ss = w_ss + sq_dist;
+        }
+    }
+
+    let k_f = F::from(n_clusters).unwrap();
+    let one = F::one();
+
+    // CH = (B / (k-1)) / (W / (n-k))
+    if w_ss == F::zero() {
+        // Perfect clustering — all points coincide with centroids.
+        return Ok(F::infinity());
+    }
+
+    Ok((b_ss / (k_f - one)) / (w_ss / (n_f - k_f)))
+}
+
+// ---------------------------------------------------------------------------
+// homogeneity_score, completeness_score, v_measure_score
+// ---------------------------------------------------------------------------
+
+/// Build a contingency table between true labels and predicted labels (both isize).
+///
+/// Returns `(classes_true, classes_pred, contingency)`.
+fn build_contingency_table(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+) -> (Vec<isize>, Vec<isize>, Vec<Vec<u64>>) {
+    let mut classes_true: Vec<isize> = labels_true.iter().copied().collect();
+    classes_true.sort_unstable();
+    classes_true.dedup();
+
+    let mut classes_pred: Vec<isize> = labels_pred.iter().copied().collect();
+    classes_pred.sort_unstable();
+    classes_pred.dedup();
+
+    let r = classes_true.len();
+    let s = classes_pred.len();
+
+    let mut contingency = vec![vec![0u64; s]; r];
+    for (&lt, &lp) in labels_true.iter().zip(labels_pred.iter()) {
+        let ri = classes_true.partition_point(|&c| c < lt);
+        let ci = classes_pred.partition_point(|&c| c < lp);
+        contingency[ri][ci] += 1;
+    }
+
+    (classes_true, classes_pred, contingency)
+}
+
+/// Compute the homogeneity score.
+///
+/// A clustering result satisfies homogeneity if all clusters contain only
+/// samples from a single class. The score is:
+///
+/// ```text
+/// homogeneity = 1 - H(C|K) / H(C)
+/// ```
+///
+/// where `H(C|K)` is the conditional entropy of the class distribution
+/// given the cluster assignments and `H(C)` is the entropy of the class
+/// distribution.
+///
+/// # Arguments
+///
+/// * `labels_true` — ground-truth class labels.
+/// * `labels_pred` — cluster labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::clustering::homogeneity_score;
+/// use ndarray::array;
+///
+/// let labels_true = array![0isize, 0, 1, 1, 2, 2];
+/// let labels_pred = array![0isize, 0, 1, 1, 2, 2];
+/// let h = homogeneity_score(&labels_true, &labels_pred).unwrap();
+/// assert!((h - 1.0).abs() < 1e-10);
+/// ```
+pub fn homogeneity_score(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+) -> Result<f64, FerroError> {
+    let n = labels_true.len();
+    check_labels_same_length(n, labels_pred.len(), "homogeneity_score")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "homogeneity_score".into(),
+        });
+    }
+
+    let n_f = n as f64;
+    let (_classes_true, _classes_pred, contingency) =
+        build_contingency_table(labels_true, labels_pred);
+
+    let n_cols = contingency[0].len();
+
+    // Row sums (class totals).
+    let a: Vec<u64> = contingency.iter().map(|row| row.iter().sum()).collect();
+
+    // H(C) = entropy of classes.
+    let h_c = entropy_from_counts(&a, n_f);
+    if h_c == 0.0 {
+        // Only one class — homogeneity is 1.0 by convention.
+        return Ok(1.0);
+    }
+
+    // Column sums (cluster totals).
+    let b: Vec<u64> = (0..n_cols)
+        .map(|j| contingency.iter().map(|row| row[j]).sum())
+        .collect();
+
+    // H(C|K) = conditional entropy of classes given clusters.
+    let mut h_c_given_k = 0.0_f64;
+    for j in 0..n_cols {
+        let bj = b[j] as f64;
+        if bj == 0.0 {
+            continue;
+        }
+        for row in &contingency {
+            let n_ij = row[j] as f64;
+            if n_ij == 0.0 {
+                continue;
+            }
+            h_c_given_k -= (n_ij / n_f) * (n_ij / bj).ln();
+        }
+    }
+
+    Ok(1.0 - h_c_given_k / h_c)
+}
+
+/// Compute the completeness score.
+///
+/// A clustering result satisfies completeness if all samples of a given
+/// class are assigned to the same cluster. The score is:
+///
+/// ```text
+/// completeness = 1 - H(K|C) / H(K)
+/// ```
+///
+/// where `H(K|C)` is the conditional entropy of the cluster distribution
+/// given the class labels and `H(K)` is the entropy of the cluster
+/// distribution.
+///
+/// # Arguments
+///
+/// * `labels_true` — ground-truth class labels.
+/// * `labels_pred` — cluster labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::clustering::completeness_score;
+/// use ndarray::array;
+///
+/// let labels_true = array![0isize, 0, 1, 1, 2, 2];
+/// let labels_pred = array![0isize, 0, 1, 1, 2, 2];
+/// let c = completeness_score(&labels_true, &labels_pred).unwrap();
+/// assert!((c - 1.0).abs() < 1e-10);
+/// ```
+pub fn completeness_score(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+) -> Result<f64, FerroError> {
+    let n = labels_true.len();
+    check_labels_same_length(n, labels_pred.len(), "completeness_score")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "completeness_score".into(),
+        });
+    }
+
+    let n_f = n as f64;
+    let (_classes_true, _classes_pred, contingency) =
+        build_contingency_table(labels_true, labels_pred);
+
+    let n_cols = contingency[0].len();
+
+    // Column sums (cluster totals).
+    let b: Vec<u64> = (0..n_cols)
+        .map(|j| contingency.iter().map(|row| row[j]).sum())
+        .collect();
+
+    // H(K) = entropy of clusters.
+    let h_k = entropy_from_counts(&b, n_f);
+    if h_k == 0.0 {
+        // Only one cluster — completeness is 1.0 by convention.
+        return Ok(1.0);
+    }
+
+    // Row sums (class totals).
+    let a: Vec<u64> = contingency.iter().map(|row| row.iter().sum()).collect();
+
+    // H(K|C) = conditional entropy of clusters given classes.
+    let mut h_k_given_c = 0.0_f64;
+    for (row, &ai_raw) in contingency.iter().zip(a.iter()) {
+        let ai = ai_raw as f64;
+        if ai == 0.0 {
+            continue;
+        }
+        for &cell in row {
+            let n_ij = cell as f64;
+            if n_ij == 0.0 {
+                continue;
+            }
+            h_k_given_c -= (n_ij / n_f) * (n_ij / ai).ln();
+        }
+    }
+
+    Ok(1.0 - h_k_given_c / h_k)
+}
+
+/// Compute the V-measure score.
+///
+/// The V-measure is the harmonic mean of homogeneity and completeness:
+///
+/// ```text
+/// v = 2 * (homogeneity * completeness) / (homogeneity + completeness)
+/// ```
+///
+/// # Arguments
+///
+/// * `labels_true` — ground-truth class labels.
+/// * `labels_pred` — cluster labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::clustering::v_measure_score;
+/// use ndarray::array;
+///
+/// let labels_true = array![0isize, 0, 1, 1, 2, 2];
+/// let labels_pred = array![0isize, 0, 1, 1, 2, 2];
+/// let v = v_measure_score(&labels_true, &labels_pred).unwrap();
+/// assert!((v - 1.0).abs() < 1e-10);
+/// ```
+pub fn v_measure_score(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+) -> Result<f64, FerroError> {
+    let h = homogeneity_score(labels_true, labels_pred)?;
+    let c = completeness_score(labels_true, labels_pred)?;
+
+    if h + c == 0.0 {
+        return Ok(0.0);
+    }
+
+    Ok(2.0 * h * c / (h + c))
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -964,6 +1538,213 @@ mod tests {
             db_good < db_bad,
             "good clustering ({db_good}) should have lower DB than bad ({db_bad})"
         );
+    }
+
+    // -----------------------------------------------------------------------
+    // silhouette_samples
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_silhouette_samples_well_separated() {
+        let x = Array2::from_shape_vec(
+            (4, 2),
+            vec![0.0_f64, 0.0, 0.1, 0.1, 10.0, 10.0, 10.1, 10.1],
+        )
+        .unwrap();
+        let labels = array![0isize, 0, 1, 1];
+        let samples = silhouette_samples(&x, &labels).unwrap();
+        assert_eq!(samples.len(), 4);
+        for &s in samples.iter() {
+            assert!(s > 0.9, "expected > 0.9, got {s}");
+        }
+    }
+
+    #[test]
+    fn test_silhouette_samples_mean_matches_score() {
+        let x =
+            Array2::from_shape_vec((4, 1), vec![0.0_f64, 0.1, 100.0, 100.1]).unwrap();
+        let labels = array![0isize, 0, 1, 1];
+        let samples = silhouette_samples(&x, &labels).unwrap();
+        let mean: f64 = samples.iter().sum::<f64>() / samples.len() as f64;
+        let score: f64 = silhouette_score(&x, &labels).unwrap();
+        assert_abs_diff_eq!(mean, score, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_silhouette_samples_noise_gets_zero() {
+        let x =
+            Array2::from_shape_vec((5, 1), vec![0.0_f64, 0.1, 50.0, 100.0, 100.1]).unwrap();
+        let labels = array![0isize, 0, -1, 1, 1];
+        let samples = silhouette_samples(&x, &labels).unwrap();
+        assert_abs_diff_eq!(samples[2], 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_silhouette_samples_single_cluster_error() {
+        let x = Array2::from_shape_vec((3, 1), vec![0.0_f64, 1.0, 2.0]).unwrap();
+        let labels = array![0isize, 0, 0];
+        assert!(silhouette_samples(&x, &labels).is_err());
+    }
+
+    #[test]
+    fn test_silhouette_samples_empty() {
+        let x = Array2::<f64>::zeros((0, 2));
+        let labels = Array1::<isize>::from_vec(vec![]);
+        assert!(silhouette_samples(&x, &labels).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // calinski_harabasz_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_calinski_harabasz_well_separated() {
+        let x = Array2::from_shape_vec(
+            (4, 2),
+            vec![0.0_f64, 0.0, 0.1, 0.1, 10.0, 10.0, 10.1, 10.1],
+        )
+        .unwrap();
+        let labels = array![0isize, 0, 1, 1];
+        let score = calinski_harabasz_score(&x, &labels).unwrap();
+        assert!(score > 100.0, "expected high CH, got {score}");
+    }
+
+    #[test]
+    fn test_calinski_harabasz_single_cluster_error() {
+        let x = Array2::from_shape_vec((3, 1), vec![0.0_f64, 1.0, 2.0]).unwrap();
+        let labels = array![0isize, 0, 0];
+        assert!(calinski_harabasz_score(&x, &labels).is_err());
+    }
+
+    #[test]
+    fn test_calinski_harabasz_shape_mismatch() {
+        let x = Array2::from_shape_vec((3, 1), vec![0.0_f64, 1.0, 2.0]).unwrap();
+        let labels = array![0isize, 0];
+        assert!(calinski_harabasz_score(&x, &labels).is_err());
+    }
+
+    #[test]
+    fn test_calinski_harabasz_better_for_good_clustering() {
+        let x =
+            Array2::from_shape_vec((6, 1), vec![0.0_f64, 1.0, 2.0, 100.0, 101.0, 102.0]).unwrap();
+        let labels_good = array![0isize, 0, 0, 1, 1, 1];
+        let labels_bad = array![0isize, 1, 0, 1, 0, 1];
+        let ch_good = calinski_harabasz_score(&x, &labels_good).unwrap();
+        let ch_bad = calinski_harabasz_score(&x, &labels_bad).unwrap();
+        assert!(
+            ch_good > ch_bad,
+            "good ({ch_good}) should beat bad ({ch_bad})"
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // homogeneity_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_homogeneity_perfect() {
+        let labels_true = array![0isize, 0, 1, 1, 2, 2];
+        let labels_pred = array![0isize, 0, 1, 1, 2, 2];
+        assert_abs_diff_eq!(
+            homogeneity_score(&labels_true, &labels_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_homogeneity_permuted_labels() {
+        let labels_true = array![0isize, 0, 1, 1];
+        let labels_pred = array![1isize, 1, 0, 0];
+        assert_abs_diff_eq!(
+            homogeneity_score(&labels_true, &labels_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_homogeneity_single_class_is_one() {
+        let labels_true = array![0isize, 0, 0, 0];
+        let labels_pred = array![0isize, 1, 0, 1];
+        assert_abs_diff_eq!(
+            homogeneity_score(&labels_true, &labels_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_homogeneity_empty() {
+        let lt = Array1::<isize>::from_vec(vec![]);
+        let lp = Array1::<isize>::from_vec(vec![]);
+        assert!(homogeneity_score(&lt, &lp).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // completeness_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_completeness_perfect() {
+        let labels_true = array![0isize, 0, 1, 1, 2, 2];
+        let labels_pred = array![0isize, 0, 1, 1, 2, 2];
+        assert_abs_diff_eq!(
+            completeness_score(&labels_true, &labels_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_completeness_single_cluster_is_one() {
+        let labels_true = array![0isize, 1, 2, 0];
+        let labels_pred = array![0isize, 0, 0, 0];
+        assert_abs_diff_eq!(
+            completeness_score(&labels_true, &labels_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_completeness_empty() {
+        let lt = Array1::<isize>::from_vec(vec![]);
+        let lp = Array1::<isize>::from_vec(vec![]);
+        assert!(completeness_score(&lt, &lp).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // v_measure_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_v_measure_perfect() {
+        let labels_true = array![0isize, 0, 1, 1, 2, 2];
+        let labels_pred = array![0isize, 0, 1, 1, 2, 2];
+        assert_abs_diff_eq!(
+            v_measure_score(&labels_true, &labels_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_v_measure_harmonic_mean() {
+        let labels_true = array![0isize, 0, 1, 1, 2, 2];
+        let labels_pred = array![0isize, 0, 0, 1, 1, 2];
+        let h = homogeneity_score(&labels_true, &labels_pred).unwrap();
+        let c = completeness_score(&labels_true, &labels_pred).unwrap();
+        let v = v_measure_score(&labels_true, &labels_pred).unwrap();
+        let expected = 2.0 * h * c / (h + c);
+        assert_abs_diff_eq!(v, expected, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_v_measure_empty() {
+        let lt = Array1::<isize>::from_vec(vec![]);
+        let lp = Array1::<isize>::from_vec(vec![]);
+        assert!(v_measure_score(&lt, &lp).is_err());
     }
 }
 
