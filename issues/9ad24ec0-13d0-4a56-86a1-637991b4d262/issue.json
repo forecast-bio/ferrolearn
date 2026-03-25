@@ -1,0 +1,11 @@
+{
+  "uuid": "9ad24ec0-13d0-4a56-86a1-637991b4d262",
+  "display_id": 133,
+  "title": "Add rand_score and normalized_mutual_info_score",
+  "description": "Unadjusted Rand Index and normalized mutual information.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:22:33.031506121Z",
+  "updated_at": "2026-03-25T15:22:33.031506121Z"
+}
