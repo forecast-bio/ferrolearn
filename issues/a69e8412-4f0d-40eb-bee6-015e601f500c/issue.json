@@ -1,0 +1,11 @@
+{
+  "uuid": "a69e8412-4f0d-40eb-bee6-015e601f500c",
+  "display_id": 124,
+  "title": "Add precision_recall_fscore_support combined metric",
+  "description": "Compute precision, recall, F-score, and support in a single pass.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:21:27.461443494Z",
+  "updated_at": "2026-03-25T15:21:27.461443494Z"
+}
