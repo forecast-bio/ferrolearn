@@ -1,0 +1,11 @@
+{
+  "uuid": "a2c7b164-cb40-401a-abda-4e534d4a01d1",
+  "display_id": 74,
+  "title": "Add BayesianGaussianMixture with Dirichlet process priors",
+  "description": "Bayesian GMM with automatic cluster count selection via variational inference.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:16:09.053279285Z",
+  "updated_at": "2026-03-25T15:16:09.053279285Z"
+}
