@@ -2,11 +2,12 @@
   "uuid": "b27535e1-ce01-4c1a-8ba2-a817b278a27a",
   "display_id": 5,
   "title": "Compose sklearn vs ferrolearn gap report across all module segments",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T14:56:28.782152496Z",
-  "updated_at": "2026-03-25T14:56:30.869636559Z",
+  "updated_at": "2026-03-25T17:03:34.831202005Z",
+  "closed_at": "2026-03-25T17:03:34.831202005Z",
   "labels": [
     "enhancement"
   ]
