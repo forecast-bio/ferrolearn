@@ -1,0 +1,11 @@
+{
+  "uuid": "71a0ad90-3f87-4004-812e-ca639a1f3111",
+  "display_id": 161,
+  "title": "Add PredefinedSplit for custom fold indices",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "0051aba8-ca7d-40c0-84ba-c31a6c515ec5",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:24:54.288003766Z",
+  "updated_at": "2026-03-25T15:24:54.288003766Z"
+}
