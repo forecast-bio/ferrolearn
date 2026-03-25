@@ -3,11 +3,12 @@
   "display_id": 126,
   "title": "Add median_absolute_error and max_error regression metrics",
   "description": "Robust regression error metrics.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:21:35.718538687Z",
-  "updated_at": "2026-03-25T15:21:37.787203784Z",
+  "updated_at": "2026-03-25T15:48:38.363628788Z",
+  "closed_at": "2026-03-25T15:48:38.363628788Z",
   "labels": [
     "feature"
   ]
