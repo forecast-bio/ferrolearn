@@ -1,0 +1,11 @@
+{
+  "uuid": "57f85869-38ff-441f-88fc-351ae93070da",
+  "display_id": 170,
+  "title": "Add make_pipeline and make_union convenience constructors",
+  "description": "Shorthand pipeline construction from positional arguments.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:25:29.852730694Z",
+  "updated_at": "2026-03-25T15:25:29.852730694Z"
+}
