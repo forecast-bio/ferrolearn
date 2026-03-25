@@ -1,0 +1,11 @@
+{
+  "uuid": "ae8211a1-6e8d-400a-ae3e-268b62b47d61",
+  "display_id": 72,
+  "title": "Add AffinityPropagation clustering",
+  "description": "Message-passing clustering that automatically determines number of clusters without k parameter.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:15:58.977619510Z",
+  "updated_at": "2026-03-25T15:15:58.977619510Z"
+}
