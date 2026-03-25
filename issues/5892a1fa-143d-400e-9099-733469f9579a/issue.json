@@ -1,0 +1,10 @@
+{
+  "uuid": "5892a1fa-143d-400e-9099-733469f9579a",
+  "display_id": 232,
+  "title": "Add NuSVC, NuSVR, OneClassSVM, LocalOutlierFactor, NearestCentroid, NB partial_fit and class_prior",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T21:38:17.614628270Z",
+  "updated_at": "2026-03-25T21:38:17.614628270Z"
+}
