@@ -1,0 +1,11 @@
+{
+  "uuid": "57426395-3299-4032-8fab-4de054dc65b4",
+  "display_id": 169,
+  "title": "Add TransformedTargetRegressor for target-space transformation",
+  "description": "Apply inverse-transformable transformation to regression targets.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:25:25.782035523Z",
+  "updated_at": "2026-03-25T15:25:25.782035523Z"
+}
