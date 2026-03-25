@@ -1,0 +1,11 @@
+{
+  "uuid": "83790e94-4802-4549-9dcb-e5385096053c",
+  "display_id": 52,
+  "title": "Add monotonic_cst monotonic constraints to DecisionTree",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "b449364b-0522-4f34-bef5-ec94a2dd1b4a",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:13:22.482162878Z",
+  "updated_at": "2026-03-25T15:13:22.482162878Z"
+}
