@@ -40,14 +40,6 @@
 //!   ANOVA F-scores against class labels.
 //! - [`feature_selection::SelectFromModel`] — keep features whose importance
 //!   weight (from a pre-fitted model) meets a configurable threshold.
-//! - [`SelectFromModelExt`] — extended model-importance selector with four
-//!   threshold strategies (mean, median, value, percentile) and optional
-//!   `max_features` cap.
-//! - [`SequentialFeatureSelector`] — greedy forward/backward sequential
-//!   feature selection via a user-supplied scoring callback.
-//! - [`SelectFpr`] / [`SelectFdr`] / [`SelectFwe`] — statistical-test-based
-//!   selectors controlling false positive rate, false discovery rate
-//!   (Benjamini-Hochberg), or family-wise error (Bonferroni).
 //!
 //! ## Feature Engineering
 //!
@@ -80,6 +72,7 @@
 pub mod binarizer;
 pub mod binary_encoder;
 pub mod column_transformer;
+pub mod count_vectorizer;
 pub mod feature_selection;
 pub mod function_transformer;
 pub mod imputer;
@@ -95,15 +88,14 @@ pub mod ordinal_encoder;
 pub mod polynomial_features;
 pub mod power_transformer;
 pub mod quantile_transformer;
+pub mod random_projection;
 pub mod rfe;
 pub mod robust_scaler;
-pub mod select_from_model;
 pub mod select_percentile;
-pub mod sequential_feature_selector;
-pub mod stat_selectors;
 pub mod spline_transformer;
 pub mod standard_scaler;
 pub mod target_encoder;
+pub mod tfidf;
 
 // Re-exports
 pub use binarizer::Binarizer;
@@ -136,15 +128,16 @@ pub use quantile_transformer::{
     FittedQuantileTransformer, OutputDistribution, QuantileTransformer,
 };
 pub use rfe::{RFE, RFECV};
-pub use select_from_model::{
-    FittedSelectFromModelExt, SelectFromModelExt, ThresholdStrategy,
-};
 pub use select_percentile::{FittedSelectPercentile, SelectPercentile};
-pub use sequential_feature_selector::{
-    Direction, FittedSequentialFeatureSelector, SequentialFeatureSelector,
-};
-pub use stat_selectors::{
-    FittedSelectFdr, FittedSelectFpr, FittedSelectFwe, SelectFdr, SelectFpr, SelectFwe,
-};
 pub use spline_transformer::{FittedSplineTransformer, KnotStrategy, SplineTransformer};
 pub use target_encoder::{FittedTargetEncoder, TargetEncoder};
+
+// Text processing re-exports
+pub use count_vectorizer::{CountVectorizer, FittedCountVectorizer};
+pub use tfidf::{FittedTfidfTransformer, TfidfNorm, TfidfTransformer};
+
+// Random projection re-exports
+pub use random_projection::{
+    FittedGaussianRandomProjection, FittedSparseRandomProjection, GaussianRandomProjection,
+    SparseRandomProjection,
+};

@@ -57,19 +57,35 @@ use num_traits::{Float, FromPrimitive, ToPrimitive};
 pub struct MultinomialNB<F> {
     /// Additive (Laplace) smoothing parameter. Default: `1.0`.
     pub alpha: F,
+    /// Optional user-supplied class priors. If set, these are used
+    /// instead of computing priors from the data.
+    pub class_prior: Option<Vec<F>>,
 }
 
 impl<F: Float> MultinomialNB<F> {
     /// Create a new `MultinomialNB` with Laplace smoothing (`alpha = 1.0`).
     #[must_use]
     pub fn new() -> Self {
-        Self { alpha: F::one() }
+        Self {
+            alpha: F::one(),
+            class_prior: None,
+        }
     }
 
     /// Set the Laplace smoothing parameter.
     #[must_use]
     pub fn with_alpha(mut self, alpha: F) -> Self {
         self.alpha = alpha;
+        self
+    }
+
+    /// Set user-supplied class priors.
+    ///
+    /// The priors must sum to 1.0 and have length equal to the number
+    /// of classes discovered during fitting.
+    #[must_use]
+    pub fn with_class_prior(mut self, priors: Vec<F>) -> Self {
+        self.class_prior = Some(priors);
         self
     }
 }
@@ -89,6 +105,14 @@ pub struct FittedMultinomialNB<F> {
     log_prior: Array1<F>,
     /// Log feature probabilities per class, shape `(n_classes, n_features)`.
     log_theta: Array2<F>,
+    /// Raw per-class feature count sums, shape `(n_classes, n_features)`.
+    feature_counts: Array2<F>,
+    /// Per-class sample counts.
+    class_counts: Vec<usize>,
+    /// Smoothing parameter carried forward for partial_fit.
+    alpha: F,
+    /// Optional user-supplied class priors.
+    class_prior: Option<Vec<F>>,
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for MultinomialNB<F> {
@@ -141,6 +165,9 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Multino
         let mut log_prior = Array1::<F>::zeros(n_classes);
         let mut log_theta = Array2::<F>::zeros((n_classes, n_features));
 
+        let mut all_feature_counts = Array2::<F>::zeros((n_classes, n_features));
+        let mut class_counts_vec = vec![0usize; n_classes];
+
         for (ci, &class_label) in classes.iter().enumerate() {
             let class_indices: Vec<usize> = y
                 .iter()
@@ -151,22 +178,39 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Multino
             let n_c = class_indices.len();
             let n_c_f = F::from(n_c).unwrap();
             log_prior[ci] = (n_c_f / n_f).ln();
+            class_counts_vec[ci] = n_c;
 
             // Sum of feature counts for this class.
-            let mut feature_counts = Array1::<F>::zeros(n_features);
             for &i in &class_indices {
                 for j in 0..n_features {
-                    feature_counts[j] = feature_counts[j] + x[[i, j]];
+                    all_feature_counts[[ci, j]] = all_feature_counts[[ci, j]] + x[[i, j]];
                 }
             }
 
             // Total count across all features for this class.
-            let total_count = feature_counts.sum();
+            let total_count = all_feature_counts.row(ci).sum();
 
             // Smoothed log probabilities.
             let denom = total_count + self.alpha * n_feat_f;
             for j in 0..n_features {
-                log_theta[[ci, j]] = ((feature_counts[j] + self.alpha) / denom).ln();
+                log_theta[[ci, j]] = ((all_feature_counts[[ci, j]] + self.alpha) / denom).ln();
+            }
+        }
+
+        // Use user-supplied class priors if provided.
+        if let Some(ref priors) = self.class_prior {
+            if priors.len() != n_classes {
+                return Err(FerroError::InvalidParameter {
+                    name: "class_prior".into(),
+                    reason: format!(
+                        "length {} does not match number of classes {}",
+                        priors.len(),
+                        n_classes
+                    ),
+                });
+            }
+            for (ci, &p) in priors.iter().enumerate() {
+                log_prior[ci] = p.ln();
             }
         }
 
@@ -174,11 +218,105 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Multino
             classes,
             log_prior,
             log_theta,
+            feature_counts: all_feature_counts,
+            class_counts: class_counts_vec,
+            alpha: self.alpha,
+            class_prior: self.class_prior.clone(),
         })
     }
 }
 
 impl<F: Float + Send + Sync + 'static> FittedMultinomialNB<F> {
+    /// Incrementally update the model with new data.
+    ///
+    /// Accumulates feature counts and class counts, then recomputes
+    /// the log probabilities.
+    ///
+    /// # Errors
+    ///
+    /// - [`FerroError::ShapeMismatch`] if `x` and `y` have different row counts
+    ///   or the number of features does not match the fitted model.
+    /// - [`FerroError::InvalidParameter`] if any feature value is negative.
+    pub fn partial_fit(
+        &mut self,
+        x: &Array2<F>,
+        y: &Array1<usize>,
+    ) -> Result<(), FerroError> {
+        let (n_samples, n_features) = x.dim();
+
+        if n_samples == 0 {
+            return Ok(());
+        }
+
+        if n_samples != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![n_samples],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+
+        if n_features != self.log_theta.ncols() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.log_theta.ncols()],
+                actual: vec![n_features],
+                context: "number of features must match fitted MultinomialNB".into(),
+            });
+        }
+
+        if x.iter().any(|&v| v < F::zero()) {
+            return Err(FerroError::InvalidParameter {
+                name: "X".into(),
+                reason: "MultinomialNB requires non-negative feature values".into(),
+            });
+        }
+
+        let n_feat_f = F::from(n_features).unwrap();
+
+        // Accumulate counts for each existing class.
+        for (ci, &class_label) in self.classes.clone().iter().enumerate() {
+            let new_indices: Vec<usize> = y
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &label)| if label == class_label { Some(i) } else { None })
+                .collect();
+
+            if new_indices.is_empty() {
+                continue;
+            }
+
+            self.class_counts[ci] += new_indices.len();
+
+            for &i in &new_indices {
+                for j in 0..n_features {
+                    self.feature_counts[[ci, j]] = self.feature_counts[[ci, j]] + x[[i, j]];
+                }
+            }
+        }
+
+        // Recompute log_theta from accumulated feature_counts.
+        let n_classes = self.classes.len();
+        for ci in 0..n_classes {
+            let total_count = self.feature_counts.row(ci).sum();
+            let denom = total_count + self.alpha * n_feat_f;
+            for j in 0..n_features {
+                self.log_theta[[ci, j]] =
+                    ((self.feature_counts[[ci, j]] + self.alpha) / denom).ln();
+            }
+        }
+
+        // Recompute log priors.
+        if self.class_prior.is_none() {
+            let total: usize = self.class_counts.iter().sum();
+            let total_f = F::from(total).unwrap();
+            for (ci, &count) in self.class_counts.iter().enumerate() {
+                self.log_prior[ci] = (F::from(count).unwrap() / total_f).ln();
+            }
+        }
+
+        Ok(())
+    }
+
     /// Compute joint log-likelihood for each class.
     ///
     /// Returns shape `(n_samples, n_classes)`.
@@ -452,5 +590,59 @@ mod tests {
     fn test_multinomial_nb_default() {
         let model = MultinomialNB::<f64>::default();
         assert_relative_eq!(model.alpha, 1.0, epsilon = 1e-15);
+    }
+
+    #[test]
+    fn test_multinomial_nb_partial_fit() {
+        let x1 = Array2::from_shape_vec(
+            (4, 3),
+            vec![5.0, 1.0, 0.0, 4.0, 2.0, 0.0, 0.0, 1.0, 5.0, 1.0, 0.0, 4.0],
+        )
+        .unwrap();
+        let y1 = array![0usize, 0, 1, 1];
+
+        let model = MultinomialNB::<f64>::new();
+        let mut fitted = model.fit(&x1, &y1).unwrap();
+
+        let x2 = Array2::from_shape_vec(
+            (2, 3),
+            vec![6.0, 0.0, 1.0, 0.0, 2.0, 6.0],
+        )
+        .unwrap();
+        let y2 = array![0usize, 1];
+
+        fitted.partial_fit(&x2, &y2).unwrap();
+
+        // Should still predict correctly on training data.
+        let preds = fitted.predict(&x1).unwrap();
+        let correct = preds.iter().zip(y1.iter()).filter(|(p, a)| p == a).count();
+        assert!(correct >= 3);
+    }
+
+    #[test]
+    fn test_multinomial_nb_partial_fit_shape_mismatch() {
+        let (x, y) = make_count_data();
+        let model = MultinomialNB::<f64>::new();
+        let mut fitted = model.fit(&x, &y).unwrap();
+
+        let x_bad = Array2::from_shape_vec((2, 5), vec![1.0; 10]).unwrap();
+        let y_bad = array![0usize, 1];
+        assert!(fitted.partial_fit(&x_bad, &y_bad).is_err());
+    }
+
+    #[test]
+    fn test_multinomial_nb_class_prior() {
+        let (x, y) = make_count_data();
+        let model = MultinomialNB::<f64>::new().with_class_prior(vec![0.9, 0.1]);
+        let fitted = model.fit(&x, &y).unwrap();
+        let preds = fitted.predict(&x).unwrap();
+        assert_eq!(preds.len(), 6);
+    }
+
+    #[test]
+    fn test_multinomial_nb_class_prior_wrong_length() {
+        let (x, y) = make_count_data();
+        let model = MultinomialNB::<f64>::new().with_class_prior(vec![0.5]);
+        assert!(model.fit(&x, &y).is_err());
     }
 }

@@ -723,6 +723,102 @@ pub fn cross_val_predict(
 }
 
 // ---------------------------------------------------------------------------
+// permutation_test_score
+// ---------------------------------------------------------------------------
+
+/// Evaluate the statistical significance of a cross-validated score by
+/// permutation testing.
+///
+/// The function computes the real cross-validated score, then permutes the
+/// target `y` `n_permutations` times, re-computing the CV score each time.
+/// The p-value is the fraction of permuted scores that are greater than or
+/// equal to the real score.
+///
+/// # Parameters
+///
+/// - `pipeline` — An unfitted [`Pipeline`] to evaluate.
+/// - `x` — Feature matrix with shape `(n_samples, n_features)`.
+/// - `y` — Target array of length `n_samples`.
+/// - `cv` — A [`CrossValidator`] (e.g. [`KFold`]) that produces fold indices.
+/// - `scoring` — A function `(y_true, y_pred) -> Result<f64, FerroError>`
+///   used to score each fold.
+/// - `n_permutations` — Number of random permutations to perform.
+/// - `random_state` — Optional RNG seed for reproducibility.
+///
+/// # Returns
+///
+/// A tuple `(real_score, permuted_scores, p_value)`:
+///
+/// - `real_score` — mean CV score on the original (unpermuted) data.
+/// - `permuted_scores` — mean CV score for each permutation.
+/// - `p_value` — fraction of permuted scores >= `real_score`.
+///
+/// # Errors
+///
+/// Propagates any error from fold splitting, model fitting, predicting, or
+/// scoring.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use ferrolearn_model_sel::cross_validation::permutation_test_score;
+/// use ferrolearn_model_sel::KFold;
+/// use ferrolearn_core::pipeline::Pipeline;
+/// use ferrolearn_core::FerroError;
+/// use ndarray::{Array1, Array2};
+///
+/// fn neg_mse(y_true: &Array1<f64>, y_pred: &Array1<f64>) -> Result<f64, FerroError> {
+///     let diff = y_true - y_pred;
+///     Ok(-(diff.mapv(|v| v * v).mean().unwrap_or(0.0)))
+/// }
+///
+/// // let (score, perm_scores, pval) = permutation_test_score(
+/// //     &pipeline, &x, &y, &KFold::new(5), neg_mse, 100, Some(42),
+/// // ).unwrap();
+/// ```
+pub fn permutation_test_score(
+    pipeline: &Pipeline,
+    x: &Array2<f64>,
+    y: &Array1<f64>,
+    cv: &dyn CrossValidator,
+    scoring: fn(&Array1<f64>, &Array1<f64>) -> Result<f64, FerroError>,
+    n_permutations: usize,
+    random_state: Option<u64>,
+) -> Result<(f64, Vec<f64>, f64), FerroError> {
+    // Compute real score (mean of fold scores).
+    let real_scores = cross_val_score(pipeline, x, y, cv, scoring)?;
+    let real_score = real_scores.mean().unwrap_or(0.0);
+
+    // Permutation loop.
+    let n_samples = y.len();
+    let mut rng: SmallRng = match random_state {
+        Some(seed) => SmallRng::seed_from_u64(seed),
+        None => SmallRng::from_os_rng(),
+    };
+
+    let mut perm_scores = Vec::with_capacity(n_permutations);
+    let mut indices: Vec<usize> = (0..n_samples).collect();
+
+    for _ in 0..n_permutations {
+        // Shuffle indices to produce a permuted y.
+        indices.shuffle(&mut rng);
+        let y_perm: Array1<f64> = indices.iter().map(|&i| y[i]).collect();
+
+        let fold_scores = cross_val_score(pipeline, x, &y_perm, cv, scoring)?;
+        perm_scores.push(fold_scores.mean().unwrap_or(0.0));
+    }
+
+    // p-value = fraction of permuted scores >= real score.
+    let n_ge = perm_scores
+        .iter()
+        .filter(|&&s| s >= real_score)
+        .count();
+    let p_value = (n_ge as f64 + 1.0) / (n_permutations as f64 + 1.0);
+
+    Ok((real_score, perm_scores, p_value))
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -1085,5 +1181,55 @@ mod tests {
         for &p in preds.iter() {
             assert!((p - 3.0).abs() < 1e-10, "expected 3.0, got {p}");
         }
+    }
+
+    // -- permutation_test_score tests ----------------------------------------
+
+    fn neg_mse(y_true: &Array1<f64>, y_pred: &Array1<f64>) -> Result<f64, FerroError> {
+        let diff = y_true - y_pred;
+        Ok(-(diff.mapv(|v| v * v).mean().unwrap_or(0.0)))
+    }
+
+    #[test]
+    fn test_permutation_test_score_returns_correct_counts() {
+        let pipeline = Pipeline::new().estimator_step("mean", Box::new(MeanEstimator));
+        let x = Array2::<f64>::zeros((20, 3));
+        let y = Array1::<f64>::from_elem(20, 5.0);
+        let kf = KFold::new(5);
+        let (score, perm_scores, p_value) =
+            permutation_test_score(&pipeline, &x, &y, &kf, neg_mse, 10, Some(42)).unwrap();
+        assert_eq!(perm_scores.len(), 10);
+        // For constant y, real score = 0 (neg MSE), and permuted scores should also be 0.
+        assert!((score - 0.0).abs() < 1e-10);
+        assert!(p_value >= 0.0 && p_value <= 1.0);
+    }
+
+    #[test]
+    fn test_permutation_test_score_deterministic() {
+        let pipeline = Pipeline::new().estimator_step("mean", Box::new(MeanEstimator));
+        let x = Array2::<f64>::zeros((20, 3));
+        let y: Array1<f64> = Array1::from_iter((0..20).map(|i| i as f64));
+        let kf = KFold::new(5);
+        let (s1, ps1, p1) =
+            permutation_test_score(&pipeline, &x, &y, &kf, neg_mse, 5, Some(42)).unwrap();
+        let (s2, ps2, p2) =
+            permutation_test_score(&pipeline, &x, &y, &kf, neg_mse, 5, Some(42)).unwrap();
+        assert!((s1 - s2).abs() < 1e-10);
+        assert!((p1 - p2).abs() < 1e-10);
+        for (a, b) in ps1.iter().zip(ps2.iter()) {
+            assert!((a - b).abs() < 1e-10);
+        }
+    }
+
+    #[test]
+    fn test_permutation_test_score_p_value_range() {
+        let pipeline = Pipeline::new().estimator_step("mean", Box::new(MeanEstimator));
+        let x = Array2::<f64>::zeros((20, 3));
+        let y: Array1<f64> = Array1::from_iter((0..20).map(|i| i as f64));
+        let kf = KFold::new(5);
+        let (_, _, p_value) =
+            permutation_test_score(&pipeline, &x, &y, &kf, neg_mse, 20, Some(42)).unwrap();
+        assert!(p_value > 0.0, "p_value should be positive");
+        assert!(p_value <= 1.0, "p_value should be <= 1");
     }
 }

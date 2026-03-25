@@ -22,10 +22,6 @@ use num_traits::Float;
 /// Result type for curve functions that return `(x, y, thresholds)` arrays.
 type CurveResult<F> = Result<(Array1<F>, Array1<F>, Array1<F>), FerroError>;
 
-/// Result type for [`precision_recall_fscore_support`] — per-class precision,
-/// recall, F-score, and support.
-type PrfsResult = Result<(Array1<f64>, Array1<f64>, Array1<f64>, Array1<usize>), FerroError>;
-
 /// Averaging strategy for multi-class precision, recall, and F1.
 ///
 /// This enum controls how per-class scores are aggregated into a single
@@ -581,7 +577,9 @@ fn validate_binary_scores<F: Float + Send + Sync + 'static>(
         if label > 1 {
             return Err(FerroError::InvalidParameter {
                 name: "y_true".into(),
-                reason: format!("{context} requires binary labels (0 or 1), found label {label}"),
+                reason: format!(
+                    "{context} requires binary labels (0 or 1), found label {label}"
+                ),
             });
         }
     }
@@ -592,7 +590,9 @@ fn validate_binary_scores<F: Float + Send + Sync + 'static>(
     if n_pos == 0 || n_neg == 0 {
         return Err(FerroError::InvalidParameter {
             name: "y_true".into(),
-            reason: format!("{context} requires at least one positive and one negative sample"),
+            reason: format!(
+                "{context} requires at least one positive and one negative sample"
+            ),
         });
     }
 
@@ -600,7 +600,10 @@ fn validate_binary_scores<F: Float + Send + Sync + 'static>(
 }
 
 /// Sort by descending score, returning `(score, label)` pairs.
-fn sort_by_score_desc<F: Float>(y_true: &Array1<usize>, y_score: &Array1<F>) -> Vec<(F, usize)> {
+fn sort_by_score_desc<F: Float>(
+    y_true: &Array1<usize>,
+    y_score: &Array1<F>,
+) -> Vec<(F, usize)> {
     let mut pairs: Vec<(F, usize)> = y_score
         .iter()
         .zip(y_true.iter())
@@ -650,7 +653,10 @@ fn sort_by_score_desc<F: Float>(y_true: &Array1<usize>, y_score: &Array1<F>) -> 
 /// assert!((fpr[last] - 1.0).abs() < 1e-10);
 /// assert!((tpr[last] - 1.0).abs() < 1e-10);
 /// ```
-pub fn roc_curve<F>(y_true: &Array1<usize>, y_score: &Array1<F>) -> CurveResult<F>
+pub fn roc_curve<F>(
+    y_true: &Array1<usize>,
+    y_score: &Array1<F>,
+) -> CurveResult<F>
 where
     F: Float + Send + Sync + 'static,
 {
@@ -728,7 +734,10 @@ where
 /// assert!((precision[last] - 1.0).abs() < 1e-10);
 /// assert!((recall[last] - 0.0).abs() < 1e-10);
 /// ```
-pub fn precision_recall_curve<F>(y_true: &Array1<usize>, y_score: &Array1<F>) -> CurveResult<F>
+pub fn precision_recall_curve<F>(
+    y_true: &Array1<usize>,
+    y_score: &Array1<F>,
+) -> CurveResult<F>
 where
     F: Float + Send + Sync + 'static,
 {
@@ -1061,252 +1070,219 @@ fn aggregate_f1(
 }
 
 // ---------------------------------------------------------------------------
-// precision_recall_fscore_support
+// top_k_accuracy_score
 // ---------------------------------------------------------------------------
 
-/// Compute precision, recall, F-score, and support for each class.
+/// Compute the top-k accuracy score.
 ///
-/// For each unique class in the union of `y_true` and `y_pred`, this function
-/// returns:
-/// - **precision**: TP / (TP + FP), defaulting to 0.0 when undefined.
-/// - **recall**: TP / (TP + FN), defaulting to 0.0 when undefined.
-/// - **fbeta_score**: `(1 + beta^2) * prec * rec / (beta^2 * prec + rec)`,
-///   defaulting to 0.0 when both precision and recall are zero.
-/// - **support**: the number of true instances of each class.
-///
-/// Classes are reported in sorted order.
+/// The top-k accuracy is the fraction of samples for which the true label is
+/// among the `k` classes with the highest predicted score.
 ///
 /// # Arguments
 ///
-/// * `y_true` — ground-truth class labels.
-/// * `y_pred` — predicted class labels.
-/// * `beta`   — the strength of recall vs precision in the F-score. `beta = 1.0`
-///   gives the standard F1 score.
+/// * `y_true` — ground-truth class labels (values in `0..n_classes`).
+/// * `y_score` — predicted score matrix of shape `(n_samples, n_classes)`.
+///   Each row contains a score for every class.
+/// * `k` — number of top predictions to consider.
 ///
 /// # Errors
 ///
-/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
-/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
-/// Returns [`FerroError::InvalidParameter`] if `beta` is negative.
+/// Returns [`FerroError::ShapeMismatch`] if `y_true.len() != y_score.nrows()`.
+/// Returns [`FerroError::InsufficientSamples`] if there are no samples.
+/// Returns [`FerroError::InvalidParameter`] if `k == 0` or any label is out
+/// of bounds for the number of columns in `y_score`.
 ///
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_metrics::classification::precision_recall_fscore_support;
-/// use ndarray::array;
+/// use ferrolearn_metrics::classification::top_k_accuracy_score;
+/// use ndarray::{array, Array2};
 ///
-/// let y_true = array![0usize, 1, 1, 0, 1];
-/// let y_pred = array![0usize, 1, 0, 0, 1];
-/// let (prec, rec, f1, support) = precision_recall_fscore_support(&y_true, &y_pred, 1.0).unwrap();
-/// assert_eq!(support.len(), 2);
-/// assert_eq!(support[0], 2); // class 0 support
-/// assert_eq!(support[1], 3); // class 1 support
+/// let y_true = array![0usize, 1, 2];
+/// let y_score = Array2::from_shape_vec(
+///     (3, 3),
+///     vec![0.8, 0.1, 0.1,  // class 0 highest
+///          0.1, 0.7, 0.2,  // class 1 highest
+///          0.1, 0.3, 0.6], // class 2 highest
+/// ).unwrap();
+/// let acc = top_k_accuracy_score(&y_true, &y_score, 1).unwrap();
+/// assert!((acc - 1.0).abs() < 1e-10);
 /// ```
-pub fn precision_recall_fscore_support(
+pub fn top_k_accuracy_score(
     y_true: &Array1<usize>,
-    y_pred: &Array1<usize>,
-    beta: f64,
-) -> PrfsResult {
+    y_score: &Array2<f64>,
+    k: usize,
+) -> Result<f64, FerroError> {
     let n = y_true.len();
-    check_same_length(
-        n,
-        y_pred.len(),
-        "precision_recall_fscore_support: y_true vs y_pred",
-    )?;
+    if n != y_score.nrows() {
+        return Err(FerroError::ShapeMismatch {
+            expected: vec![n],
+            actual: vec![y_score.nrows()],
+            context: "top_k_accuracy_score: y_true vs y_score".into(),
+        });
+    }
     if n == 0 {
         return Err(FerroError::InsufficientSamples {
             required: 1,
             actual: 0,
-            context: "precision_recall_fscore_support".into(),
+            context: "top_k_accuracy_score".into(),
         });
     }
-    if beta < 0.0 {
+    if k == 0 {
         return Err(FerroError::InvalidParameter {
-            name: "beta".into(),
-            reason: "beta must be non-negative".into(),
+            name: "k".into(),
+            reason: "k must be >= 1".into(),
         });
     }
 
-    let classes = unique_classes(y_true, y_pred);
-    let (tp, fp, fn_count) = per_class_counts(y_true, y_pred, &classes);
-    let k = classes.len();
+    let n_classes = y_score.ncols();
+    let mut correct = 0usize;
 
-    let beta_sq = beta * beta;
-    let mut prec_out = Array1::<f64>::zeros(k);
-    let mut rec_out = Array1::<f64>::zeros(k);
-    let mut f_out = Array1::<f64>::zeros(k);
-    let mut support_out = Array1::<usize>::zeros(k);
+    for (i, &label) in y_true.iter().enumerate() {
+        if label >= n_classes {
+            return Err(FerroError::InvalidParameter {
+                name: "y_true".into(),
+                reason: format!(
+                    "label {label} at index {i} is out of bounds for y_score with {n_classes} columns"
+                ),
+            });
+        }
 
-    for i in 0..k {
-        let prec = safe_div(tp[i] as f64, (tp[i] + fp[i]) as f64);
-        let rec = safe_div(tp[i] as f64, (tp[i] + fn_count[i]) as f64);
-        let f = if prec + rec == 0.0 {
-            0.0
-        } else {
-            (1.0 + beta_sq) * prec * rec / (beta_sq * prec + rec)
-        };
-        prec_out[i] = prec;
-        rec_out[i] = rec;
-        f_out[i] = f;
-        support_out[i] = tp[i] + fn_count[i];
+        // Get scores for this sample and find the top-k class indices.
+        let row = y_score.row(i);
+        let mut indices: Vec<usize> = (0..n_classes).collect();
+        indices.sort_by(|&a, &b| {
+            row[b]
+                .partial_cmp(&row[a])
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        let top_k = &indices[..k.min(n_classes)];
+        if top_k.contains(&label) {
+            correct += 1;
+        }
     }
 
-    Ok((prec_out, rec_out, f_out, support_out))
+    Ok(correct as f64 / n as f64)
 }
 
 // ---------------------------------------------------------------------------
-// multilabel_confusion_matrix
+// calibration_curve
 // ---------------------------------------------------------------------------
 
-/// Compute a per-class binary confusion matrix.
+/// Compute a calibration curve (reliability diagram data).
 ///
-/// For each class `c` in the sorted union of `y_true` and `y_pred`, this
-/// function computes a 2x2 confusion matrix:
+/// Predictions are binned into `n_bins` uniform bins. For each bin that
+/// contains at least one sample, the function computes the fraction of
+/// positive samples (class 1) and the mean predicted probability.
 ///
-/// ```text
-/// [[TN, FP],
-///  [FN, TP]]
-/// ```
-///
-/// The result has shape `(n_classes, 2, 2)`.
+/// Bins that contain no samples are omitted from the output.
 ///
 /// # Arguments
 ///
-/// * `y_true` — ground-truth class labels.
-/// * `y_pred` — predicted class labels.
+/// * `y_true` — binary ground-truth labels (0 or 1).
+/// * `y_prob` — predicted probabilities for the positive class.
+/// * `n_bins` — number of bins to divide the `[0, 1]` probability range.
+///
+/// # Returns
+///
+/// `(fraction_of_positives, mean_predicted_value)` — each is an `Array1<F>`
+/// of length equal to the number of non-empty bins.
 ///
 /// # Errors
 ///
 /// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
-/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InsufficientSamples`] if there are no samples.
+/// Returns [`FerroError::InvalidParameter`] if `n_bins == 0` or labels
+/// are not binary (0 or 1).
 ///
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_metrics::classification::multilabel_confusion_matrix;
+/// use ferrolearn_metrics::classification::calibration_curve;
 /// use ndarray::array;
 ///
-/// let y_true = array![0usize, 1, 2, 0, 1, 2];
-/// let y_pred = array![0usize, 2, 2, 0, 0, 2];
-/// let mcm = multilabel_confusion_matrix(&y_true, &y_pred).unwrap();
-/// // For class 0: TP=2, FP=1, FN=0 => TN=3
-/// assert_eq!(mcm[[0, 1, 1]], 2); // TP for class 0
-/// assert_eq!(mcm[[0, 0, 1]], 1); // FP for class 0
-/// assert_eq!(mcm[[0, 1, 0]], 0); // FN for class 0
-/// assert_eq!(mcm[[0, 0, 0]], 3); // TN for class 0
+/// let y_true = array![0usize, 0, 1, 1, 1];
+/// let y_prob = array![0.1_f64, 0.3, 0.6, 0.8, 0.9];
+/// let (frac_pos, mean_pred) = calibration_curve(&y_true, &y_prob, 2).unwrap();
+/// // Bin [0, 0.5): samples with probs 0.1, 0.3 -> frac_pos = 0/2, mean_pred = 0.2
+/// // Bin [0.5, 1]: samples with probs 0.6, 0.8, 0.9 -> frac_pos = 3/3, mean_pred = 0.7667
+/// assert_eq!(frac_pos.len(), 2);
 /// ```
-pub fn multilabel_confusion_matrix(
+pub fn calibration_curve<F>(
     y_true: &Array1<usize>,
-    y_pred: &Array1<usize>,
-) -> Result<ndarray::Array3<usize>, FerroError> {
-    let n = y_true.len();
-    check_same_length(
-        n,
-        y_pred.len(),
-        "multilabel_confusion_matrix: y_true vs y_pred",
-    )?;
-    if n == 0 {
-        return Err(FerroError::InsufficientSamples {
-            required: 1,
-            actual: 0,
-            context: "multilabel_confusion_matrix".into(),
-        });
-    }
-
-    let classes = unique_classes(y_true, y_pred);
-    let (tp, fp, fn_count) = per_class_counts(y_true, y_pred, &classes);
-    let k = classes.len();
-
-    let mut result = ndarray::Array3::<usize>::zeros((k, 2, 2));
-
-    for i in 0..k {
-        let tn = n - tp[i] - fp[i] - fn_count[i];
-        result[[i, 0, 0]] = tn;
-        result[[i, 0, 1]] = fp[i];
-        result[[i, 1, 0]] = fn_count[i];
-        result[[i, 1, 1]] = tp[i];
-    }
-
-    Ok(result)
-}
-
-// ---------------------------------------------------------------------------
-// det_curve
-// ---------------------------------------------------------------------------
-
-/// Compute the Detection Error Tradeoff (DET) curve.
-///
-/// The DET curve plots the false negative rate (FNR) against the false
-/// positive rate (FPR) at each distinct threshold. This is similar to an
-/// ROC curve but uses FNR instead of TPR on the y-axis.
-///
-/// Returns `(fpr, fnr, thresholds)`.
-///
-/// # Arguments
-///
-/// * `y_true`  — ground-truth binary labels (0 or 1).
-/// * `y_score` — predicted probability or decision score for the positive class.
-///
-/// # Errors
-///
-/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
-/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
-/// Returns [`FerroError::InvalidParameter`] if `y_true` contains labels
-/// other than 0 and 1, or if there is only one class present.
-///
-/// # Examples
-///
-/// ```
-/// use ferrolearn_metrics::classification::det_curve;
-/// use ndarray::array;
-///
-/// let y_true = array![0, 0, 1, 1];
-/// let y_score = array![0.1_f64, 0.4, 0.35, 0.8];
-/// let (fpr, fnr, thresholds) = det_curve(&y_true, &y_score).unwrap();
-/// // fpr and fnr should have the same length
-/// assert_eq!(fpr.len(), fnr.len());
-/// assert_eq!(fpr.len(), thresholds.len());
-/// ```
-pub fn det_curve<F>(y_true: &Array1<usize>, y_score: &Array1<F>) -> CurveResult<F>
+    y_prob: &Array1<F>,
+    n_bins: usize,
+) -> Result<(Array1<F>, Array1<F>), FerroError>
 where
     F: Float + Send + Sync + 'static,
 {
-    let (n_pos, n_neg) = validate_binary_scores(y_true, y_score, "det_curve")?;
-    let pairs = sort_by_score_desc(y_true, y_score);
+    let n = y_true.len();
+    if n != y_prob.len() {
+        return Err(FerroError::ShapeMismatch {
+            expected: vec![n],
+            actual: vec![y_prob.len()],
+            context: "calibration_curve: y_true vs y_prob".into(),
+        });
+    }
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "calibration_curve".into(),
+        });
+    }
+    if n_bins == 0 {
+        return Err(FerroError::InvalidParameter {
+            name: "n_bins".into(),
+            reason: "n_bins must be >= 1".into(),
+        });
+    }
 
-    let mut fpr_vec: Vec<F> = Vec::new();
-    let mut fnr_vec: Vec<F> = Vec::new();
-    let mut thresh_vec: Vec<F> = Vec::new();
-
-    let n_pos_f = F::from(n_pos).unwrap();
-    let n_neg_f = F::from(n_neg).unwrap();
-
-    let mut tp: usize = 0;
-    let mut fp: usize = 0;
-    let mut i = 0;
-
-    while i < pairs.len() {
-        let score = pairs[i].0;
-        // Consume all tied scores as one batch.
-        while i < pairs.len() && pairs[i].0 == score {
-            if pairs[i].1 == 1 {
-                tp += 1;
-            } else {
-                fp += 1;
-            }
-            i += 1;
+    // Validate binary labels.
+    for &label in y_true.iter() {
+        if label > 1 {
+            return Err(FerroError::InvalidParameter {
+                name: "y_true".into(),
+                reason: format!(
+                    "calibration_curve requires binary labels (0 or 1), found {label}"
+                ),
+            });
         }
-        let fpr = F::from(fp).unwrap() / n_neg_f;
-        let fnr = F::from(n_pos - tp).unwrap() / n_pos_f;
-        fpr_vec.push(fpr);
-        fnr_vec.push(fnr);
-        thresh_vec.push(score);
+    }
+
+    let n_bins_f = F::from(n_bins).unwrap();
+    let mut bin_pos_sum = vec![F::zero(); n_bins];
+    let mut bin_prob_sum = vec![F::zero(); n_bins];
+    let mut bin_count = vec![0usize; n_bins];
+
+    for (&label, &prob) in y_true.iter().zip(y_prob.iter()) {
+        // Determine bin index: floor(prob * n_bins), clamped to [0, n_bins-1].
+        let mut bin = (prob * n_bins_f).to_usize().unwrap_or(0);
+        if bin >= n_bins {
+            bin = n_bins - 1;
+        }
+        bin_count[bin] += 1;
+        bin_prob_sum[bin] = bin_prob_sum[bin] + prob;
+        if label == 1 {
+            bin_pos_sum[bin] = bin_pos_sum[bin] + F::one();
+        }
+    }
+
+    // Collect non-empty bins.
+    let mut frac_positives = Vec::new();
+    let mut mean_predictions = Vec::new();
+
+    for bin in 0..n_bins {
+        if bin_count[bin] > 0 {
+            let count_f = F::from(bin_count[bin]).unwrap();
+            frac_positives.push(bin_pos_sum[bin] / count_f);
+            mean_predictions.push(bin_prob_sum[bin] / count_f);
+        }
     }
 
     Ok((
-        Array1::from_vec(fpr_vec),
-        Array1::from_vec(fnr_vec),
-        Array1::from_vec(thresh_vec),
+        Array1::from_vec(frac_positives),
+        Array1::from_vec(mean_predictions),
     ))
 }
 
@@ -1716,10 +1692,9 @@ mod tests {
         // Perfect classifier: should go (0,0) -> (0,0.5) -> (0,1) -> ...
         // FPR stays 0 while TPR increases.
         // Verify there's a point with FPR=0, TPR=1.
-        let has_perfect_point = fpr
-            .iter()
-            .zip(tpr.iter())
-            .any(|(&f, &t)| (f - 0.0).abs() < 1e-10 && (t - 1.0).abs() < 1e-10);
+        let has_perfect_point = fpr.iter().zip(tpr.iter()).any(|(&f, &t)| {
+            (f - 0.0).abs() < 1e-10 && (t - 1.0).abs() < 1e-10
+        });
         assert!(has_perfect_point);
     }
 
@@ -1770,7 +1745,8 @@ mod tests {
     fn test_precision_recall_curve_basic() {
         let y_true = array![0usize, 0, 1, 1];
         let y_score = array![0.1_f64, 0.4, 0.35, 0.8];
-        let (precision, recall, _thresholds) = precision_recall_curve(&y_true, &y_score).unwrap();
+        let (precision, recall, _thresholds) =
+            precision_recall_curve(&y_true, &y_score).unwrap();
 
         // Last point is (precision=1, recall=0) sentinel.
         let last = precision.len() - 1;
@@ -1791,7 +1767,8 @@ mod tests {
     fn test_precision_recall_curve_perfect() {
         let y_true = array![0usize, 0, 1, 1];
         let y_score = array![0.1_f64, 0.2, 0.8, 0.9];
-        let (precision, recall, _thresholds) = precision_recall_curve(&y_true, &y_score).unwrap();
+        let (precision, recall, _thresholds) =
+            precision_recall_curve(&y_true, &y_score).unwrap();
 
         // For a perfect classifier, at the highest threshold both predictions
         // are positives and correct.
@@ -2103,155 +2080,146 @@ mod kani_proofs {
     }
 
     // -----------------------------------------------------------------------
-    // precision_recall_fscore_support
+    // top_k_accuracy_score
     // -----------------------------------------------------------------------
 
     #[test]
-    fn test_prfs_binary() {
-        let y_true = array![0usize, 1, 1, 0, 1];
-        let y_pred = array![0usize, 1, 0, 0, 1];
-        let (prec, rec, f1, support) =
-            precision_recall_fscore_support(&y_true, &y_pred, 1.0).unwrap();
-        assert_eq!(support.len(), 2);
-        // class 0: TP=2, FP=1, FN=0 => prec=2/3, rec=1.0, support=2
-        assert_abs_diff_eq!(prec[0], 2.0 / 3.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(rec[0], 1.0, epsilon = 1e-10);
-        assert_eq!(support[0], 2);
-        // class 1: TP=2, FP=0, FN=1 => prec=1.0, rec=2/3, support=3
-        assert_abs_diff_eq!(prec[1], 1.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(rec[1], 2.0 / 3.0, epsilon = 1e-10);
-        assert_eq!(support[1], 3);
+    fn test_top_k_accuracy_perfect_top1() {
+        let y_true = array![0usize, 1, 2];
+        let y_score = Array2::from_shape_vec(
+            (3, 3),
+            vec![0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8],
+        )
+        .unwrap();
+        let acc = top_k_accuracy_score(&y_true, &y_score, 1).unwrap();
+        assert_abs_diff_eq!(acc, 1.0, epsilon = 1e-10);
     }
 
     #[test]
-    fn test_prfs_f1_matches_individual() {
-        let y_true = array![0usize, 1, 1, 0, 1];
-        let y_pred = array![0usize, 1, 0, 0, 1];
-        let (prec, rec, f1, _) = precision_recall_fscore_support(&y_true, &y_pred, 1.0).unwrap();
-        // F1 for class 1
-        let expected_f1 = 2.0 * prec[1] * rec[1] / (prec[1] + rec[1]);
-        assert_abs_diff_eq!(f1[1], expected_f1, epsilon = 1e-10);
+    fn test_top_k_accuracy_top2() {
+        let y_true = array![0usize, 1, 2];
+        let y_score = Array2::from_shape_vec(
+            (3, 3),
+            vec![
+                0.8, 0.1, 0.1, // correct top-1
+                0.1, 0.7, 0.2, // correct top-1
+                0.3, 0.4, 0.3, // class 2 not in top-1 but in top-2
+            ],
+        )
+        .unwrap();
+        // top-1: samples 0,1 correct, sample 2 wrong -> 2/3
+        let acc_1 = top_k_accuracy_score(&y_true, &y_score, 1).unwrap();
+        assert_abs_diff_eq!(acc_1, 2.0 / 3.0, epsilon = 1e-10);
+        // top-2: all correct
+        let acc_2 = top_k_accuracy_score(&y_true, &y_score, 2).unwrap();
+        assert_abs_diff_eq!(acc_2, 1.0, epsilon = 1e-10);
     }
 
     #[test]
-    fn test_prfs_multiclass() {
-        let y_true = array![0usize, 1, 2, 0, 1, 2];
-        let y_pred = array![0usize, 2, 2, 0, 0, 2];
-        let (_, _, _, support) = precision_recall_fscore_support(&y_true, &y_pred, 1.0).unwrap();
-        assert_eq!(support[0], 2); // class 0
-        assert_eq!(support[1], 2); // class 1
-        assert_eq!(support[2], 2); // class 2
-    }
-
-    #[test]
-    fn test_prfs_empty() {
+    fn test_top_k_accuracy_empty() {
         let y_true = Array1::<usize>::from_vec(vec![]);
-        let y_pred = Array1::<usize>::from_vec(vec![]);
-        assert!(precision_recall_fscore_support(&y_true, &y_pred, 1.0).is_err());
+        let y_score = Array2::<f64>::zeros((0, 3));
+        assert!(top_k_accuracy_score(&y_true, &y_score, 1).is_err());
     }
 
     #[test]
-    fn test_prfs_negative_beta() {
+    fn test_top_k_accuracy_shape_mismatch() {
         let y_true = array![0usize, 1];
-        let y_pred = array![0usize, 1];
-        assert!(precision_recall_fscore_support(&y_true, &y_pred, -1.0).is_err());
+        let y_score = Array2::<f64>::zeros((3, 2));
+        assert!(top_k_accuracy_score(&y_true, &y_score, 1).is_err());
     }
 
     #[test]
-    fn test_prfs_beta_zero() {
-        // beta=0 means only precision matters: F0 = precision
-        let y_true = array![0usize, 1, 1, 0, 1];
-        let y_pred = array![0usize, 1, 0, 0, 1];
-        let (prec, _, f0, _) = precision_recall_fscore_support(&y_true, &y_pred, 0.0).unwrap();
-        assert_abs_diff_eq!(f0[0], prec[0], epsilon = 1e-10);
-        assert_abs_diff_eq!(f0[1], prec[1], epsilon = 1e-10);
+    fn test_top_k_accuracy_k_zero() {
+        let y_true = array![0usize, 1];
+        let y_score = Array2::<f64>::zeros((2, 2));
+        assert!(top_k_accuracy_score(&y_true, &y_score, 0).is_err());
+    }
+
+    #[test]
+    fn test_top_k_accuracy_label_out_of_bounds() {
+        let y_true = array![0usize, 5];
+        let y_score = Array2::<f64>::zeros((2, 3));
+        assert!(top_k_accuracy_score(&y_true, &y_score, 1).is_err());
+    }
+
+    #[test]
+    fn test_top_k_accuracy_k_equals_n_classes() {
+        // When k = n_classes, all samples should be correct
+        let y_true = array![0usize, 1, 2];
+        let y_score = Array2::from_shape_vec(
+            (3, 3),
+            vec![0.1, 0.2, 0.7, 0.5, 0.3, 0.2, 0.3, 0.3, 0.4],
+        )
+        .unwrap();
+        let acc = top_k_accuracy_score(&y_true, &y_score, 3).unwrap();
+        assert_abs_diff_eq!(acc, 1.0, epsilon = 1e-10);
     }
 
     // -----------------------------------------------------------------------
-    // multilabel_confusion_matrix
+    // calibration_curve
     // -----------------------------------------------------------------------
 
     #[test]
-    fn test_mcm_binary() {
-        let y_true = array![0usize, 1, 1, 0, 1];
-        let y_pred = array![0usize, 1, 0, 0, 1];
-        let mcm = multilabel_confusion_matrix(&y_true, &y_pred).unwrap();
-        assert_eq!(mcm.shape(), &[2, 2, 2]);
-        // class 0: TP=2, FP=1, FN=0, TN=2
-        assert_eq!(mcm[[0, 1, 1]], 2); // TP
-        assert_eq!(mcm[[0, 0, 1]], 1); // FP
-        assert_eq!(mcm[[0, 1, 0]], 0); // FN
-        assert_eq!(mcm[[0, 0, 0]], 2); // TN
-        // class 1: TP=2, FP=0, FN=1, TN=2
-        assert_eq!(mcm[[1, 1, 1]], 2); // TP
-        assert_eq!(mcm[[1, 0, 1]], 0); // FP
-        assert_eq!(mcm[[1, 1, 0]], 1); // FN
-        assert_eq!(mcm[[1, 0, 0]], 2); // TN
+    fn test_calibration_curve_basic() {
+        let y_true = array![0usize, 0, 1, 1, 1];
+        let y_prob = array![0.1_f64, 0.3, 0.6, 0.8, 0.9];
+        let (frac_pos, mean_pred) = calibration_curve(&y_true, &y_prob, 2).unwrap();
+        // Bin [0, 0.5): probs 0.1, 0.3 -> frac_pos=0/2=0, mean_pred=(0.1+0.3)/2=0.2
+        // Bin [0.5, 1.0]: probs 0.6, 0.8, 0.9 -> frac_pos=3/3=1, mean_pred=(0.6+0.8+0.9)/3
+        assert_eq!(frac_pos.len(), 2);
+        assert_abs_diff_eq!(frac_pos[0], 0.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(frac_pos[1], 1.0, epsilon = 1e-10);
+        assert_abs_diff_eq!(mean_pred[0], 0.2, epsilon = 1e-10);
+        let expected_mean = (0.6 + 0.8 + 0.9) / 3.0;
+        assert_abs_diff_eq!(mean_pred[1], expected_mean, epsilon = 1e-10);
     }
 
     #[test]
-    fn test_mcm_multiclass() {
-        let y_true = array![0usize, 1, 2, 0, 1, 2];
-        let y_pred = array![0usize, 2, 2, 0, 0, 2];
-        let mcm = multilabel_confusion_matrix(&y_true, &y_pred).unwrap();
-        assert_eq!(mcm.shape(), &[3, 2, 2]);
-        // Each 2x2 matrix should sum to n=6
-        for c in 0..3 {
-            let total = mcm[[c, 0, 0]] + mcm[[c, 0, 1]] + mcm[[c, 1, 0]] + mcm[[c, 1, 1]];
-            assert_eq!(total, 6);
-        }
+    fn test_calibration_curve_empty_bins() {
+        // All predictions in one bin
+        let y_true = array![1usize, 0, 1];
+        let y_prob = array![0.1_f64, 0.2, 0.3];
+        let (frac_pos, _mean_pred) = calibration_curve(&y_true, &y_prob, 5).unwrap();
+        // Empty bins are omitted
+        assert!(frac_pos.len() <= 5);
+        assert!(frac_pos.len() >= 1);
     }
 
     #[test]
-    fn test_mcm_empty() {
+    fn test_calibration_curve_empty() {
         let y_true = Array1::<usize>::from_vec(vec![]);
-        let y_pred = Array1::<usize>::from_vec(vec![]);
-        assert!(multilabel_confusion_matrix(&y_true, &y_pred).is_err());
-    }
-
-    // -----------------------------------------------------------------------
-    // det_curve
-    // -----------------------------------------------------------------------
-
-    #[test]
-    fn test_det_curve_basic() {
-        let y_true = array![0, 0, 1, 1];
-        let y_score = array![0.1_f64, 0.4, 0.35, 0.8];
-        let (fpr, fnr, thresholds) = det_curve(&y_true, &y_score).unwrap();
-        assert_eq!(fpr.len(), fnr.len());
-        assert_eq!(fpr.len(), thresholds.len());
-        // At highest threshold (0.8): only 1 TP, 0 FP => FPR=0, FNR=0.5
-        assert_abs_diff_eq!(fpr[0], 0.0, epsilon = 1e-10);
-        assert_abs_diff_eq!(fnr[0], 0.5, epsilon = 1e-10);
+        let y_prob = Array1::<f64>::from_vec(vec![]);
+        assert!(calibration_curve(&y_true, &y_prob, 5).is_err());
     }
 
     #[test]
-    fn test_det_curve_consistent_with_roc() {
-        // FNR = 1 - TPR, so det_curve's fnr should equal 1 - roc_curve's tpr
-        // at the same thresholds.
-        let y_true = array![0, 0, 1, 1];
-        let y_score = array![0.1_f64, 0.4, 0.35, 0.8];
-        let (roc_fpr, roc_tpr, _) = roc_curve(&y_true, &y_score).unwrap();
-        let (det_fpr, det_fnr, _) = det_curve(&y_true, &y_score).unwrap();
-        // ROC has an extra leading point (0,0), DET does not
-        for i in 0..det_fpr.len() {
-            // ROC point i+1 should correspond to DET point i
-            assert_abs_diff_eq!(det_fpr[i], roc_fpr[i + 1], epsilon = 1e-10);
-            assert_abs_diff_eq!(det_fnr[i], 1.0 - roc_tpr[i + 1], epsilon = 1e-10);
-        }
+    fn test_calibration_curve_shape_mismatch() {
+        let y_true = array![0usize, 1];
+        let y_prob = array![0.1_f64, 0.2, 0.3];
+        assert!(calibration_curve(&y_true, &y_prob, 5).is_err());
     }
 
     #[test]
-    fn test_det_curve_error_single_class() {
-        let y_true = array![1, 1, 1];
-        let y_score = array![0.5_f64, 0.6, 0.7];
-        assert!(det_curve(&y_true, &y_score).is_err());
+    fn test_calibration_curve_zero_bins() {
+        let y_true = array![0usize, 1];
+        let y_prob = array![0.1_f64, 0.9];
+        assert!(calibration_curve(&y_true, &y_prob, 0).is_err());
     }
 
     #[test]
-    fn test_det_curve_error_empty() {
-        let y_true = Array1::<usize>::from_vec(vec![]);
-        let y_score = Array1::<f64>::from_vec(vec![]);
-        assert!(det_curve(&y_true, &y_score).is_err());
+    fn test_calibration_curve_non_binary() {
+        let y_true = array![0usize, 2];
+        let y_prob = array![0.1_f64, 0.9];
+        assert!(calibration_curve(&y_true, &y_prob, 5).is_err());
+    }
+
+    #[test]
+    fn test_calibration_curve_f32() {
+        let y_true = array![0usize, 1, 1];
+        let y_prob = array![0.2_f32, 0.7, 0.9];
+        let (frac_pos, mean_pred) = calibration_curve(&y_true, &y_prob, 2).unwrap();
+        assert!(!frac_pos.is_empty());
+        assert!(!mean_pred.is_empty());
     }
 }

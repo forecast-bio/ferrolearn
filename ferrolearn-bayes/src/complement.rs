@@ -62,19 +62,37 @@ use num_traits::{Float, FromPrimitive, ToPrimitive};
 pub struct ComplementNB<F> {
     /// Additive (Laplace) smoothing parameter. Default: `1.0`.
     pub alpha: F,
+    /// Optional user-supplied class priors. Note: ComplementNB does not
+    /// use priors in the standard way (it uses complement weights), but
+    /// this field is provided for API consistency with other NB variants.
+    pub class_prior: Option<Vec<F>>,
 }
 
 impl<F: Float> ComplementNB<F> {
     /// Create a new `ComplementNB` with Laplace smoothing (`alpha = 1.0`).
     #[must_use]
     pub fn new() -> Self {
-        Self { alpha: F::one() }
+        Self {
+            alpha: F::one(),
+            class_prior: None,
+        }
     }
 
     /// Set the Laplace smoothing parameter.
     #[must_use]
     pub fn with_alpha(mut self, alpha: F) -> Self {
         self.alpha = alpha;
+        self
+    }
+
+    /// Set user-supplied class priors.
+    ///
+    /// The priors must have length equal to the number of classes discovered
+    /// during fitting. Note: ComplementNB uses complement-class weights rather
+    /// than direct class priors, but the priors are stored for API consistency.
+    #[must_use]
+    pub fn with_class_prior(mut self, priors: Vec<F>) -> Self {
+        self.class_prior = Some(priors);
         self
     }
 }
@@ -93,6 +111,12 @@ pub struct FittedComplementNB<F> {
     /// Complement weights per class, shape `(n_classes, n_features)`.
     /// Each entry is `log( (N_~cj + alpha) / (N_~c + alpha * n_features) )`.
     weights: Array2<F>,
+    /// Raw per-class feature count sums, shape `(n_classes, n_features)`.
+    feature_counts: Array2<F>,
+    /// Per-class sample counts.
+    class_counts: Vec<usize>,
+    /// Smoothing parameter carried forward for partial_fit.
+    alpha: F,
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for ComplementNB<F> {
@@ -153,9 +177,6 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Complem
             }
         }
 
-        // class_counts used for validation; suppress unused-variable lint.
-        let _ = class_counts;
-
         // Total feature counts across all classes.
         let total_feature_counts: Array1<F> = class_feature_counts.rows().into_iter().fold(
             Array1::<F>::zeros(n_features),
@@ -185,11 +206,126 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Complem
             }
         }
 
-        Ok(FittedComplementNB { classes, weights })
+        // Validate class_prior length if provided.
+        if let Some(ref priors) = self.class_prior {
+            if priors.len() != n_classes {
+                return Err(FerroError::InvalidParameter {
+                    name: "class_prior".into(),
+                    reason: format!(
+                        "length {} does not match number of classes {}",
+                        priors.len(),
+                        n_classes
+                    ),
+                });
+            }
+        }
+
+        Ok(FittedComplementNB {
+            classes,
+            weights,
+            feature_counts: class_feature_counts,
+            class_counts,
+            alpha: self.alpha,
+        })
     }
 }
 
 impl<F: Float + Send + Sync + 'static> FittedComplementNB<F> {
+    /// Incrementally update the model with new data.
+    ///
+    /// Accumulates feature counts and class counts, then recomputes
+    /// the complement weights.
+    ///
+    /// # Errors
+    ///
+    /// - [`FerroError::ShapeMismatch`] if `x` and `y` have different row counts
+    ///   or the number of features does not match the fitted model.
+    /// - [`FerroError::InvalidParameter`] if any feature value is negative.
+    pub fn partial_fit(
+        &mut self,
+        x: &Array2<F>,
+        y: &Array1<usize>,
+    ) -> Result<(), FerroError> {
+        let (n_samples, n_features) = x.dim();
+
+        if n_samples == 0 {
+            return Ok(());
+        }
+
+        if n_samples != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![n_samples],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+
+        if n_features != self.weights.ncols() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.weights.ncols()],
+                actual: vec![n_features],
+                context: "number of features must match fitted ComplementNB".into(),
+            });
+        }
+
+        if x.iter().any(|&v| v < F::zero()) {
+            return Err(FerroError::InvalidParameter {
+                name: "X".into(),
+                reason: "ComplementNB requires non-negative feature values".into(),
+            });
+        }
+
+        // Accumulate counts for each existing class.
+        for (ci, &class_label) in self.classes.clone().iter().enumerate() {
+            let new_indices: Vec<usize> = y
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &label)| if label == class_label { Some(i) } else { None })
+                .collect();
+
+            if new_indices.is_empty() {
+                continue;
+            }
+
+            self.class_counts[ci] += new_indices.len();
+
+            for &i in &new_indices {
+                for j in 0..n_features {
+                    self.feature_counts[[ci, j]] = self.feature_counts[[ci, j]] + x[[i, j]];
+                }
+            }
+        }
+
+        // Recompute complement weights from accumulated feature_counts.
+        let n_classes = self.classes.len();
+        let n_feat_f = F::from(n_features).unwrap();
+
+        let total_feature_counts: Array1<F> = self.feature_counts.rows().into_iter().fold(
+            Array1::<F>::zeros(n_features),
+            |acc, row| {
+                let mut result = acc;
+                for j in 0..n_features {
+                    result[j] = result[j] + row[j];
+                }
+                result
+            },
+        );
+
+        let total_all: F = total_feature_counts.sum();
+
+        for ci in 0..n_classes {
+            let complement_total = total_all - self.feature_counts.row(ci).sum();
+            let denom = complement_total + self.alpha * n_feat_f;
+            for j in 0..n_features {
+                let complement_count_j =
+                    total_feature_counts[j] - self.feature_counts[[ci, j]];
+                self.weights[[ci, j]] = ((complement_count_j + self.alpha) / denom).ln();
+            }
+        }
+
+        Ok(())
+    }
+
     /// Compute complement scores for each class.
     ///
     /// Returns shape `(n_samples, n_classes)`. Lower is better.
@@ -469,6 +605,58 @@ mod tests {
         // Class 1 samples should be predicted as class 1.
         assert_eq!(preds[10], 1);
         assert_eq!(preds[11], 1);
+    }
+
+    #[test]
+    fn test_complement_nb_partial_fit() {
+        let x1 = Array2::from_shape_vec(
+            (4, 3),
+            vec![5.0, 1.0, 0.0, 4.0, 2.0, 0.0, 0.0, 1.0, 5.0, 1.0, 0.0, 4.0],
+        )
+        .unwrap();
+        let y1 = array![0usize, 0, 1, 1];
+
+        let model = ComplementNB::<f64>::new();
+        let mut fitted = model.fit(&x1, &y1).unwrap();
+
+        let x2 = Array2::from_shape_vec(
+            (2, 3),
+            vec![6.0, 0.0, 1.0, 0.0, 2.0, 6.0],
+        )
+        .unwrap();
+        let y2 = array![0usize, 1];
+
+        fitted.partial_fit(&x2, &y2).unwrap();
+
+        let preds = fitted.predict(&x1).unwrap();
+        assert_eq!(preds.len(), 4);
+    }
+
+    #[test]
+    fn test_complement_nb_partial_fit_shape_mismatch() {
+        let (x, y) = make_count_data();
+        let model = ComplementNB::<f64>::new();
+        let mut fitted = model.fit(&x, &y).unwrap();
+
+        let x_bad = Array2::from_shape_vec((2, 5), vec![1.0; 10]).unwrap();
+        let y_bad = array![0usize, 1];
+        assert!(fitted.partial_fit(&x_bad, &y_bad).is_err());
+    }
+
+    #[test]
+    fn test_complement_nb_class_prior() {
+        let (x, y) = make_count_data();
+        let model = ComplementNB::<f64>::new().with_class_prior(vec![0.5, 0.5]);
+        let fitted = model.fit(&x, &y).unwrap();
+        let preds = fitted.predict(&x).unwrap();
+        assert_eq!(preds.len(), 6);
+    }
+
+    #[test]
+    fn test_complement_nb_class_prior_wrong_length() {
+        let (x, y) = make_count_data();
+        let model = ComplementNB::<f64>::new().with_class_prior(vec![1.0]);
+        assert!(model.fit(&x, &y).is_err());
     }
 
     #[test]

@@ -51,12 +51,13 @@ pub mod lda;
 mod linalg;
 pub mod linear_regression;
 pub mod logistic_regression;
-pub mod mlp;
 mod optim;
 pub mod ransac;
 pub mod ridge;
 pub mod ridge_cv;
 pub mod sgd;
+pub mod nu_svm;
+pub mod one_class_svm;
 pub mod svm;
 
 // Re-export the main types at the crate root.
@@ -70,13 +71,12 @@ pub use lasso_cv::{FittedLassoCV, LassoCV};
 pub use lda::{FittedLDA, LDA};
 pub use linear_regression::{FittedLinearRegression, LinearRegression};
 pub use logistic_regression::{FittedLogisticRegression, LogisticRegression};
-pub use mlp::{
-    Activation, FittedMLPClassifier, FittedMLPRegressor, MLPClassifier, MLPRegressor, Solver,
-};
 pub use ransac::{FittedRANSACRegressor, RANSACRegressor};
 pub use ridge::{FittedRidge, Ridge};
 pub use ridge_cv::{FittedRidgeCV, RidgeCV};
 pub use sgd::{FittedSGDClassifier, FittedSGDRegressor, SGDClassifier, SGDRegressor};
+pub use nu_svm::{FittedNuSVC, FittedNuSVR, NuSVC, NuSVR};
+pub use one_class_svm::{FittedOneClassSVM, OneClassSVM};
 pub use svm::{
     FittedSVC, FittedSVR, Kernel, LinearKernel, PolynomialKernel, RbfKernel, SVC, SVR,
     SigmoidKernel,

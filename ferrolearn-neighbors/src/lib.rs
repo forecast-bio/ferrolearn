@@ -52,6 +52,8 @@
 pub mod balltree;
 pub mod kdtree;
 pub mod knn;
+pub mod local_outlier_factor;
+pub mod nearest_centroid;
 pub mod nearest_neighbors;
 pub mod radius_neighbors;
 
@@ -60,6 +62,8 @@ pub use knn::{
     Algorithm, FittedKNeighborsClassifier, FittedKNeighborsRegressor, KNeighborsClassifier,
     KNeighborsRegressor, Weights,
 };
+pub use local_outlier_factor::{FittedLocalOutlierFactor, LocalOutlierFactor};
+pub use nearest_centroid::{FittedNearestCentroid, NearestCentroid};
 pub use nearest_neighbors::{FittedNearestNeighbors, NearestNeighbors};
 pub use radius_neighbors::{
     FittedRadiusNeighborsClassifier, FittedRadiusNeighborsRegressor, RadiusNeighborsClassifier,

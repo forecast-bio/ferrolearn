@@ -11,9 +11,6 @@
 //! | [`classification::precision_score`] | Positive predictive value (TP / (TP + FP)) |
 //! | [`classification::recall_score`] | Sensitivity (TP / (TP + FN)) |
 //! | [`classification::f1_score`] | Harmonic mean of precision and recall |
-//! | [`classification::precision_recall_fscore_support`] | Per-class precision, recall, F-score, and support |
-//! | [`classification::multilabel_confusion_matrix`] | Per-class 2x2 confusion matrices |
-//! | [`classification::det_curve`] | Detection Error Tradeoff curve (FNR vs FPR) |
 //! | [`classification::roc_auc_score`] | Area under the ROC curve (binary) |
 //! | [`classification::roc_curve`] | Compute ROC curve (FPR, TPR, thresholds) |
 //! | [`classification::precision_recall_curve`] | Compute precision-recall curve |
@@ -21,6 +18,15 @@
 //! | [`classification::average_precision_score`] | Average precision from PR curve |
 //! | [`classification::confusion_matrix`] | Matrix of true vs. predicted counts |
 //! | [`classification::log_loss`] | Cross-entropy loss for probabilistic classifiers |
+//! | [`classification::top_k_accuracy_score`] | Fraction of samples with true label in top-k predictions |
+//! | [`classification::calibration_curve`] | Calibration curve (reliability diagram) data |
+//!
+//! ## Ranking Metrics
+//!
+//! | Function | Description |
+//! |---|---|
+//! | [`ranking::dcg_score`] | Discounted Cumulative Gain |
+//! | [`ranking::ndcg_score`] | Normalized Discounted Cumulative Gain |
 //!
 //! ## Regression Metrics
 //!
@@ -32,22 +38,6 @@
 //! | [`regression::r2_score`] | Coefficient of determination |
 //! | [`regression::mean_absolute_percentage_error`] | Mean absolute percentage error |
 //! | [`regression::explained_variance_score`] | Fraction of variance explained |
-//! | [`regression::mean_pinball_loss`] | Quantile (pinball) loss |
-//! | [`regression::mean_poisson_deviance`] | Mean Poisson deviance |
-//! | [`regression::mean_gamma_deviance`] | Mean Gamma deviance |
-//! | [`regression::mean_tweedie_deviance`] | Mean Tweedie deviance (generalised) |
-//!
-//! ## Clustering Metrics
-//!
-//! | Function | Description |
-//! |---|---|
-//! | [`clustering::silhouette_score`] | Mean silhouette coefficient |
-//! | [`clustering::adjusted_rand_score`] | Adjusted Rand Index |
-//! | [`clustering::rand_score`] | Unadjusted Rand Index |
-//! | [`clustering::adjusted_mutual_info`] | Adjusted Mutual Information |
-//! | [`clustering::normalized_mutual_info_score`] | Normalized Mutual Information |
-//! | [`clustering::fowlkes_mallows_score`] | Fowlkes-Mallows Index |
-//! | [`clustering::davies_bouldin_score`] | Davies-Bouldin Index |
 //!
 //! ## Pairwise Distances
 //!
@@ -58,14 +48,6 @@
 //! | [`pairwise::manhattan_distances`] | L1 pairwise distances |
 //! | [`pairwise::cosine_distances`] | `1 - cosine_similarity` pairwise distances |
 //! | [`pairwise::chebyshev_distances`] | L-infinity pairwise distances |
-//! | [`pairwise::nan_euclidean_distances`] | L2 distances with NaN-feature handling |
-//!
-//! ## Scorer Utility
-//!
-//! | Item | Description |
-//! |---|---|
-//! | [`scorer::Scorer`] | Wraps a scoring function with optimisation metadata |
-//! | [`scorer::make_scorer`] | Create a `Scorer` from a function pointer |
 //!
 //! ## Example
 //!
@@ -90,26 +72,24 @@
 pub mod classification;
 pub mod clustering;
 pub mod pairwise;
+pub mod ranking;
 pub mod regression;
-pub mod scorer;
 
 // Flat re-exports for convenient access.
 pub use classification::{
-    Average, accuracy_score, auc, average_precision_score, confusion_matrix, det_curve, f1_score,
-    log_loss, multilabel_confusion_matrix, precision_recall_curve, precision_recall_fscore_support,
-    precision_score, recall_score, roc_auc_score, roc_curve,
+    Average, accuracy_score, auc, average_precision_score, calibration_curve, confusion_matrix,
+    f1_score, log_loss, precision_recall_curve, precision_score, recall_score, roc_auc_score,
+    roc_curve, top_k_accuracy_score,
 };
+pub use ranking::{dcg_score, ndcg_score};
 pub use clustering::{
-    NmiMethod, adjusted_mutual_info, adjusted_rand_score, davies_bouldin_score,
-    fowlkes_mallows_score, normalized_mutual_info_score, rand_score, silhouette_score,
+    adjusted_mutual_info, adjusted_rand_score, davies_bouldin_score, silhouette_score,
 };
 pub use pairwise::{
     Metric, chebyshev_distances, cosine_distances, euclidean_distances, manhattan_distances,
-    nan_euclidean_distances, pairwise_distances,
+    pairwise_distances,
 };
 pub use regression::{
     explained_variance_score, mean_absolute_error, mean_absolute_percentage_error,
-    mean_gamma_deviance, mean_pinball_loss, mean_poisson_deviance, mean_squared_error,
-    mean_tweedie_deviance, r2_score, root_mean_squared_error,
+    mean_squared_error, r2_score, root_mean_squared_error,
 };
-pub use scorer::{Scorer, make_scorer};

@@ -46,16 +46,20 @@ pub struct GaussianNB<F> {
     /// Prevents division by zero when a feature has near-zero variance.
     /// Default: `1e-9`.
     pub var_smoothing: F,
+    /// Optional user-supplied class priors. If set, these are used
+    /// instead of computing priors from the data.
+    pub class_prior: Option<Vec<F>>,
 }
 
 impl<F: Float> GaussianNB<F> {
     /// Create a new `GaussianNB` with default settings.
     ///
-    /// Default: `var_smoothing = 1e-9`.
+    /// Default: `var_smoothing = 1e-9`, `class_prior = None`.
     #[must_use]
     pub fn new() -> Self {
         Self {
             var_smoothing: F::from(1e-9).unwrap(),
+            class_prior: None,
         }
     }
 
@@ -63,6 +67,16 @@ impl<F: Float> GaussianNB<F> {
     #[must_use]
     pub fn with_var_smoothing(mut self, var_smoothing: F) -> Self {
         self.var_smoothing = var_smoothing;
+        self
+    }
+
+    /// Set user-supplied class priors.
+    ///
+    /// The priors must sum to 1.0 and have length equal to the number
+    /// of classes discovered during fitting.
+    #[must_use]
+    pub fn with_class_prior(mut self, priors: Vec<F>) -> Self {
+        self.class_prior = Some(priors);
         self
     }
 }
@@ -76,6 +90,7 @@ impl<F: Float> Default for GaussianNB<F> {
 /// Fitted Gaussian Naive Bayes classifier.
 ///
 /// Stores the per-class prior, mean, and variance computed during fitting.
+/// Also stores sufficient statistics for incremental (partial) fitting.
 #[derive(Debug, Clone)]
 pub struct FittedGaussianNB<F> {
     /// Sorted unique class labels.
@@ -86,6 +101,15 @@ pub struct FittedGaussianNB<F> {
     theta: Array2<F>,
     /// Per-class per-feature variance (smoothed), shape `(n_classes, n_features)`.
     sigma: Array2<F>,
+    /// Per-class sample counts (for partial_fit updates).
+    class_counts: Vec<usize>,
+    /// Per-class per-feature unsmoothed variance, shape `(n_classes, n_features)`.
+    /// Stored for Welford update during partial_fit.
+    raw_sigma: Array2<F>,
+    /// Variance smoothing parameter carried forward for partial_fit.
+    var_smoothing: F,
+    /// Optional user-supplied class priors.
+    class_prior: Option<Vec<F>>,
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for GaussianNB<F> {
@@ -162,6 +186,9 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Gaussia
             }
         }
 
+        // Store raw (unsmoothed) variance for partial_fit.
+        let raw_sigma = sigma.clone();
+
         // Apply variance smoothing: add var_smoothing * max(variance_all_features).
         // Following scikit-learn: epsilon = var_smoothing * max of all variances.
         let max_var = sigma
@@ -170,16 +197,216 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Gaussia
         let epsilon = self.var_smoothing * max_var.max(F::one());
         sigma.mapv_inplace(|v| v + epsilon);
 
+        // Use user-supplied class priors if provided.
+        if let Some(ref priors) = self.class_prior {
+            if priors.len() != n_classes {
+                return Err(FerroError::InvalidParameter {
+                    name: "class_prior".into(),
+                    reason: format!(
+                        "length {} does not match number of classes {}",
+                        priors.len(),
+                        n_classes
+                    ),
+                });
+            }
+            for (ci, &p) in priors.iter().enumerate() {
+                log_prior[ci] = p.ln();
+            }
+        }
+
+        // Collect class counts for partial_fit.
+        let class_counts: Vec<usize> = classes
+            .iter()
+            .map(|&label| y.iter().filter(|&&l| l == label).count())
+            .collect();
+
         Ok(FittedGaussianNB {
             classes,
             log_prior,
             theta,
             sigma,
+            class_counts,
+            raw_sigma,
+            var_smoothing: self.var_smoothing,
+            class_prior: self.class_prior.clone(),
         })
     }
 }
 
 impl<F: Float + Send + Sync + 'static> FittedGaussianNB<F> {
+    /// Incrementally update the model with new data using Welford's algorithm.
+    ///
+    /// This method updates the running mean and variance for each class using
+    /// a numerically stable online algorithm.
+    ///
+    /// # Errors
+    ///
+    /// - [`FerroError::ShapeMismatch`] if `x` and `y` have different row counts
+    ///   or the number of features does not match the fitted model.
+    pub fn partial_fit(
+        &mut self,
+        x: &Array2<F>,
+        y: &Array1<usize>,
+    ) -> Result<(), FerroError> {
+        let (n_samples, n_features) = x.dim();
+
+        if n_samples == 0 {
+            return Ok(());
+        }
+
+        if n_samples != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![n_samples],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+
+        if n_features != self.theta.ncols() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.theta.ncols()],
+                actual: vec![n_features],
+                context: "number of features must match fitted GaussianNB".into(),
+            });
+        }
+
+        for &class_label in y.iter() {
+            let ci = match self.classes.iter().position(|&c| c == class_label) {
+                Some(idx) => idx,
+                None => {
+                    // New class discovered: extend arrays.
+                    self.classes.push(class_label);
+                    let ci = self.classes.len() - 1;
+
+                    // Sort classes and find the new index.
+                    let mut sorted_classes = self.classes.clone();
+                    sorted_classes.sort_unstable();
+
+                    // Rebuild with insertion.
+                    let insert_pos = sorted_classes
+                        .iter()
+                        .position(|&c| c == class_label)
+                        .unwrap();
+
+                    self.classes = sorted_classes;
+                    let n_classes = self.classes.len();
+
+                    // Expand theta, raw_sigma, sigma, log_prior, class_counts.
+                    let mut new_theta = Array2::<F>::zeros((n_classes, n_features));
+                    let mut new_sigma = Array2::<F>::zeros((n_classes, n_features));
+                    let mut new_raw_sigma = Array2::<F>::zeros((n_classes, n_features));
+                    let mut new_log_prior = Array1::<F>::zeros(n_classes);
+                    let mut new_counts = vec![0usize; n_classes];
+
+                    let mut old_idx = 0;
+                    for new_idx in 0..n_classes {
+                        if new_idx == insert_pos {
+                            // New class: zero-initialized.
+                            continue;
+                        }
+                        if old_idx < self.theta.nrows() {
+                            for j in 0..n_features {
+                                new_theta[[new_idx, j]] = self.theta[[old_idx, j]];
+                                new_sigma[[new_idx, j]] = self.sigma[[old_idx, j]];
+                                new_raw_sigma[[new_idx, j]] = self.raw_sigma[[old_idx, j]];
+                            }
+                            new_log_prior[new_idx] = self.log_prior[old_idx];
+                            new_counts[new_idx] = self.class_counts[old_idx];
+                            old_idx += 1;
+                        }
+                    }
+
+                    self.theta = new_theta;
+                    self.sigma = new_sigma;
+                    self.raw_sigma = new_raw_sigma;
+                    self.log_prior = new_log_prior;
+                    self.class_counts = new_counts;
+
+                    let _ = ci; // suppress unused
+                    insert_pos
+                }
+            };
+
+            // We already have the class index. Now gather samples for this class.
+            let _ = ci; // Will be used below.
+        }
+
+        // Now update per class.
+        for (ci, &class_label) in self.classes.iter().enumerate() {
+            let new_indices: Vec<usize> = y
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &label)| if label == class_label { Some(i) } else { None })
+                .collect();
+
+            if new_indices.is_empty() {
+                continue;
+            }
+
+            let old_count = self.class_counts[ci];
+            let new_count = new_indices.len();
+            let total_count = old_count + new_count;
+            let total_f = F::from(total_count).unwrap();
+
+            for j in 0..n_features {
+                let old_mean = self.theta[[ci, j]];
+                let old_var = self.raw_sigma[[ci, j]];
+                let old_count_f = F::from(old_count).unwrap();
+                let new_count_f = F::from(new_count).unwrap();
+
+                // Compute new batch mean and variance.
+                let new_mean_batch = new_indices
+                    .iter()
+                    .fold(F::zero(), |acc, &i| acc + x[[i, j]])
+                    / new_count_f;
+
+                let new_var_batch = if new_count > 1 {
+                    new_indices.iter().fold(F::zero(), |acc, &i| {
+                        let d = x[[i, j]] - new_mean_batch;
+                        acc + d * d
+                    }) / new_count_f
+                } else {
+                    F::zero()
+                };
+
+                // Combined mean (Welford's parallel algorithm).
+                let combined_mean =
+                    (old_count_f * old_mean + new_count_f * new_mean_batch) / total_f;
+
+                // Combined variance.
+                let delta = new_mean_batch - old_mean;
+                let combined_var = (old_count_f * old_var + new_count_f * new_var_batch
+                    + old_count_f * new_count_f * delta * delta / total_f)
+                    / total_f;
+
+                self.theta[[ci, j]] = combined_mean;
+                self.raw_sigma[[ci, j]] = combined_var;
+            }
+
+            self.class_counts[ci] = total_count;
+        }
+
+        // Recompute smoothed sigma.
+        self.sigma = self.raw_sigma.clone();
+        let max_var = self
+            .sigma
+            .iter()
+            .fold(F::zero(), |acc, &v| if v > acc { v } else { acc });
+        let epsilon = self.var_smoothing * max_var.max(F::one());
+        self.sigma.mapv_inplace(|v| v + epsilon);
+
+        // Recompute log priors.
+        if self.class_prior.is_none() {
+            let total_samples: usize = self.class_counts.iter().sum();
+            let total_f = F::from(total_samples).unwrap();
+            for (ci, &count) in self.class_counts.iter().enumerate() {
+                self.log_prior[ci] = (F::from(count).unwrap() / total_f).ln();
+            }
+        }
+
+        Ok(())
+    }
+
     /// Compute the joint log-likelihood for each class.
     ///
     /// Returns an array of shape `(n_samples, n_classes)` containing the
@@ -521,5 +748,86 @@ mod tests {
         assert!(preds[0] == 3 || preds[0] == 7);
         assert_eq!(preds[0], 3);
         assert_eq!(preds[3], 7);
+    }
+
+    #[test]
+    fn test_gaussian_nb_partial_fit() {
+        // Fit on first batch, then partial_fit on second batch.
+        let x1 = Array2::from_shape_vec(
+            (4, 2),
+            vec![1.0, 1.0, 1.2, 0.8, 5.0, 5.0, 5.1, 4.9],
+        )
+        .unwrap();
+        let y1 = array![0usize, 0, 1, 1];
+
+        let model = GaussianNB::<f64>::new();
+        let mut fitted = model.fit(&x1, &y1).unwrap();
+
+        let x2 = Array2::from_shape_vec(
+            (4, 2),
+            vec![0.9, 1.1, 1.1, 0.9, 4.8, 5.2, 5.0, 4.8],
+        )
+        .unwrap();
+        let y2 = array![0usize, 0, 1, 1];
+
+        fitted.partial_fit(&x2, &y2).unwrap();
+
+        // Should still classify correctly after partial_fit.
+        let x_test = Array2::from_shape_vec(
+            (2, 2),
+            vec![1.0, 1.0, 5.0, 5.0],
+        )
+        .unwrap();
+        let preds = fitted.predict(&x_test).unwrap();
+        assert_eq!(preds[0], 0);
+        assert_eq!(preds[1], 1);
+    }
+
+    #[test]
+    fn test_gaussian_nb_partial_fit_shape_mismatch() {
+        let (x, y) = make_2class_data();
+        let model = GaussianNB::<f64>::new();
+        let mut fitted = model.fit(&x, &y).unwrap();
+
+        // Wrong number of features.
+        let x_bad = Array2::from_shape_vec((2, 3), vec![1.0; 6]).unwrap();
+        let y_bad = array![0usize, 1];
+        assert!(fitted.partial_fit(&x_bad, &y_bad).is_err());
+
+        // Wrong y length.
+        let x_ok = Array2::from_shape_vec((2, 2), vec![1.0; 4]).unwrap();
+        let y_wrong = array![0usize];
+        assert!(fitted.partial_fit(&x_ok, &y_wrong).is_err());
+    }
+
+    #[test]
+    fn test_gaussian_nb_partial_fit_empty() {
+        let (x, y) = make_2class_data();
+        let model = GaussianNB::<f64>::new();
+        let mut fitted = model.fit(&x, &y).unwrap();
+
+        let x_empty = Array2::<f64>::zeros((0, 2));
+        let y_empty = Array1::<usize>::zeros(0);
+        // Should succeed without changes.
+        assert!(fitted.partial_fit(&x_empty, &y_empty).is_ok());
+    }
+
+    #[test]
+    fn test_gaussian_nb_class_prior() {
+        let (x, y) = make_2class_data();
+        let model = GaussianNB::<f64>::new().with_class_prior(vec![0.9, 0.1]);
+        let fitted = model.fit(&x, &y).unwrap();
+
+        // With strongly biased prior toward class 0, predictions should favor class 0.
+        // Even class 1 samples might be classified as class 0.
+        let preds = fitted.predict(&x).unwrap();
+        assert_eq!(preds.len(), 8);
+    }
+
+    #[test]
+    fn test_gaussian_nb_class_prior_wrong_length() {
+        let (x, y) = make_2class_data();
+        let model = GaussianNB::<f64>::new().with_class_prior(vec![0.5, 0.3, 0.2]);
+        assert!(model.fit(&x, &y).is_err());
     }
 }

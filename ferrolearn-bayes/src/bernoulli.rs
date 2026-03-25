@@ -61,17 +61,21 @@ pub struct BernoulliNB<F> {
     /// Optional threshold for binarizing features. Values strictly above this
     /// threshold are set to 1; others to 0. If `None`, features are used as-is.
     pub binarize: Option<F>,
+    /// Optional user-supplied class priors. If set, these are used
+    /// instead of computing priors from the data.
+    pub class_prior: Option<Vec<F>>,
 }
 
 impl<F: Float> BernoulliNB<F> {
     /// Create a new `BernoulliNB` with default settings.
     ///
-    /// Default: `alpha = 1.0`, `binarize = None`.
+    /// Default: `alpha = 1.0`, `binarize = None`, `class_prior = None`.
     #[must_use]
     pub fn new() -> Self {
         Self {
             alpha: F::one(),
             binarize: None,
+            class_prior: None,
         }
     }
 
@@ -88,6 +92,16 @@ impl<F: Float> BernoulliNB<F> {
     #[must_use]
     pub fn with_binarize(mut self, threshold: F) -> Self {
         self.binarize = Some(threshold);
+        self
+    }
+
+    /// Set user-supplied class priors.
+    ///
+    /// The priors must sum to 1.0 and have length equal to the number
+    /// of classes discovered during fitting.
+    #[must_use]
+    pub fn with_class_prior(mut self, priors: Vec<F>) -> Self {
+        self.class_prior = Some(priors);
         self
     }
 }
@@ -118,6 +132,14 @@ pub struct FittedBernoulliNB<F> {
     log_neg_prob: Array2<F>,
     /// Binarization threshold (carried forward for prediction).
     binarize: Option<F>,
+    /// Raw per-class feature occurrence counts, shape `(n_classes, n_features)`.
+    feature_counts: Array2<F>,
+    /// Per-class sample counts.
+    class_counts: Vec<usize>,
+    /// Smoothing parameter carried forward for partial_fit.
+    alpha: F,
+    /// Optional user-supplied class priors.
+    class_prior: Option<Vec<F>>,
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for BernoulliNB<F> {
@@ -169,6 +191,9 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Bernoul
         let mut log_prob = Array2::<F>::zeros((n_classes, n_features));
         let mut log_neg_prob = Array2::<F>::zeros((n_classes, n_features));
 
+        let mut feature_counts = Array2::<F>::zeros((n_classes, n_features));
+        let mut class_counts_vec = vec![0usize; n_classes];
+
         for (ci, &class_label) in classes.iter().enumerate() {
             let class_indices: Vec<usize> = y
                 .iter()
@@ -179,17 +204,37 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Bernoul
             let n_c = class_indices.len();
             let n_c_f = F::from(n_c).unwrap();
             log_prior[ci] = (n_c_f / n_f).ln();
+            class_counts_vec[ci] = n_c;
 
             // Count occurrences of each feature in this class.
             for j in 0..n_features {
-                let feature_count = class_indices
+                let fc = class_indices
                     .iter()
                     .fold(F::zero(), |acc, &i| acc + x_bin[[i, j]]);
 
+                feature_counts[[ci, j]] = fc;
+
                 // Smoothed probability: (N_cj + alpha) / (N_c + 2*alpha).
-                let p = (feature_count + self.alpha) / (n_c_f + two * self.alpha);
+                let p = (fc + self.alpha) / (n_c_f + two * self.alpha);
                 log_prob[[ci, j]] = p.ln();
                 log_neg_prob[[ci, j]] = (F::one() - p).ln();
+            }
+        }
+
+        // Use user-supplied class priors if provided.
+        if let Some(ref priors) = self.class_prior {
+            if priors.len() != n_classes {
+                return Err(FerroError::InvalidParameter {
+                    name: "class_prior".into(),
+                    reason: format!(
+                        "length {} does not match number of classes {}",
+                        priors.len(),
+                        n_classes
+                    ),
+                });
+            }
+            for (ci, &p) in priors.iter().enumerate() {
+                log_prior[ci] = p.ln();
             }
         }
 
@@ -199,11 +244,104 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Bernoul
             log_prob,
             log_neg_prob,
             binarize: self.binarize,
+            feature_counts,
+            class_counts: class_counts_vec,
+            alpha: self.alpha,
+            class_prior: self.class_prior.clone(),
         })
     }
 }
 
 impl<F: Float + Send + Sync + 'static> FittedBernoulliNB<F> {
+    /// Incrementally update the model with new data.
+    ///
+    /// Accumulates feature counts and class counts, then recomputes
+    /// the log probabilities.
+    ///
+    /// # Errors
+    ///
+    /// - [`FerroError::ShapeMismatch`] if `x` and `y` have different row counts
+    ///   or the number of features does not match the fitted model.
+    pub fn partial_fit(
+        &mut self,
+        x: &Array2<F>,
+        y: &Array1<usize>,
+    ) -> Result<(), FerroError> {
+        let (n_samples, n_features) = x.dim();
+
+        if n_samples == 0 {
+            return Ok(());
+        }
+
+        if n_samples != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![n_samples],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+
+        if n_features != self.log_prob.ncols() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.log_prob.ncols()],
+                actual: vec![n_features],
+                context: "number of features must match fitted BernoulliNB".into(),
+            });
+        }
+
+        let x_bin = if let Some(threshold) = self.binarize {
+            binarize_array(x, threshold)
+        } else {
+            x.clone()
+        };
+
+        let two = F::from(2.0).unwrap();
+
+        // Accumulate counts for each existing class.
+        for (ci, &class_label) in self.classes.clone().iter().enumerate() {
+            let new_indices: Vec<usize> = y
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &label)| if label == class_label { Some(i) } else { None })
+                .collect();
+
+            if new_indices.is_empty() {
+                continue;
+            }
+
+            self.class_counts[ci] += new_indices.len();
+
+            for &i in &new_indices {
+                for j in 0..n_features {
+                    self.feature_counts[[ci, j]] = self.feature_counts[[ci, j]] + x_bin[[i, j]];
+                }
+            }
+        }
+
+        // Recompute log probabilities from accumulated feature_counts.
+        let n_classes = self.classes.len();
+        for ci in 0..n_classes {
+            let n_c_f = F::from(self.class_counts[ci]).unwrap();
+            for j in 0..n_features {
+                let p =
+                    (self.feature_counts[[ci, j]] + self.alpha) / (n_c_f + two * self.alpha);
+                self.log_prob[[ci, j]] = p.ln();
+                self.log_neg_prob[[ci, j]] = (F::one() - p).ln();
+            }
+        }
+
+        // Recompute log priors.
+        if self.class_prior.is_none() {
+            let total: usize = self.class_counts.iter().sum();
+            let total_f = F::from(total).unwrap();
+            for (ci, &count) in self.class_counts.iter().enumerate() {
+                self.log_prior[ci] = (F::from(count).unwrap() / total_f).ln();
+            }
+        }
+
+        Ok(())
+    }
+
     /// Compute joint log-likelihood for each class.
     ///
     /// Returns shape `(n_samples, n_classes)`.
@@ -514,5 +652,57 @@ mod tests {
         for i in 3..6 {
             assert!(proba[[i, 1]] > proba[[i, 0]]);
         }
+    }
+
+    #[test]
+    fn test_bernoulli_nb_partial_fit() {
+        let x1 = Array2::from_shape_vec(
+            (4, 3),
+            vec![1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0],
+        )
+        .unwrap();
+        let y1 = array![0usize, 0, 1, 1];
+
+        let model = BernoulliNB::<f64>::new();
+        let mut fitted = model.fit(&x1, &y1).unwrap();
+
+        let x2 = Array2::from_shape_vec(
+            (2, 3),
+            vec![1.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+        )
+        .unwrap();
+        let y2 = array![0usize, 1];
+
+        fitted.partial_fit(&x2, &y2).unwrap();
+
+        let preds = fitted.predict(&x1).unwrap();
+        assert_eq!(preds.len(), 4);
+    }
+
+    #[test]
+    fn test_bernoulli_nb_partial_fit_shape_mismatch() {
+        let (x, y) = make_binary_data();
+        let model = BernoulliNB::<f64>::new();
+        let mut fitted = model.fit(&x, &y).unwrap();
+
+        let x_bad = Array2::from_shape_vec((2, 5), vec![1.0; 10]).unwrap();
+        let y_bad = array![0usize, 1];
+        assert!(fitted.partial_fit(&x_bad, &y_bad).is_err());
+    }
+
+    #[test]
+    fn test_bernoulli_nb_class_prior() {
+        let (x, y) = make_binary_data();
+        let model = BernoulliNB::<f64>::new().with_class_prior(vec![0.8, 0.2]);
+        let fitted = model.fit(&x, &y).unwrap();
+        let preds = fitted.predict(&x).unwrap();
+        assert_eq!(preds.len(), 6);
+    }
+
+    #[test]
+    fn test_bernoulli_nb_class_prior_wrong_length() {
+        let (x, y) = make_binary_data();
+        let model = BernoulliNB::<f64>::new().with_class_prior(vec![0.5, 0.3, 0.2]);
+        assert!(model.fit(&x, &y).is_err());
     }
 }

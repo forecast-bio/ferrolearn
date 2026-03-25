@@ -61,6 +61,9 @@ use std::marker::PhantomData;
 pub struct CategoricalNB<F: Float + Send + Sync + 'static> {
     /// Additive (Laplace) smoothing parameter. Default: `1.0`.
     alpha: F,
+    /// Optional user-supplied class priors. If set, these are used
+    /// instead of computing priors from the data.
+    class_prior: Option<Vec<F>>,
     _marker: PhantomData<F>,
 }
 
@@ -70,6 +73,7 @@ impl<F: Float + Send + Sync + 'static> CategoricalNB<F> {
     pub fn new() -> Self {
         Self {
             alpha: F::one(),
+            class_prior: None,
             _marker: PhantomData,
         }
     }
@@ -82,6 +86,16 @@ impl<F: Float + Send + Sync + 'static> CategoricalNB<F> {
     #[must_use]
     pub fn with_alpha(mut self, alpha: F) -> Self {
         self.alpha = alpha;
+        self
+    }
+
+    /// Set user-supplied class priors.
+    ///
+    /// The priors must sum to 1.0 and have length equal to the number
+    /// of classes discovered during fitting.
+    #[must_use]
+    pub fn with_class_prior(mut self, priors: Vec<F>) -> Self {
+        self.class_prior = Some(priors);
         self
     }
 }
@@ -219,6 +233,23 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Categor
 
             feature_log_prob.push(class_log_probs);
             categories_per_feature.push(cats);
+        }
+
+        // Use user-supplied class priors if provided.
+        if let Some(ref priors) = self.class_prior {
+            if priors.len() != n_classes {
+                return Err(FerroError::InvalidParameter {
+                    name: "class_prior".into(),
+                    reason: format!(
+                        "length {} does not match number of classes {}",
+                        priors.len(),
+                        n_classes
+                    ),
+                });
+            }
+            for (ci, &p) in priors.iter().enumerate() {
+                class_log_prior[ci] = p.ln();
+            }
         }
 
         Ok(FittedCategoricalNB {

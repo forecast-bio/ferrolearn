@@ -15,10 +15,15 @@
 //!   native NaN support, and optional best-first (leaf-wise) growth.
 //! - **[`AdaBoostClassifier`]** — Adaptive Boosting using decision tree stumps with
 //!   SAMME and SAMME.R algorithms.
-//! - **[`AdaBoostRegressor`]** — AdaBoost.R2 regression with linear, square,
-//!   or exponential loss functions.
-//! - **[`BaggingClassifier`]** / **[`BaggingRegressor`]** — Bootstrap aggregation
-//!   meta-estimators with configurable sample and feature subsampling.
+//! - **[`ExtraTreeClassifier`]** / **[`ExtraTreeRegressor`]** — Extremely randomized
+//!   trees where split thresholds are chosen randomly rather than via exhaustive search.
+//! - **[`ExtraTreesClassifier`]** / **[`ExtraTreesRegressor`]** — Ensembles of
+//!   extremely randomized trees with Rayon parallel fitting. No bootstrap by default.
+//! - **[`IsolationForest`]** — Anomaly detection via random isolation trees.
+//! - **[`VotingClassifier`]** / **[`VotingRegressor`]** — Ensembles of decision trees
+//!   with varying hyperparameters, aggregated by majority vote or averaging.
+//! - **[`RandomTreesEmbedding`]** — Unsupervised feature transformation via one-hot
+//!   encoded leaf indices across an ensemble of randomly built trees.
 //!
 //! # Design
 //!
@@ -42,22 +47,28 @@
 //! supporting both `f32` and `f64`.
 
 pub mod adaboost;
-pub mod adaboost_regressor;
-pub mod bagging;
 pub mod decision_tree;
+pub mod extra_tree;
+pub mod extra_trees_ensemble;
 pub mod gradient_boosting;
 pub mod hist_gradient_boosting;
+pub mod isolation_forest;
 pub mod random_forest;
+pub mod random_trees_embedding;
+pub mod voting;
 
 // Re-export the main types at the crate root.
 pub use adaboost::{AdaBoostAlgorithm, AdaBoostClassifier, FittedAdaBoostClassifier};
-pub use adaboost_regressor::{AdaBoostLoss, AdaBoostRegressor, FittedAdaBoostRegressor};
-pub use bagging::{
-    BaggingClassifier, BaggingRegressor, FittedBaggingClassifier, FittedBaggingRegressor,
-};
 pub use decision_tree::{
     ClassificationCriterion, DecisionTreeClassifier, DecisionTreeRegressor,
     FittedDecisionTreeClassifier, FittedDecisionTreeRegressor, Node, RegressionCriterion,
+};
+pub use extra_tree::{
+    ExtraTreeClassifier, ExtraTreeRegressor, FittedExtraTreeClassifier, FittedExtraTreeRegressor,
+};
+pub use extra_trees_ensemble::{
+    ExtraTreesClassifier, ExtraTreesRegressor, FittedExtraTreesClassifier,
+    FittedExtraTreesRegressor,
 };
 pub use gradient_boosting::{
     ClassificationLoss, FittedGradientBoostingClassifier, FittedGradientBoostingRegressor,
@@ -68,7 +79,12 @@ pub use hist_gradient_boosting::{
     HistClassificationLoss, HistGradientBoostingClassifier, HistGradientBoostingRegressor,
     HistNode, HistRegressionLoss,
 };
+pub use isolation_forest::{FittedIsolationForest, IsolationForest};
 pub use random_forest::{
     FittedRandomForestClassifier, FittedRandomForestRegressor, MaxFeatures, RandomForestClassifier,
     RandomForestRegressor,
+};
+pub use random_trees_embedding::{FittedRandomTreesEmbedding, RandomTreesEmbedding};
+pub use voting::{
+    FittedVotingClassifier, FittedVotingRegressor, VotingClassifier, VotingRegressor,
 };
