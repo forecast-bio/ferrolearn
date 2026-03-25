@@ -1,0 +1,11 @@
+{
+  "uuid": "6322fb3e-323b-4c60-b927-bb6a74de7131",
+  "display_id": 222,
+  "title": "Add trustworthiness metric for manifold embedding evaluation",
+  "description": "Measure preservation of local neighborhoods in dimensionality reduction.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:29:55.530141957Z",
+  "updated_at": "2026-03-25T15:29:55.530141957Z"
+}
