@@ -1,0 +1,11 @@
+{
+  "uuid": "0051aba8-ca7d-40c0-84ba-c31a6c515ec5",
+  "display_id": 152,
+  "title": "Add additional cross-validation splitters",
+  "description": "LeaveOneOut, RepeatedKFold, ShuffleSplit, GroupKFold, and variants.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:24:05.695078361Z",
+  "updated_at": "2026-03-25T15:24:05.695078361Z"
+}
