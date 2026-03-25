@@ -47,18 +47,18 @@ crc32fast = "1.4"
 statrs = "0.18"
 
 # Internal crates
-ferrolearn-core = { path = "ferrolearn-core", version = "0.1.3" }
-ferrolearn-linear = { path = "ferrolearn-linear", version = "0.1.2" }
-ferrolearn-tree = { path = "ferrolearn-tree", version = "0.1.2" }
-ferrolearn-neighbors = { path = "ferrolearn-neighbors", version = "0.1.3" }
-ferrolearn-bayes = { path = "ferrolearn-bayes", version = "0.1.2" }
-ferrolearn-cluster = { path = "ferrolearn-cluster", version = "0.1.0" }
-ferrolearn-decomp = { path = "ferrolearn-decomp", version = "0.1.3" }
-ferrolearn-preprocess = { path = "ferrolearn-preprocess", version = "0.1.2" }
-ferrolearn-metrics = { path = "ferrolearn-metrics", version = "0.1.0" }
-ferrolearn-model-sel = { path = "ferrolearn-model-sel", version = "0.1.0" }
-ferrolearn-sparse = { path = "ferrolearn-sparse", version = "0.1.0" }
-ferrolearn-datasets = { path = "ferrolearn-datasets", version = "0.1.0" }
-ferrolearn-io = { path = "ferrolearn-io", version = "0.1.0" }
-ferrolearn-kernel = { path = "ferrolearn-kernel", version = "0.1.0" }
-ferrolearn-numerical = { path = "ferrolearn-numerical", version = "0.1.0" }
+ferrolearn-core = { path = "ferrolearn-core", version = "0.2.0" }
+ferrolearn-linear = { path = "ferrolearn-linear", version = "0.2.0" }
+ferrolearn-tree = { path = "ferrolearn-tree", version = "0.2.0" }
+ferrolearn-neighbors = { path = "ferrolearn-neighbors", version = "0.2.0" }
+ferrolearn-bayes = { path = "ferrolearn-bayes", version = "0.2.0" }
+ferrolearn-cluster = { path = "ferrolearn-cluster", version = "0.2.0" }
+ferrolearn-decomp = { path = "ferrolearn-decomp", version = "0.2.0" }
+ferrolearn-preprocess = { path = "ferrolearn-preprocess", version = "0.2.0" }
+ferrolearn-metrics = { path = "ferrolearn-metrics", version = "0.2.0" }
+ferrolearn-model-sel = { path = "ferrolearn-model-sel", version = "0.2.0" }
+ferrolearn-sparse = { path = "ferrolearn-sparse", version = "0.2.0" }
+ferrolearn-datasets = { path = "ferrolearn-datasets", version = "0.2.0" }
+ferrolearn-io = { path = "ferrolearn-io", version = "0.2.0" }
+ferrolearn-kernel = { path = "ferrolearn-kernel", version = "0.2.0" }
+ferrolearn-numerical = { path = "ferrolearn-numerical", version = "0.2.0" }
