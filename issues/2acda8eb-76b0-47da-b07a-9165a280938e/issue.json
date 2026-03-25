@@ -1,0 +1,11 @@
+{
+  "uuid": "2acda8eb-76b0-47da-b07a-9165a280938e",
+  "display_id": 18,
+  "title": "Add OrthogonalMatchingPursuit and OrthogonalMatchingPursuitCV",
+  "description": "Greedy sparse approximation algorithm for feature selection.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:09:43.591602697Z",
+  "updated_at": "2026-03-25T15:09:43.591602697Z"
+}
