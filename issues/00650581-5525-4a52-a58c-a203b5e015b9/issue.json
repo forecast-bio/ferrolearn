@@ -1,0 +1,11 @@
+{
+  "uuid": "00650581-5525-4a52-a58c-a203b5e015b9",
+  "display_id": 79,
+  "title": "Add estimate_bandwidth helper for MeanShift parameter tuning",
+  "description": "Automatic bandwidth estimation for MeanShift clustering.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:16:38.802392785Z",
+  "updated_at": "2026-03-25T15:16:38.802392785Z"
+}
