@@ -7,5 +7,8 @@
   "parent_uuid": "d0b0e893-b29e-4a14-8e89-6b00c9a9a29f",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:29:13.655718800Z",
-  "updated_at": "2026-03-25T15:29:13.655718800Z"
+  "updated_at": "2026-03-25T15:29:15.624800081Z",
+  "labels": [
+    "feature"
+  ]
 }
