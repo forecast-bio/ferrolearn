@@ -1,0 +1,11 @@
+{
+  "uuid": "3ed45510-9863-45b2-93b4-f4e34a9e225d",
+  "display_id": 166,
+  "title": "Add permutation_test_score statistical significance test",
+  "description": "Estimate p-value by permuting labels and comparing CV scores.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:25:14.212967632Z",
+  "updated_at": "2026-03-25T15:25:14.212967632Z"
+}
