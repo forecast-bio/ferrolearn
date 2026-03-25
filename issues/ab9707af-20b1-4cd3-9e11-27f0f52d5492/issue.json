@@ -1,0 +1,11 @@
+{
+  "uuid": "ab9707af-20b1-4cd3-9e11-27f0f52d5492",
+  "display_id": 64,
+  "title": "Add KernelDensity estimation",
+  "description": "Kernel density estimation using BallTree/KdTree with 6 kernels and bandwidth selection.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:14:28.836116842Z",
+  "updated_at": "2026-03-25T15:14:28.836116842Z"
+}
