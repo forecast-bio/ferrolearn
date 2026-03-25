@@ -3,11 +3,12 @@
   "display_id": 185,
   "title": "Add MLPClassifier and MLPRegressor multi-layer perceptron",
   "description": "Feedforward neural network with backpropagation, multiple activation functions, and solvers.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:26:40.996127913Z",
-  "updated_at": "2026-03-25T15:26:44.433211285Z",
+  "updated_at": "2026-03-25T16:55:04.527817748Z",
+  "closed_at": "2026-03-25T16:55:04.527817748Z",
   "labels": [
     "feature"
   ]
