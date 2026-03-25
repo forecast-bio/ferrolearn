@@ -3,11 +3,12 @@
   "display_id": 168,
   "title": "Add FeatureUnion parallel transformer composition",
   "description": "Concatenate outputs of multiple transformers horizontally in a pipeline.",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:25:21.570962973Z",
-  "updated_at": "2026-03-25T15:25:23.610245474Z",
+  "updated_at": "2026-03-25T16:56:01.548189563Z",
+  "closed_at": "2026-03-25T16:56:01.548189563Z",
   "labels": [
     "feature"
   ]
