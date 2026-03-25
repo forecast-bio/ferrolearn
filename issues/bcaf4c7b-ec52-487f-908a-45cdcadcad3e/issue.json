@@ -1,0 +1,11 @@
+{
+  "uuid": "bcaf4c7b-ec52-487f-908a-45cdcadcad3e",
+  "display_id": 15,
+  "title": "Add LassoLars LARS-based Lasso solver",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "66436a3a-bfba-46ef-8dd2-ff6378e41c65",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:09:25.756613775Z",
+  "updated_at": "2026-03-25T15:09:25.756613775Z"
+}
