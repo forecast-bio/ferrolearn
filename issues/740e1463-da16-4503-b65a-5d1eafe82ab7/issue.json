@@ -1,0 +1,11 @@
+{
+  "uuid": "740e1463-da16-4503-b65a-5d1eafe82ab7",
+  "display_id": 207,
+  "title": "Add multi-output strategies (MultiOutputClassifier, MultiOutputRegressor)",
+  "description": "Meta-estimators for multi-target prediction.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:28:50.313624290Z",
+  "updated_at": "2026-03-25T15:28:50.313624290Z"
+}
