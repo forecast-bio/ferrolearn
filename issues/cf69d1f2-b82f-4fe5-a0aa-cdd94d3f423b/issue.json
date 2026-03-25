@@ -1,0 +1,11 @@
+{
+  "uuid": "cf69d1f2-b82f-4fe5-a0aa-cdd94d3f423b",
+  "display_id": 216,
+  "title": "Add DummyClassifier and DummyRegressor baseline estimators",
+  "description": "Simple baseline estimators (stratified, most_frequent, mean, median) for comparison.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:29:27.808155452Z",
+  "updated_at": "2026-03-25T15:29:27.808155452Z"
+}
