@@ -3,11 +3,12 @@
   "display_id": 131,
   "title": "Add calinski_harabasz_score variance ratio criterion",
   "description": "Between/within cluster variance ratio, higher is better.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:21:58.912299915Z",
-  "updated_at": "2026-03-25T15:22:01.558870177Z",
+  "updated_at": "2026-03-25T15:48:44.594804883Z",
+  "closed_at": "2026-03-25T15:48:44.594804883Z",
   "labels": [
     "feature"
   ]
