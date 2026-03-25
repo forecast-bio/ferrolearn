@@ -1,0 +1,11 @@
+{
+  "uuid": "fce8f093-b733-44db-a9ee-42e0ee606ab2",
+  "display_id": 92,
+  "title": "Add LabelBinarizer and MultiLabelBinarizer",
+  "description": "Multilabel one-vs-rest binarization and multi-hot label encoding.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:17:55.453086819Z",
+  "updated_at": "2026-03-25T15:17:55.453086819Z"
+}
