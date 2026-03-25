@@ -1,0 +1,8 @@
+{
+  "uuid": "70b73aa6-eaa2-47fd-befb-6c24a59652c2",
+  "issue_uuid": "d283b010-8887-475f-9456-c22424337168",
+  "author": "anon-2101b8a8",
+  "content": "Delivered: all 18 crates bumped from 0.1.x to 0.2.0, workspace dependency versions updated, cargo check passes",
+  "created_at": "2026-03-25T22:17:46.470117304Z",
+  "kind": "result"
+}
