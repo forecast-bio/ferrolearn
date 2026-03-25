@@ -2,12 +2,13 @@
   "uuid": "da0d71f5-1ce1-4717-bb87-ddc78e4c132f",
   "display_id": 176,
   "title": "Add NuSVC nu-parameterized support vector classifier",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "902ead3a-dfa1-4a19-8a89-9339fcad84d2",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:25:54.496819988Z",
-  "updated_at": "2026-03-25T15:25:56.565617131Z",
+  "updated_at": "2026-03-25T22:14:42.578433544Z",
+  "closed_at": "2026-03-25T22:14:42.578433544Z",
   "labels": [
     "feature"
   ]
