@@ -1,0 +1,11 @@
+{
+  "uuid": "bf0d0548-4f4b-492d-9a7f-d0ac1a2ae642",
+  "display_id": 101,
+  "title": "Add r_regression Pearson correlation for regression",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "17f26087-5919-4589-8747-b421b18f0847",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:18:49.632800004Z",
+  "updated_at": "2026-03-25T15:18:49.632800004Z"
+}
