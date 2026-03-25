@@ -1,0 +1,10 @@
+{
+  "uuid": "e0db76de-8838-4d33-9222-bc7494f516de",
+  "display_id": 230,
+  "title": "Add IsolationForest, VotingClassifier, VotingRegressor, RandomTreesEmbedding",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T21:18:18.490968169Z",
+  "updated_at": "2026-03-25T21:18:18.490968169Z"
+}
