@@ -1,0 +1,11 @@
+{
+  "uuid": "ad8e5970-c8e8-4920-8815-cb4a494954d3",
+  "display_id": 78,
+  "title": "Add SpectralCoclustering log-diagonal biclustering",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "3a24b248-5bba-4413-80fc-2dfacf82c22d",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:16:31.067997221Z",
+  "updated_at": "2026-03-25T15:16:31.067997221Z"
+}
