@@ -1,0 +1,11 @@
+{
+  "uuid": "ecb3554f-096b-45b1-ad99-5f4a14bd8d9a",
+  "display_id": 110,
+  "title": "Add HashingVectorizer for memory-efficient text hashing",
+  "description": "Hashing trick for text vectorization without vocabulary storage.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:20:22.711447907Z",
+  "updated_at": "2026-03-25T15:20:22.711447907Z"
+}
