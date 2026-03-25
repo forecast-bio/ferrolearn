@@ -1,0 +1,11 @@
+{
+  "uuid": "f7b0b56f-ca21-4719-aee6-a644b78ec379",
+  "display_id": 100,
+  "title": "Add mutual_info_regression mutual information for regression",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "17f26087-5919-4589-8747-b421b18f0847",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:18:43.495005388Z",
+  "updated_at": "2026-03-25T15:18:43.495005388Z"
+}
