@@ -1,0 +1,11 @@
+{
+  "uuid": "1e950e50-8c39-4217-92a6-b79c01cb0a0e",
+  "display_id": 140,
+  "title": "Add average_precision_score for ranking tasks",
+  "description": "Average precision summarizing precision-recall curve.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:23:08.922339460Z",
+  "updated_at": "2026-03-25T15:23:08.922339460Z"
+}
