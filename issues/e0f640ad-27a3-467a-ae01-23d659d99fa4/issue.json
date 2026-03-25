@@ -1,0 +1,11 @@
+{
+  "uuid": "e0f640ad-27a3-467a-ae01-23d659d99fa4",
+  "display_id": 75,
+  "title": "Add FeatureAgglomeration for feature-space clustering",
+  "description": "Hierarchical clustering of features (columns) for dimensionality reduction.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:16:14.871191619Z",
+  "updated_at": "2026-03-25T15:16:14.871191619Z"
+}
