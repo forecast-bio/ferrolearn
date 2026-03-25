@@ -1,0 +1,11 @@
+{
+  "uuid": "15292ae7-5d16-497d-b490-14647848b3b8",
+  "display_id": 40,
+  "title": "Add StackingClassifier and StackingRegressor meta-learner stacking",
+  "description": "Multi-level ensemble: base estimators feed into a meta-learner.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:12:00.211240924Z",
+  "updated_at": "2026-03-25T15:12:00.211240924Z"
+}
