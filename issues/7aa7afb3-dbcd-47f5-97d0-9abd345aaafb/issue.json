@@ -1,0 +1,11 @@
+{
+  "uuid": "7aa7afb3-dbcd-47f5-97d0-9abd345aaafb",
+  "display_id": 143,
+  "title": "Add pairwise_distances and euclidean_distances",
+  "description": "Pairwise distance computation with multiple metrics.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:23:22.995112421Z",
+  "updated_at": "2026-03-25T15:23:22.995112421Z"
+}
