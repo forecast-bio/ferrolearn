@@ -3,11 +3,12 @@
   "display_id": 36,
   "title": "Add BaggingClassifier and BaggingRegressor generic bagging meta-estimators",
   "description": "Generic bootstrap aggregation for any base estimator, not just decision trees.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:11:37.203668445Z",
-  "updated_at": "2026-03-25T15:11:39.492036319Z",
+  "updated_at": "2026-03-25T16:32:02.093607754Z",
+  "closed_at": "2026-03-25T16:32:02.093607754Z",
   "labels": [
     "feature"
   ]
