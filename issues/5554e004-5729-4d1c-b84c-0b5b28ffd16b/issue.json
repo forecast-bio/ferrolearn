@@ -1,0 +1,10 @@
+{
+  "uuid": "5554e004-5729-4d1c-b84c-0b5b28ffd16b",
+  "display_id": 233,
+  "title": "Add ranking metrics, CountVectorizer, TfidfTransformer, RandomProjection, permutation_test_score, calibration_curve",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T21:54:53.578812467Z",
+  "updated_at": "2026-03-25T21:54:53.578812467Z"
+}
