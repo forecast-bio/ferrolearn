@@ -3,11 +3,12 @@
   "display_id": 162,
   "title": "Add cross_validate multi-metric cross-validation function",
   "description": "Detailed CV with multiple scoring metrics, fit/score timing, and train scores.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:24:58.429847179Z",
-  "updated_at": "2026-03-25T15:25:00.890943139Z",
+  "updated_at": "2026-03-25T16:14:55.728873717Z",
+  "closed_at": "2026-03-25T16:14:55.728873717Z",
   "labels": [
     "feature"
   ]
