@@ -2,12 +2,13 @@
   "uuid": "f22d5535-6ad1-4382-99c1-dc271aa86261",
   "display_id": 137,
   "title": "Add precision_recall_curve at thresholds",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "22fc756f-5d7d-460a-9b71-96015354b983",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:22:54.916522255Z",
-  "updated_at": "2026-03-25T15:22:57.872585658Z",
+  "updated_at": "2026-03-25T16:14:07.481138863Z",
+  "closed_at": "2026-03-25T16:14:07.481138863Z",
   "labels": [
     "feature"
   ]
