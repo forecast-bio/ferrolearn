@@ -1,0 +1,11 @@
+{
+  "uuid": "33cf70ef-b1aa-4ba4-ade4-79588248abdb",
+  "display_id": 70,
+  "title": "Add class_prior parameter to all Naive Bayes estimators",
+  "description": "Allow user-specified class priors and fit_prior control for domain knowledge injection.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:15:44.540826310Z",
+  "updated_at": "2026-03-25T15:15:44.540826310Z"
+}
