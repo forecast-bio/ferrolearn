@@ -24,6 +24,10 @@
 //! - [`distributions`] — sampling distributions for [`RandomizedSearchCV`].
 //! - [`CalibratedClassifierCV`] — probability calibration via cross-validation.
 //! - [`SelfTrainingClassifier`] — semi-supervised self-training meta-estimator.
+//! - [`OneVsRestClassifier`] — one-vs-rest multi-class decomposition.
+//! - [`OneVsOneClassifier`] — one-vs-one multi-class decomposition.
+//! - [`MultiOutputClassifier`] — per-target multi-output classification.
+//! - [`MultiOutputRegressor`] — per-target multi-output regression.
 //!
 //! # Quick Start
 //!
@@ -51,6 +55,8 @@ pub mod grid_search;
 pub mod halving_grid_search;
 pub mod halving_random_search;
 pub mod learning_curve;
+pub mod multiclass;
+pub mod multioutput;
 pub mod param_grid;
 pub mod random_search;
 pub mod self_training;
@@ -64,6 +70,13 @@ pub use cross_validation::{
     cross_val_score, cross_validate,
 };
 pub use grid_search::{CvResults, GridSearchCV};
+pub use multiclass::{
+    FittedOneVsOneClassifier, FittedOneVsRestClassifier, OneVsOneClassifier, OneVsRestClassifier,
+};
+pub use multioutput::{
+    FittedMultiOutputClassifier, FittedMultiOutputRegressor, MultiOutputClassifier,
+    MultiOutputRegressor,
+};
 pub use halving_grid_search::HalvingGridSearchCV;
 pub use halving_random_search::HalvingRandomSearchCV;
 pub use learning_curve::{LearningCurveResult, learning_curve};

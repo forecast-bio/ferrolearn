@@ -11,6 +11,7 @@ keywords = ["machine-learning", "kernel-regression", "nadaraya-watson", "nonpara
 categories = ["science", "algorithms"]
 
 [dependencies]
+faer = { workspace = true }
 ferrolearn-core = { workspace = true }
 ferrolearn-neighbors = { workspace = true }
 ndarray = { workspace = true }
@@ -20,6 +21,7 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
+rand_xoshiro = { workspace = true }
 statrs = "0.18"
 
 [dev-dependencies]

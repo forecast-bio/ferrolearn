@@ -31,9 +31,12 @@ pub mod bandwidth;
 pub mod confidence;
 pub mod diagnostics;
 pub mod hat_matrix;
+pub mod kernel_ridge;
 pub mod kernels;
 pub mod local_polynomial;
 pub mod nadaraya_watson;
+pub mod nystroem;
+pub mod rbf_sampler;
 pub mod weights;
 
 pub use bandwidth::{CrossValidatedBandwidth, CvStrategy, scott_bandwidth, silverman_bandwidth};
@@ -45,9 +48,12 @@ pub use diagnostics::{
     GoodnessOfFit, HeteroscedasticityTest, HeteroscedasticityTestResult, ResidualDiagnosticsResult,
     heteroscedasticity_test, residual_diagnostics,
 };
+pub use kernel_ridge::{FittedKernelRidge, KernelRidge};
 pub use kernels::{
     BiweightKernel, CosineKernel, DynKernel, EpanechnikovKernel, GaussianKernel, Kernel,
     TricubeKernel, TriweightKernel, UniformKernel,
 };
 pub use local_polynomial::{FittedLocalPolynomialRegression, LocalPolynomialRegression};
 pub use nadaraya_watson::{FittedNadarayaWatson, NadarayaWatson};
+pub use nystroem::{FittedNystroem, KernelType, Nystroem};
+pub use rbf_sampler::{FittedRBFSampler, RBFSampler};
