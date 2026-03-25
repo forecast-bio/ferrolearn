@@ -2,12 +2,13 @@
   "uuid": "59789da9-eed1-42fd-b9d5-fafa78b1cc52",
   "display_id": 94,
   "title": "Add MultiLabelBinarizer for multi-hot label encoding",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "fce8f093-b733-44db-a9ee-42e0ee606ab2",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:18:06.072172196Z",
-  "updated_at": "2026-03-25T15:18:09.536387147Z",
+  "updated_at": "2026-03-25T16:33:52.570597463Z",
+  "closed_at": "2026-03-25T16:33:52.570597463Z",
   "labels": [
     "feature"
   ]
