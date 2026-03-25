@@ -1,0 +1,11 @@
+{
+  "uuid": "a9a03323-7849-4a88-9efc-28044342775d",
+  "display_id": 218,
+  "title": "Add DummyRegressor baseline regressor",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "cf69d1f2-b82f-4fe5-a0aa-cdd94d3f423b",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:29:38.066293654Z",
+  "updated_at": "2026-03-25T15:29:38.066293654Z"
+}
