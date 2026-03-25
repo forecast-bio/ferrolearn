@@ -1,0 +1,11 @@
+{
+  "uuid": "52f4a0ca-a7f9-4689-b8a6-2ce3144aa2d6",
+  "display_id": 102,
+  "title": "Add SelectFdr, SelectFpr, SelectFwe statistical threshold selectors",
+  "description": "False Discovery Rate, False Positive Rate, and Family-Wise Error feature filters.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:18:57.206730799Z",
+  "updated_at": "2026-03-25T15:18:57.206730799Z"
+}
