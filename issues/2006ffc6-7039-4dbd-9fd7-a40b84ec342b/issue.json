@@ -1,0 +1,11 @@
+{
+  "uuid": "2006ffc6-7039-4dbd-9fd7-a40b84ec342b",
+  "display_id": 198,
+  "title": "Add EmpiricalCovariance and ShrunkCovariance estimators",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "9cbcf83c-996f-45fa-ac1b-efb43f535642",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:28:15.698430123Z",
+  "updated_at": "2026-03-25T15:28:15.698430123Z"
+}
