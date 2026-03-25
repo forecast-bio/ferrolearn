@@ -1,0 +1,11 @@
+{
+  "uuid": "d92b537c-4e22-43b7-8890-fbe819cf2f23",
+  "display_id": 6,
+  "title": "Add cross-validated linear model variants (RidgeCV, LassoCV, ElasticNetCV)",
+  "description": "Auto-tuning alpha via cross-validation for Ridge, Lasso, and ElasticNet. These are among the most commonly used sklearn estimators.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:08:37.732471313Z",
+  "updated_at": "2026-03-25T15:08:37.732471313Z"
+}
