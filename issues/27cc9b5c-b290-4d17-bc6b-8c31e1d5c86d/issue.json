@@ -2,12 +2,13 @@
   "uuid": "27cc9b5c-b290-4d17-bc6b-8c31e1d5c86d",
   "display_id": 33,
   "title": "Add ExtraTreeRegressor with random split thresholds",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "68e20e54-43c5-4d5a-a06c-9ed19c15c86e",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:11:19.446222504Z",
-  "updated_at": "2026-03-25T15:11:22.645192074Z",
+  "updated_at": "2026-03-25T15:47:46.300147358Z",
+  "closed_at": "2026-03-25T15:47:46.300147358Z",
   "labels": [
     "feature"
   ]
