@@ -2,12 +2,13 @@
   "uuid": "add78393-5a4d-44f2-8a04-99b75cfcb264",
   "display_id": 213,
   "title": "Add GaussianRandomProjection with dense random matrix",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "d0b0e893-b29e-4a14-8e89-6b00c9a9a29f",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:29:13.655718800Z",
-  "updated_at": "2026-03-25T15:29:15.624800081Z",
+  "updated_at": "2026-03-25T22:15:30.989466114Z",
+  "closed_at": "2026-03-25T22:15:30.989466114Z",
   "labels": [
     "feature"
   ]
