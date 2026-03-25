@@ -3,11 +3,12 @@
   "display_id": 69,
   "title": "Add partial_fit incremental learning to all Naive Bayes estimators",
   "description": "Enable online/streaming learning for GaussianNB, MultinomialNB, BernoulliNB, ComplementNB.",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:15:40.693602013Z",
-  "updated_at": "2026-03-25T15:15:42.639644142Z",
+  "updated_at": "2026-03-25T22:15:04.671145069Z",
+  "closed_at": "2026-03-25T22:15:04.671145069Z",
   "labels": [
     "enhancement"
   ]
