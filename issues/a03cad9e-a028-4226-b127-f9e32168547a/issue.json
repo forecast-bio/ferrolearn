@@ -3,11 +3,12 @@
   "display_id": 178,
   "title": "Add OneClassSVM for novelty detection",
   "description": "Unsupervised one-class SVM for anomaly/novelty detection.",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:26:02.640814137Z",
-  "updated_at": "2026-03-25T15:26:05.348886796Z",
+  "updated_at": "2026-03-25T22:14:54.298330505Z",
+  "closed_at": "2026-03-25T22:14:54.298330505Z",
   "labels": [
     "feature"
   ]
