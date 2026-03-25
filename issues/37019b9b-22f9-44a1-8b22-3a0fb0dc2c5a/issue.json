@@ -1,0 +1,11 @@
+{
+  "uuid": "37019b9b-22f9-44a1-8b22-3a0fb0dc2c5a",
+  "display_id": 71,
+  "title": "Add sample_weight support to all Naive Bayes estimators",
+  "description": "Weighted samples during fit/partial_fit for imbalanced data handling.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:15:54.439188583Z",
+  "updated_at": "2026-03-25T15:15:54.439188583Z"
+}
