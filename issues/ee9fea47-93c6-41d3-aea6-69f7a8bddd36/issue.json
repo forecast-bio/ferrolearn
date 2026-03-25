@@ -2,12 +2,13 @@
   "uuid": "ee9fea47-93c6-41d3-aea6-69f7a8bddd36",
   "display_id": 191,
   "title": "Add RBFSampler random Fourier features for RBF kernel",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "8bd67d1b-5b8b-4a4a-a246-d4f7852ac38c",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:27:26.548750528Z",
-  "updated_at": "2026-03-25T15:27:30.855597082Z",
+  "updated_at": "2026-03-25T16:34:19.731244415Z",
+  "closed_at": "2026-03-25T16:34:19.731244415Z",
   "labels": [
     "feature"
   ]
