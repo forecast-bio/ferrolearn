@@ -1,0 +1,11 @@
+{
+  "uuid": "1a42572c-c5ad-422f-8ca6-3becbf68f80b",
+  "display_id": 162,
+  "title": "Add cross_validate multi-metric cross-validation function",
+  "description": "Detailed CV with multiple scoring metrics, fit/score timing, and train scores.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:24:58.429847179Z",
+  "updated_at": "2026-03-25T15:24:58.429847179Z"
+}
