@@ -1,0 +1,11 @@
+{
+  "uuid": "b449364b-0522-4f34-bef5-ec94a2dd1b4a",
+  "display_id": 48,
+  "title": "Add decision tree pruning and advanced hyperparameters",
+  "description": "ccp_alpha cost-complexity pruning, random splitter, max_leaf_nodes, min_impurity_decrease, monotonic_cst.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:12:39.505312416Z",
+  "updated_at": "2026-03-25T15:12:39.505312416Z"
+}
