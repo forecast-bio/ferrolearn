@@ -918,15 +918,16 @@ where
 /// let score = calinski_harabasz_score(&x, &labels).unwrap();
 /// assert!(score > 100.0); // well-separated clusters
 /// ```
-pub fn calinski_harabasz_score<F>(
-    x: &Array2<F>,
-    labels: &Array1<isize>,
-) -> Result<F, FerroError>
+pub fn calinski_harabasz_score<F>(x: &Array2<F>, labels: &Array1<isize>) -> Result<F, FerroError>
 where
     F: Float + Send + Sync + 'static,
 {
     let n_total = x.nrows();
-    check_x_labels_compat(n_total, labels.len(), "calinski_harabasz_score: x rows vs labels")?;
+    check_x_labels_compat(
+        n_total,
+        labels.len(),
+        "calinski_harabasz_score: x rows vs labels",
+    )?;
 
     let cluster_labels = unique_cluster_labels(labels);
     let n_clusters = cluster_labels.len();
@@ -1291,6 +1292,304 @@ pub fn v_measure_score(
 }
 
 // ---------------------------------------------------------------------------
+// rand_score
+// ---------------------------------------------------------------------------
+
+/// Compute the unadjusted Rand Index between two clusterings.
+///
+/// The Rand Index measures the proportion of sample pairs that are either in the
+/// same cluster in both labelings or in different clusters in both labelings:
+///
+/// ```text
+/// RI = (a + d) / C(n, 2)
+/// ```
+///
+/// where `a` is the number of pairs in the same cluster in both, and `d` is the
+/// number of pairs in different clusters in both.
+///
+/// Unlike [`adjusted_rand_score`], this is not corrected for chance: random
+/// labelings may receive a high score.
+///
+/// # Arguments
+///
+/// * `labels_true` — ground-truth cluster labels.
+/// * `labels_pred` — predicted cluster labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays have fewer than 2 elements.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::clustering::rand_score;
+/// use ndarray::array;
+///
+/// let labels = array![0isize, 0, 1, 1, 2, 2];
+/// let ri = rand_score(&labels, &labels).unwrap();
+/// assert!((ri - 1.0).abs() < 1e-10);
+/// ```
+pub fn rand_score(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+) -> Result<f64, FerroError> {
+    let n = labels_true.len();
+    check_labels_same_length(n, labels_pred.len(), "rand_score")?;
+    if n < 2 {
+        return Err(FerroError::InsufficientSamples {
+            required: 2,
+            actual: n,
+            context: "rand_score requires at least 2 samples".into(),
+        });
+    }
+
+    // Build the contingency table.
+    let mut classes_true: Vec<isize> = labels_true.iter().copied().collect();
+    classes_true.sort_unstable();
+    classes_true.dedup();
+
+    let mut classes_pred: Vec<isize> = labels_pred.iter().copied().collect();
+    classes_pred.sort_unstable();
+    classes_pred.dedup();
+
+    let r = classes_true.len();
+    let s = classes_pred.len();
+
+    let mut contingency = vec![vec![0u64; s]; r];
+    for (&lt, &lp) in labels_true.iter().zip(labels_pred.iter()) {
+        let ri = classes_true.partition_point(|&c| c < lt);
+        let ci = classes_pred.partition_point(|&c| c < lp);
+        contingency[ri][ci] += 1;
+    }
+
+    let a: Vec<u64> = contingency.iter().map(|row| row.iter().sum()).collect();
+    let b: Vec<u64> = (0..s)
+        .map(|j| contingency.iter().map(|row| row[j]).sum())
+        .collect();
+
+    let comb_n = n_choose_2(n as u64);
+
+    // a = number of pairs in same cluster in both = sum of C(n_ij, 2)
+    let sum_comb_c: u64 = contingency
+        .iter()
+        .flat_map(|row| row.iter())
+        .map(|&v| n_choose_2(v))
+        .sum();
+
+    let sum_comb_a: u64 = a.iter().map(|&ai| n_choose_2(ai)).sum();
+    let sum_comb_b: u64 = b.iter().map(|&bj| n_choose_2(bj)).sum();
+
+    // d = C(n,2) - sum_comb_a - sum_comb_b + sum_comb_c
+    // (pairs that differ in both = total pairs - pairs_same_in_true - pairs_same_in_pred + pairs_same_in_both)
+    let d = comb_n - sum_comb_a - sum_comb_b + sum_comb_c;
+
+    Ok((sum_comb_c + d) as f64 / comb_n as f64)
+}
+
+// ---------------------------------------------------------------------------
+// normalized_mutual_info_score
+// ---------------------------------------------------------------------------
+
+/// Normalization method for [`normalized_mutual_info_score`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NmiMethod {
+    /// Normalize by the geometric mean of entropies: `sqrt(H(U) * H(V))`.
+    Geometric,
+    /// Normalize by the arithmetic mean of entropies: `(H(U) + H(V)) / 2`.
+    Arithmetic,
+    /// Normalize by the minimum entropy: `min(H(U), H(V))`.
+    Min,
+    /// Normalize by the maximum entropy: `max(H(U), H(V))`.
+    Max,
+}
+
+/// Compute the Normalized Mutual Information (NMI) between two clusterings.
+///
+/// NMI scales the Mutual Information to `[0, 1]` by dividing by a function of
+/// the entropies:
+///
+/// ```text
+/// NMI = MI(U, V) / norm(H(U), H(V))
+/// ```
+///
+/// The normalization function is chosen via the [`NmiMethod`] parameter.
+///
+/// # Arguments
+///
+/// * `labels_true` — ground-truth cluster labels.
+/// * `labels_pred` — predicted cluster labels.
+/// * `method`      — normalization strategy.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::clustering::{normalized_mutual_info_score, NmiMethod};
+/// use ndarray::array;
+///
+/// let labels = array![0isize, 0, 1, 1, 2, 2];
+/// let nmi = normalized_mutual_info_score(&labels, &labels, NmiMethod::Geometric).unwrap();
+/// assert!((nmi - 1.0).abs() < 1e-10);
+/// ```
+pub fn normalized_mutual_info_score(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+    method: NmiMethod,
+) -> Result<f64, FerroError> {
+    let n = labels_true.len();
+    check_labels_same_length(n, labels_pred.len(), "normalized_mutual_info_score")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "normalized_mutual_info_score".into(),
+        });
+    }
+
+    let n_f = n as f64;
+
+    let (_, _, contingency) = build_contingency_table(labels_true, labels_pred);
+
+    let r = contingency.len();
+    let s = contingency[0].len();
+
+    let a: Vec<u64> = contingency.iter().map(|row| row.iter().sum()).collect();
+    let b: Vec<u64> = (0..s)
+        .map(|j| contingency.iter().map(|row| row[j]).sum())
+        .collect();
+
+    // Mutual Information.
+    let mut mi = 0.0_f64;
+    for i in 0..r {
+        for j in 0..s {
+            let n_ij = contingency[i][j] as f64;
+            if n_ij == 0.0 {
+                continue;
+            }
+            let ai = a[i] as f64;
+            let bj = b[j] as f64;
+            mi += n_ij / n_f * (n_ij * n_f / (ai * bj)).ln();
+        }
+    }
+
+    let h_true = entropy_from_counts(&a, n_f);
+    let h_pred = entropy_from_counts(&b, n_f);
+
+    let normalizer = match method {
+        NmiMethod::Geometric => (h_true * h_pred).sqrt(),
+        NmiMethod::Arithmetic => (h_true + h_pred) / 2.0,
+        NmiMethod::Min => h_true.min(h_pred),
+        NmiMethod::Max => h_true.max(h_pred),
+    };
+
+    if normalizer.abs() < f64::EPSILON {
+        // Both entropies are zero => single cluster in each => perfect by convention.
+        return Ok(1.0);
+    }
+
+    Ok(mi / normalizer)
+}
+
+// ---------------------------------------------------------------------------
+// fowlkes_mallows_score
+// ---------------------------------------------------------------------------
+
+/// Compute the Fowlkes-Mallows Index (FMI) between two clusterings.
+///
+/// FMI is the geometric mean of pairwise precision and recall:
+///
+/// ```text
+/// FMI = TP / sqrt((TP + FP) * (TP + FN))
+/// ```
+///
+/// where `TP` is the number of pairs in the same cluster in both, `FP` is pairs
+/// in the same cluster only in the predicted labels, and `FN` is pairs in the
+/// same cluster only in the true labels.
+///
+/// # Arguments
+///
+/// * `labels_true` — ground-truth cluster labels.
+/// * `labels_pred` — predicted cluster labels.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if there are fewer than 2 samples.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::clustering::fowlkes_mallows_score;
+/// use ndarray::array;
+///
+/// let labels = array![0isize, 0, 1, 1, 2, 2];
+/// let fmi = fowlkes_mallows_score(&labels, &labels).unwrap();
+/// assert!((fmi - 1.0).abs() < 1e-10);
+/// ```
+pub fn fowlkes_mallows_score(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+) -> Result<f64, FerroError> {
+    let n = labels_true.len();
+    check_labels_same_length(n, labels_pred.len(), "fowlkes_mallows_score")?;
+    if n < 2 {
+        return Err(FerroError::InsufficientSamples {
+            required: 2,
+            actual: n,
+            context: "fowlkes_mallows_score requires at least 2 samples".into(),
+        });
+    }
+
+    // Build contingency table.
+    let mut classes_true: Vec<isize> = labels_true.iter().copied().collect();
+    classes_true.sort_unstable();
+    classes_true.dedup();
+
+    let mut classes_pred: Vec<isize> = labels_pred.iter().copied().collect();
+    classes_pred.sort_unstable();
+    classes_pred.dedup();
+
+    let r = classes_true.len();
+    let s = classes_pred.len();
+
+    let mut contingency = vec![vec![0u64; s]; r];
+    for (&lt, &lp) in labels_true.iter().zip(labels_pred.iter()) {
+        let ri = classes_true.partition_point(|&c| c < lt);
+        let ci = classes_pred.partition_point(|&c| c < lp);
+        contingency[ri][ci] += 1;
+    }
+
+    let a: Vec<u64> = contingency.iter().map(|row| row.iter().sum()).collect();
+    let b: Vec<u64> = (0..s)
+        .map(|j| contingency.iter().map(|row| row[j]).sum())
+        .collect();
+
+    // TP = sum C(n_ij, 2)
+    let tp: u64 = contingency
+        .iter()
+        .flat_map(|row| row.iter())
+        .map(|&v| n_choose_2(v))
+        .sum();
+
+    // TP + FP = sum C(b_j, 2)
+    let tp_plus_fp: u64 = b.iter().map(|&bj| n_choose_2(bj)).sum();
+
+    // TP + FN = sum C(a_i, 2)
+    let tp_plus_fn: u64 = a.iter().map(|&ai| n_choose_2(ai)).sum();
+
+    if tp_plus_fp == 0 || tp_plus_fn == 0 {
+        return Ok(0.0);
+    }
+
+    Ok(tp as f64 / ((tp_plus_fp as f64) * (tp_plus_fn as f64)).sqrt())
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -1546,11 +1845,9 @@ mod tests {
 
     #[test]
     fn test_silhouette_samples_well_separated() {
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0_f64, 0.0, 0.1, 0.1, 10.0, 10.0, 10.1, 10.1],
-        )
-        .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![0.0_f64, 0.0, 0.1, 0.1, 10.0, 10.0, 10.1, 10.1])
+                .unwrap();
         let labels = array![0isize, 0, 1, 1];
         let samples = silhouette_samples(&x, &labels).unwrap();
         assert_eq!(samples.len(), 4);
@@ -1561,8 +1858,7 @@ mod tests {
 
     #[test]
     fn test_silhouette_samples_mean_matches_score() {
-        let x =
-            Array2::from_shape_vec((4, 1), vec![0.0_f64, 0.1, 100.0, 100.1]).unwrap();
+        let x = Array2::from_shape_vec((4, 1), vec![0.0_f64, 0.1, 100.0, 100.1]).unwrap();
         let labels = array![0isize, 0, 1, 1];
         let samples = silhouette_samples(&x, &labels).unwrap();
         let mean: f64 = samples.iter().sum::<f64>() / samples.len() as f64;
@@ -1572,8 +1868,7 @@ mod tests {
 
     #[test]
     fn test_silhouette_samples_noise_gets_zero() {
-        let x =
-            Array2::from_shape_vec((5, 1), vec![0.0_f64, 0.1, 50.0, 100.0, 100.1]).unwrap();
+        let x = Array2::from_shape_vec((5, 1), vec![0.0_f64, 0.1, 50.0, 100.0, 100.1]).unwrap();
         let labels = array![0isize, 0, -1, 1, 1];
         let samples = silhouette_samples(&x, &labels).unwrap();
         assert_abs_diff_eq!(samples[2], 0.0, epsilon = 1e-10);
@@ -1599,11 +1894,9 @@ mod tests {
 
     #[test]
     fn test_calinski_harabasz_well_separated() {
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0_f64, 0.0, 0.1, 0.1, 10.0, 10.0, 10.1, 10.1],
-        )
-        .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![0.0_f64, 0.0, 0.1, 0.1, 10.0, 10.0, 10.1, 10.1])
+                .unwrap();
         let labels = array![0isize, 0, 1, 1];
         let score = calinski_harabasz_score(&x, &labels).unwrap();
         assert!(score > 100.0, "expected high CH, got {score}");
@@ -1821,5 +2114,168 @@ mod kani_proofs {
         if let Ok(score) = result {
             assert!(score >= 0.0, "Davies-Bouldin score must be >= 0.0");
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // rand_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_rand_score_perfect() {
+        let labels = array![0isize, 0, 1, 1, 2, 2];
+        let ri = rand_score(&labels, &labels).unwrap();
+        assert_abs_diff_eq!(ri, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_rand_score_all_different() {
+        // Every sample in its own cluster in both
+        let labels = array![0isize, 1, 2, 3];
+        let ri = rand_score(&labels, &labels).unwrap();
+        assert_abs_diff_eq!(ri, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_rand_score_all_same() {
+        // All samples in one cluster
+        let labels = array![0isize, 0, 0, 0];
+        let ri = rand_score(&labels, &labels).unwrap();
+        assert_abs_diff_eq!(ri, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_rand_score_known_value() {
+        // Manually computed:
+        // true: [0,0,1,1], pred: [0,1,0,1]
+        // Pairs: (0,1),(0,2),(0,3),(1,2),(1,3),(2,3)
+        // same_in_true: (0,1), (2,3)
+        // same_in_pred: (0,2), (1,3)
+        // agree: pairs same in both = 0, pairs different in both: (0,3), (1,2) = 2
+        // RI = (0 + 2) / 6 = 1/3
+        let labels_true = array![0isize, 0, 1, 1];
+        let labels_pred = array![0isize, 1, 0, 1];
+        let ri = rand_score(&labels_true, &labels_pred).unwrap();
+        assert_abs_diff_eq!(ri, 1.0 / 3.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_rand_score_bounds() {
+        let labels_true = array![0isize, 0, 1, 1, 2, 2];
+        let labels_pred = array![2isize, 1, 0, 0, 1, 2];
+        let ri = rand_score(&labels_true, &labels_pred).unwrap();
+        assert!(ri >= 0.0 && ri <= 1.0);
+    }
+
+    #[test]
+    fn test_rand_score_too_few_samples() {
+        let labels = array![0isize];
+        assert!(rand_score(&labels, &labels).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // normalized_mutual_info_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_nmi_perfect_geometric() {
+        let labels = array![0isize, 0, 1, 1, 2, 2];
+        let nmi = normalized_mutual_info_score(&labels, &labels, NmiMethod::Geometric).unwrap();
+        assert_abs_diff_eq!(nmi, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_nmi_perfect_arithmetic() {
+        let labels = array![0isize, 0, 1, 1, 2, 2];
+        let nmi = normalized_mutual_info_score(&labels, &labels, NmiMethod::Arithmetic).unwrap();
+        assert_abs_diff_eq!(nmi, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_nmi_perfect_min() {
+        let labels = array![0isize, 0, 1, 1, 2, 2];
+        let nmi = normalized_mutual_info_score(&labels, &labels, NmiMethod::Min).unwrap();
+        assert_abs_diff_eq!(nmi, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_nmi_perfect_max() {
+        let labels = array![0isize, 0, 1, 1, 2, 2];
+        let nmi = normalized_mutual_info_score(&labels, &labels, NmiMethod::Max).unwrap();
+        assert_abs_diff_eq!(nmi, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_nmi_bounds() {
+        let labels_true = array![0isize, 0, 1, 1, 2, 2];
+        let labels_pred = array![2isize, 1, 0, 0, 1, 2];
+        let nmi =
+            normalized_mutual_info_score(&labels_true, &labels_pred, NmiMethod::Geometric).unwrap();
+        assert!(nmi >= 0.0 && nmi <= 1.0);
+    }
+
+    #[test]
+    fn test_nmi_single_cluster() {
+        // All in one cluster => H(true) = 0 => NMI = 1.0 by convention
+        let labels_true = array![0isize, 0, 0, 0];
+        let labels_pred = array![0isize, 0, 0, 0];
+        let nmi =
+            normalized_mutual_info_score(&labels_true, &labels_pred, NmiMethod::Geometric).unwrap();
+        assert_abs_diff_eq!(nmi, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_nmi_empty() {
+        let labels_true = Array1::<isize>::from_vec(vec![]);
+        let labels_pred = Array1::<isize>::from_vec(vec![]);
+        assert!(
+            normalized_mutual_info_score(&labels_true, &labels_pred, NmiMethod::Geometric).is_err()
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // fowlkes_mallows_score
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_fmi_perfect() {
+        let labels = array![0isize, 0, 1, 1, 2, 2];
+        let fmi = fowlkes_mallows_score(&labels, &labels).unwrap();
+        assert_abs_diff_eq!(fmi, 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_fmi_known_value() {
+        // true: [0,0,1,1], pred: [0,1,0,1]
+        // TP = 0 (no pairs same in both)
+        // TP + FP = C(2,2) for pred clusters {0,2} and {1,3} => 1 + 1 = 2
+        // TP + FN = C(2,2) for true clusters {0,1} and {2,3} => 1 + 1 = 2
+        // FMI = 0 / sqrt(2 * 2) = 0
+        let labels_true = array![0isize, 0, 1, 1];
+        let labels_pred = array![0isize, 1, 0, 1];
+        let fmi = fowlkes_mallows_score(&labels_true, &labels_pred).unwrap();
+        assert_abs_diff_eq!(fmi, 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_fmi_bounds() {
+        let labels_true = array![0isize, 0, 1, 1, 2, 2];
+        let labels_pred = array![2isize, 1, 0, 0, 1, 2];
+        let fmi = fowlkes_mallows_score(&labels_true, &labels_pred).unwrap();
+        assert!(fmi >= 0.0 && fmi <= 1.0);
+    }
+
+    #[test]
+    fn test_fmi_too_few_samples() {
+        let labels = array![0isize];
+        assert!(fowlkes_mallows_score(&labels, &labels).is_err());
+    }
+
+    #[test]
+    fn test_fmi_all_singletons() {
+        // Every sample is its own cluster => no pairs in same cluster
+        // TP=0, TP+FP=0, TP+FN=0 => FMI = 0.0
+        let labels = array![0isize, 1, 2, 3];
+        let fmi = fowlkes_mallows_score(&labels, &labels).unwrap();
+        assert_abs_diff_eq!(fmi, 0.0, epsilon = 1e-10);
     }
 }

@@ -24,6 +24,11 @@
 //!   automatically determines number of clusters.
 //! - **[`BisectingKMeans`]** — Divisive hierarchical clustering that recursively
 //!   bisects the largest cluster.
+//! - **[`BayesianGaussianMixture`]** — Variational Bayesian GMM with
+//!   automatic component pruning via Dirichlet Process or Dirichlet
+//!   Distribution priors.
+//! - **[`FeatureAgglomeration`]** — Hierarchical clustering of features
+//!   (columns) with pooling-based dimensionality reduction.
 //!
 //! # Design
 //!
@@ -60,6 +65,10 @@
 //!   exemplar indices and labels — it does **not** implement `Predict`.
 //! - [`BisectingKMeans`] produces [`FittedBisectingKMeans`], which implements
 //!   [`Predict`](ferrolearn_core::Predict) (assign to nearest center).
+//! - [`BayesianGaussianMixture`] produces [`FittedBayesianGaussianMixture`],
+//!   which implements [`Predict`](ferrolearn_core::Predict) (hard assignment).
+//! - [`FeatureAgglomeration`] produces [`FittedFeatureAgglomeration`], which
+//!   implements [`Transform`](ferrolearn_core::Transform) (pool features).
 //!
 //! # Float Generics
 //!
@@ -68,9 +77,11 @@
 
 pub mod affinity_propagation;
 pub mod agglomerative;
+pub mod bayesian_gmm;
 pub mod birch;
 pub mod bisecting_kmeans;
 pub mod dbscan;
+pub mod feature_agglomeration;
 pub mod gmm;
 pub mod hdbscan;
 pub mod kmeans;
@@ -84,6 +95,12 @@ pub mod spectral;
 // Re-export the main types at the crate root.
 pub use affinity_propagation::{AffinityPropagation, FittedAffinityPropagation};
 pub use agglomerative::{AgglomerativeClustering, FittedAgglomerativeClustering, Linkage};
+pub use bayesian_gmm::{
+    BayesianCovType, BayesianGaussianMixture, FittedBayesianGaussianMixture, WeightPriorType,
+};
+pub use feature_agglomeration::{
+    AgglomerativeLinkage, FeatureAgglomeration, FittedFeatureAgglomeration, PoolingFunc,
+};
 pub use bisecting_kmeans::{BisectingKMeans, BisectingStrategy, FittedBisectingKMeans};
 pub use birch::{Birch, FittedBirch};
 pub use dbscan::{DBSCAN, FittedDBSCAN};

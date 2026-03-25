@@ -44,14 +44,22 @@ fn check_feature_dim<F: Float>(
         return Err(FerroError::ShapeMismatch {
             expected: vec![x.nrows(), x.ncols()],
             actual: vec![y.nrows(), y.ncols()],
-            context: format!("{context}: feature dimensions must match (X has {} cols, Y has {} cols)", x.ncols(), y.ncols()),
+            context: format!(
+                "{context}: feature dimensions must match (X has {} cols, Y has {} cols)",
+                x.ncols(),
+                y.ncols()
+            ),
         });
     }
     Ok(())
 }
 
 /// Validate that the matrices are non-empty.
-fn check_non_empty<F: Float>(x: &Array2<F>, y: &Array2<F>, context: &str) -> Result<(), FerroError> {
+fn check_non_empty<F: Float>(
+    x: &Array2<F>,
+    y: &Array2<F>,
+    context: &str,
+) -> Result<(), FerroError> {
     if x.nrows() == 0 || y.nrows() == 0 {
         return Err(FerroError::InsufficientSamples {
             required: 1,
@@ -397,6 +405,78 @@ where
     }
 }
 
+/// Compute pairwise Euclidean distances with NaN handling.
+///
+/// For each pair of rows `(x_i, y_j)`, the distance is computed over the
+/// features where both values are non-NaN, then scaled by
+/// `sqrt(n_features / n_valid)` to compensate for the missing features.
+///
+/// If all features are NaN for a given pair, the distance is `NaN`.
+///
+/// # Arguments
+///
+/// * `x` — array of shape `(n, d)`.
+/// * `y` — array of shape `(m, d)`.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if `x` and `y` have different
+/// numbers of columns.
+/// Returns [`FerroError::InsufficientSamples`] if either matrix is empty.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::pairwise::nan_euclidean_distances;
+/// use ndarray::array;
+///
+/// let x = array![[f64::NAN, 0.0], [1.0, 0.0]];
+/// let y = array![[0.0_f64, 0.0]];
+/// let d = nan_euclidean_distances(&x, &y).unwrap();
+/// // x[0] vs y[0]: only feature 1 is valid, dist = |0-0| * sqrt(2/1) = 0
+/// assert!((d[[0, 0]] - 0.0).abs() < 1e-10);
+/// // x[1] vs y[0]: both valid, dist = sqrt(1+0) = 1
+/// assert!((d[[1, 0]] - 1.0).abs() < 1e-10);
+/// ```
+pub fn nan_euclidean_distances<F>(x: &Array2<F>, y: &Array2<F>) -> Result<Array2<F>, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_feature_dim(x, y, "nan_euclidean_distances")?;
+    check_non_empty(x, y, "nan_euclidean_distances")?;
+
+    let n = x.nrows();
+    let m = y.nrows();
+    let d = x.ncols();
+    let d_f = F::from(d).unwrap();
+
+    let mut result = Array2::<F>::zeros((n, m));
+    for i in 0..n {
+        for j in 0..m {
+            let mut sq_sum = F::zero();
+            let mut n_valid = 0usize;
+            for k in 0..d {
+                let xi = x[[i, k]];
+                let yj = y[[j, k]];
+                if xi.is_nan() || yj.is_nan() {
+                    continue;
+                }
+                let diff = xi - yj;
+                sq_sum = sq_sum + diff * diff;
+                n_valid += 1;
+            }
+            if n_valid == 0 {
+                result[[i, j]] = F::nan();
+            } else {
+                let scale = d_f / F::from(n_valid).unwrap();
+                result[[i, j]] = (sq_sum * scale).sqrt();
+            }
+        }
+    }
+
+    Ok(result)
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -611,5 +691,64 @@ mod tests {
         assert_abs_diff_eq!(d[[0, 0]], 12.0, epsilon = 1e-10);
         // x[2] vs y[1]: |5-9| + |6-10| = 8
         assert_abs_diff_eq!(d[[2, 1]], 8.0, epsilon = 1e-10);
+    }
+
+    // -----------------------------------------------------------------------
+    // nan_euclidean_distances
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_nan_euclidean_no_nans() {
+        // Without NaN, should match euclidean_distances exactly
+        let x = array![[0.0_f64, 0.0], [3.0, 0.0]];
+        let y = array![[0.0_f64, 4.0]];
+        let d_nan = nan_euclidean_distances(&x, &y).unwrap();
+        let d_ref = euclidean_distances(&x, &y).unwrap();
+        assert_abs_diff_eq!(d_nan[[0, 0]], d_ref[[0, 0]], epsilon = 1e-10);
+        assert_abs_diff_eq!(d_nan[[1, 0]], d_ref[[1, 0]], epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_nan_euclidean_with_nan() {
+        let x = array![[f64::NAN, 0.0], [1.0, 0.0]];
+        let y = array![[0.0_f64, 0.0]];
+        let d = nan_euclidean_distances(&x, &y).unwrap();
+        // x[0] vs y[0]: only feature 1 valid => sq_dist = 0, scale = 2/1 => sqrt(0) = 0
+        assert_abs_diff_eq!(d[[0, 0]], 0.0, epsilon = 1e-10);
+        // x[1] vs y[0]: both valid => sqrt((1-0)^2 + (0-0)^2) = 1
+        assert_abs_diff_eq!(d[[1, 0]], 1.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_nan_euclidean_scaling() {
+        // x=[NaN, 3], y=[0, 0] => only feature 1 valid
+        // sq_dist = 9, n_valid = 1, n_features = 2
+        // result = sqrt(9 * 2/1) = sqrt(18) = 3*sqrt(2)
+        let x = array![[f64::NAN, 3.0_f64]];
+        let y = array![[0.0_f64, 0.0]];
+        let d = nan_euclidean_distances(&x, &y).unwrap();
+        assert_abs_diff_eq!(d[[0, 0]], 3.0 * 2.0_f64.sqrt(), epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_nan_euclidean_all_nan() {
+        let x = array![[f64::NAN, f64::NAN]];
+        let y = array![[1.0_f64, 2.0]];
+        let d = nan_euclidean_distances(&x, &y).unwrap();
+        assert!(d[[0, 0]].is_nan());
+    }
+
+    #[test]
+    fn test_nan_euclidean_shape_mismatch() {
+        let x = array![[1.0_f64, 2.0]];
+        let y = array![[1.0_f64, 2.0, 3.0]];
+        assert!(nan_euclidean_distances(&x, &y).is_err());
+    }
+
+    #[test]
+    fn test_nan_euclidean_empty() {
+        let x = Array2::<f64>::zeros((0, 3));
+        let y = array![[1.0_f64, 2.0, 3.0]];
+        assert!(nan_euclidean_distances(&x, &y).is_err());
     }
 }

@@ -24,10 +24,8 @@
 //! - [`distributions`] — sampling distributions for [`RandomizedSearchCV`].
 //! - [`CalibratedClassifierCV`] — probability calibration via cross-validation.
 //! - [`SelfTrainingClassifier`] — semi-supervised self-training meta-estimator.
-//! - [`OneVsRestClassifier`] — one-vs-rest multi-class decomposition.
-//! - [`OneVsOneClassifier`] — one-vs-one multi-class decomposition.
-//! - [`MultiOutputClassifier`] — per-target multi-output classification.
-//! - [`MultiOutputRegressor`] — per-target multi-output regression.
+//! - [`FeatureUnion`] — concatenate outputs of multiple transformers horizontally.
+//! - [`TransformedTargetRegressor`] — transform `y` before fitting, invert at predict.
 //!
 //! # Quick Start
 //!
@@ -51,32 +49,27 @@
 pub mod calibration;
 pub mod cross_validation;
 pub mod distributions;
+pub mod feature_union;
 pub mod grid_search;
 pub mod halving_grid_search;
 pub mod halving_random_search;
 pub mod learning_curve;
-pub mod multiclass;
-pub mod multioutput;
 pub mod param_grid;
 pub mod random_search;
 pub mod self_training;
 pub mod split;
 pub mod time_series_split;
+pub mod transformed_target;
 pub mod validation_curve;
 
 pub use calibration::{CalibratedClassifierCV, CalibrationMethod, FittedCalibratedClassifierCV};
+pub use feature_union::{FeatureUnion, FittedFeatureUnion};
+pub use transformed_target::{FittedTransformedTargetRegressor, TransformedTargetRegressor};
 pub use cross_validation::{
     CrossValidateResult, CrossValidator, KFold, StratifiedKFold, cross_val_predict,
     cross_val_score, cross_validate,
 };
 pub use grid_search::{CvResults, GridSearchCV};
-pub use multiclass::{
-    FittedOneVsOneClassifier, FittedOneVsRestClassifier, OneVsOneClassifier, OneVsRestClassifier,
-};
-pub use multioutput::{
-    FittedMultiOutputClassifier, FittedMultiOutputRegressor, MultiOutputClassifier,
-    MultiOutputRegressor,
-};
 pub use halving_grid_search::HalvingGridSearchCV;
 pub use halving_random_search::HalvingRandomSearchCV;
 pub use learning_curve::{LearningCurveResult, learning_curve};

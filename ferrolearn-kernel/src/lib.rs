@@ -16,6 +16,12 @@
 //!   Breusch-Pagan, Goldfeld-Quandt, Dette-Munk-Wagner), residual analysis.
 //! - **Confidence intervals** — Wild bootstrap CI with bias corrections,
 //!   Fan-Yao variance estimation, conformal calibration.
+//! - **[`GaussianProcessRegressor`]** — Bayesian nonparametric regression with
+//!   predictive mean and variance via Cholesky decomposition.
+//! - **[`GaussianProcessClassifier`]** — Probabilistic classification via Laplace
+//!   approximation (binary and multi-class one-vs-rest).
+//! - **GP Kernels** — RBF, Matern (0.5/1.5/2.5), Constant, White, DotProduct,
+//!   plus Sum and Product kernel composition via the [`GPKernel`](gp_kernels::GPKernel) trait.
 //!
 //! # Design
 //!
@@ -30,13 +36,13 @@
 pub mod bandwidth;
 pub mod confidence;
 pub mod diagnostics;
+pub mod gaussian_process;
+pub mod gp_classifier;
+pub mod gp_kernels;
 pub mod hat_matrix;
-pub mod kernel_ridge;
 pub mod kernels;
 pub mod local_polynomial;
 pub mod nadaraya_watson;
-pub mod nystroem;
-pub mod rbf_sampler;
 pub mod weights;
 
 pub use bandwidth::{CrossValidatedBandwidth, CvStrategy, scott_bandwidth, silverman_bandwidth};
@@ -48,12 +54,15 @@ pub use diagnostics::{
     GoodnessOfFit, HeteroscedasticityTest, HeteroscedasticityTestResult, ResidualDiagnosticsResult,
     heteroscedasticity_test, residual_diagnostics,
 };
-pub use kernel_ridge::{FittedKernelRidge, KernelRidge};
+pub use gaussian_process::{FittedGaussianProcessRegressor, GaussianProcessRegressor};
+pub use gp_classifier::{FittedGaussianProcessClassifier, GaussianProcessClassifier};
+pub use gp_kernels::{
+    ConstantKernel, DotProductKernel, GPKernel, MaternKernel, ProductKernel, RBFKernel, SumKernel,
+    WhiteKernel,
+};
 pub use kernels::{
     BiweightKernel, CosineKernel, DynKernel, EpanechnikovKernel, GaussianKernel, Kernel,
     TricubeKernel, TriweightKernel, UniformKernel,
 };
 pub use local_polynomial::{FittedLocalPolynomialRegression, LocalPolynomialRegression};
 pub use nadaraya_watson::{FittedNadarayaWatson, NadarayaWatson};
-pub use nystroem::{FittedNystroem, KernelType, Nystroem};
-pub use rbf_sampler::{FittedRBFSampler, RBFSampler};

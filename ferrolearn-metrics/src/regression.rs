@@ -419,11 +419,7 @@ pub fn median_absolute_error<F>(y_true: &Array1<F>, y_pred: &Array1<F>) -> Resul
 where
     F: Float + Send + Sync + 'static,
 {
-    check_same_length(
-        y_true,
-        y_pred,
-        "median_absolute_error: y_true vs y_pred",
-    )?;
+    check_same_length(y_true, y_pred, "median_absolute_error: y_true vs y_pred")?;
     let n = y_true.len();
     check_non_empty(n, "median_absolute_error")?;
 
@@ -529,11 +525,7 @@ pub fn mean_squared_log_error<F>(y_true: &Array1<F>, y_pred: &Array1<F>) -> Resu
 where
     F: Float + Send + Sync + 'static,
 {
-    check_same_length(
-        y_true,
-        y_pred,
-        "mean_squared_log_error: y_true vs y_pred",
-    )?;
+    check_same_length(y_true, y_pred, "mean_squared_log_error: y_true vs y_pred")?;
     let n = y_true.len();
     check_non_empty(n, "mean_squared_log_error")?;
 
@@ -610,6 +602,400 @@ where
 {
     let msle = mean_squared_log_error(y_true, y_pred)?;
     Ok(msle.sqrt())
+}
+
+// ---------------------------------------------------------------------------
+// mean_pinball_loss
+// ---------------------------------------------------------------------------
+
+/// Compute the mean pinball (quantile) loss.
+///
+/// For a given quantile `alpha` in `[0, 1]`:
+///
+/// ```text
+/// pinball = (1/n) * sum(alpha * max(y_true - y_pred, 0)
+///                     + (1 - alpha) * max(y_pred - y_true, 0))
+/// ```
+///
+/// When `alpha = 0.5`, this is equivalent to half the MAE.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth target values.
+/// * `y_pred` — predicted values.
+/// * `alpha`  — quantile parameter in `[0, 1]`.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] if `alpha` is not in `[0, 1]`.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::regression::mean_pinball_loss;
+/// use ndarray::array;
+///
+/// let y_true = array![1.0_f64, 2.0, 3.0];
+/// let y_pred = array![1.0_f64, 2.0, 3.0];
+/// let loss = mean_pinball_loss(&y_true, &y_pred, 0.5).unwrap();
+/// assert!((loss - 0.0).abs() < 1e-10);
+/// ```
+pub fn mean_pinball_loss<F>(
+    y_true: &Array1<F>,
+    y_pred: &Array1<F>,
+    alpha: F,
+) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_same_length(y_true, y_pred, "mean_pinball_loss: y_true vs y_pred")?;
+    let n = y_true.len();
+    check_non_empty(n, "mean_pinball_loss")?;
+
+    if alpha < F::zero() || alpha > F::one() {
+        return Err(FerroError::InvalidParameter {
+            name: "alpha".into(),
+            reason: "alpha must be in [0, 1]".into(),
+        });
+    }
+
+    let one_minus_alpha = F::one() - alpha;
+
+    let sum = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .fold(F::zero(), |acc, (&t, &p)| {
+            let diff = t - p;
+            if diff >= F::zero() {
+                acc + alpha * diff
+            } else {
+                acc + one_minus_alpha * (-diff)
+            }
+        });
+
+    Ok(sum / F::from(n).unwrap())
+}
+
+// ---------------------------------------------------------------------------
+// mean_poisson_deviance
+// ---------------------------------------------------------------------------
+
+/// Compute the mean Poisson deviance.
+///
+/// ```text
+/// D = (2/n) * sum(y_true * ln(y_true / y_pred) + y_pred - y_true)
+/// ```
+///
+/// For samples where `y_true == 0`, the term reduces to `y_pred` (since
+/// `0 * ln(0/x)` is defined as `0` by the limit convention).
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth target values (must be non-negative).
+/// * `y_pred` — predicted values (must be strictly positive).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] if any `y_true < 0` or any `y_pred <= 0`.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::regression::mean_poisson_deviance;
+/// use ndarray::array;
+///
+/// let y_true = array![1.0_f64, 2.0, 3.0];
+/// let y_pred = array![1.0_f64, 2.0, 3.0];
+/// let dev = mean_poisson_deviance(&y_true, &y_pred).unwrap();
+/// assert!((dev - 0.0).abs() < 1e-10);
+/// ```
+pub fn mean_poisson_deviance<F>(y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_same_length(y_true, y_pred, "mean_poisson_deviance: y_true vs y_pred")?;
+    let n = y_true.len();
+    check_non_empty(n, "mean_poisson_deviance")?;
+
+    for (i, &v) in y_true.iter().enumerate() {
+        if v < F::zero() {
+            return Err(FerroError::InvalidParameter {
+                name: "y_true".into(),
+                reason: format!(
+                    "mean_poisson_deviance requires y_true >= 0, found negative at index {i}"
+                ),
+            });
+        }
+    }
+    for (i, &v) in y_pred.iter().enumerate() {
+        if v <= F::zero() {
+            return Err(FerroError::InvalidParameter {
+                name: "y_pred".into(),
+                reason: format!(
+                    "mean_poisson_deviance requires y_pred > 0, found non-positive at index {i}"
+                ),
+            });
+        }
+    }
+
+    let two = F::from(2.0).unwrap();
+    let n_f = F::from(n).unwrap();
+
+    let sum = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .fold(F::zero(), |acc, (&t, &p)| {
+            if t == F::zero() {
+                // 0 * ln(0/p) is 0 by convention, so term = 0 + p - 0 = p
+                acc + p
+            } else {
+                // t * ln(t/p) + p - t
+                acc + t * (t / p).ln() + p - t
+            }
+        });
+
+    Ok(two * sum / n_f)
+}
+
+// ---------------------------------------------------------------------------
+// mean_gamma_deviance
+// ---------------------------------------------------------------------------
+
+/// Compute the mean Gamma deviance.
+///
+/// ```text
+/// D = (2/n) * sum(ln(y_pred / y_true) + y_true / y_pred - 1)
+/// ```
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth target values (must be strictly positive).
+/// * `y_pred` — predicted values (must be strictly positive).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] if any `y_true <= 0` or any `y_pred <= 0`.
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::regression::mean_gamma_deviance;
+/// use ndarray::array;
+///
+/// let y_true = array![1.0_f64, 2.0, 3.0];
+/// let y_pred = array![1.0_f64, 2.0, 3.0];
+/// let dev = mean_gamma_deviance(&y_true, &y_pred).unwrap();
+/// assert!((dev - 0.0).abs() < 1e-10);
+/// ```
+pub fn mean_gamma_deviance<F>(y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_same_length(y_true, y_pred, "mean_gamma_deviance: y_true vs y_pred")?;
+    let n = y_true.len();
+    check_non_empty(n, "mean_gamma_deviance")?;
+
+    for (i, &v) in y_true.iter().enumerate() {
+        if v <= F::zero() {
+            return Err(FerroError::InvalidParameter {
+                name: "y_true".into(),
+                reason: format!(
+                    "mean_gamma_deviance requires y_true > 0, found non-positive at index {i}"
+                ),
+            });
+        }
+    }
+    for (i, &v) in y_pred.iter().enumerate() {
+        if v <= F::zero() {
+            return Err(FerroError::InvalidParameter {
+                name: "y_pred".into(),
+                reason: format!(
+                    "mean_gamma_deviance requires y_pred > 0, found non-positive at index {i}"
+                ),
+            });
+        }
+    }
+
+    let two = F::from(2.0).unwrap();
+    let n_f = F::from(n).unwrap();
+
+    let sum = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .fold(F::zero(), |acc, (&t, &p)| {
+            acc + (p / t).ln() + t / p - F::one()
+        });
+
+    Ok(two * sum / n_f)
+}
+
+// ---------------------------------------------------------------------------
+// mean_tweedie_deviance
+// ---------------------------------------------------------------------------
+
+/// Compute the mean Tweedie deviance with power parameter `p`.
+///
+/// The Tweedie family generalises several distributions:
+///
+/// | `power` | Distribution | `y_true` constraint | `y_pred` constraint |
+/// |---------|-------------|---------------------|---------------------|
+/// | 0       | Normal      | any                 | any                 |
+/// | 1       | Poisson     | >= 0                | > 0                 |
+/// | 2       | Gamma       | > 0                 | > 0                 |
+/// | 3       | Inverse Gaussian | > 0            | > 0                 |
+///
+/// The unit deviance for each observation is:
+///
+/// ```text
+/// d(y, mu) = 2 * (y^(2-p) / ((1-p)(2-p)) - y*mu^(1-p) / (1-p) + mu^(2-p) / (2-p))
+/// ```
+///
+/// Special cases for `p = 0`, `p = 1`, and `p = 2` are handled explicitly.
+///
+/// # Arguments
+///
+/// * `y_true` — ground-truth target values.
+/// * `y_pred` — predicted values.
+/// * `power`  — the Tweedie power parameter.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+/// Returns [`FerroError::InvalidParameter`] if the inputs violate the constraints
+/// for the given `power`, or if `power` is in `(0, 1)` (which is not a valid
+/// Tweedie distribution).
+///
+/// # Examples
+///
+/// ```
+/// use ferrolearn_metrics::regression::mean_tweedie_deviance;
+/// use ndarray::array;
+///
+/// // power=0 should give 2*MSE
+/// let y_true = array![1.0_f64, 2.0, 3.0];
+/// let y_pred = array![1.0_f64, 2.0, 3.0];
+/// let dev = mean_tweedie_deviance(&y_true, &y_pred, 0.0).unwrap();
+/// assert!((dev - 0.0).abs() < 1e-10);
+/// ```
+pub fn mean_tweedie_deviance<F>(
+    y_true: &Array1<F>,
+    y_pred: &Array1<F>,
+    power: F,
+) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_same_length(y_true, y_pred, "mean_tweedie_deviance: y_true vs y_pred")?;
+    let n = y_true.len();
+    check_non_empty(n, "mean_tweedie_deviance")?;
+
+    let zero = F::zero();
+    let one = F::one();
+    let two = F::from(2.0).unwrap();
+
+    // Reject power in (0, 1) — not a valid Tweedie distribution.
+    if power > zero && power < one {
+        return Err(FerroError::InvalidParameter {
+            name: "power".into(),
+            reason: "power must not be in (0, 1); valid values are <= 0 or >= 1".into(),
+        });
+    }
+
+    // Check input constraints based on power.
+    if power >= one {
+        // y_pred > 0 required for power >= 1
+        for (i, &v) in y_pred.iter().enumerate() {
+            if v <= zero {
+                return Err(FerroError::InvalidParameter {
+                    name: "y_pred".into(),
+                    reason: format!(
+                        "mean_tweedie_deviance with power >= 1 requires y_pred > 0, found non-positive at index {i}"
+                    ),
+                });
+            }
+        }
+    }
+    if power >= one && power < two {
+        // y_true >= 0 for Poisson-like
+        for (i, &v) in y_true.iter().enumerate() {
+            if v < zero {
+                return Err(FerroError::InvalidParameter {
+                    name: "y_true".into(),
+                    reason: format!(
+                        "mean_tweedie_deviance with 1 <= power < 2 requires y_true >= 0, found negative at index {i}"
+                    ),
+                });
+            }
+        }
+    }
+    if power >= two {
+        // y_true > 0 for Gamma-like and beyond
+        for (i, &v) in y_true.iter().enumerate() {
+            if v <= zero {
+                return Err(FerroError::InvalidParameter {
+                    name: "y_true".into(),
+                    reason: format!(
+                        "mean_tweedie_deviance with power >= 2 requires y_true > 0, found non-positive at index {i}"
+                    ),
+                });
+            }
+        }
+    }
+
+    let n_f = F::from(n).unwrap();
+
+    // Special case: power == 0 => Normal distribution => deviance = (y - mu)^2
+    if power == zero {
+        let sum = y_true
+            .iter()
+            .zip(y_pred.iter())
+            .fold(zero, |acc, (&t, &p)| {
+                let diff = t - p;
+                acc + diff * diff
+            });
+        return Ok(sum / n_f);
+    }
+
+    // Special case: power == 1 => Poisson
+    if power == one {
+        return mean_poisson_deviance(y_true, y_pred);
+    }
+
+    // Special case: power == 2 => Gamma
+    if power == two {
+        return mean_gamma_deviance(y_true, y_pred);
+    }
+
+    // General case
+    let one_minus_p = one - power;
+    let two_minus_p = two - power;
+
+    let sum = y_true
+        .iter()
+        .zip(y_pred.iter())
+        .fold(zero, |acc, (&t, &p)| {
+            let term = if t == zero {
+                // When y_true = 0: y^(2-p) / ((1-p)(2-p)) = 0 (since 2-p < 0 for p > 2,
+                // but for p in [1,2), y_true >= 0 is fine and 0^(2-p) = 0 since 2-p > 0)
+                // Actually for p < 2, 0^(2-p) = 0. For p > 2, y_true must be > 0 so this
+                // branch only fires for 1 <= p < 2.
+                p.powf(two_minus_p) / two_minus_p
+            } else {
+                t.powf(two_minus_p) / (one_minus_p * two_minus_p)
+                    - t * p.powf(one_minus_p) / one_minus_p
+                    + p.powf(two_minus_p) / two_minus_p
+            };
+            acc + term
+        });
+
+    Ok(two * sum / n_f)
 }
 
 // ---------------------------------------------------------------------------
@@ -880,11 +1266,7 @@ mod tests {
     #[test]
     fn test_median_absolute_error_perfect() {
         let y = array![1.0_f64, 2.0, 3.0];
-        assert_abs_diff_eq!(
-            median_absolute_error(&y, &y).unwrap(),
-            0.0,
-            epsilon = 1e-10
-        );
+        assert_abs_diff_eq!(median_absolute_error(&y, &y).unwrap(), 0.0, epsilon = 1e-10);
     }
 
     #[test]
@@ -1184,5 +1566,225 @@ mod kani_proofs {
         if let Ok(evs) = result {
             assert!(!evs.is_nan(), "EVS must not be NaN for non-constant y_true");
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // mean_pinball_loss
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_pinball_perfect() {
+        let y = array![1.0_f64, 2.0, 3.0];
+        assert_abs_diff_eq!(
+            mean_pinball_loss(&y, &y, 0.5_f64).unwrap(),
+            0.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_pinball_half_is_half_mae() {
+        let y_true = array![1.0_f64, 2.0, 3.0];
+        let y_pred = array![1.5_f64, 2.0, 2.5];
+        let pinball = mean_pinball_loss(&y_true, &y_pred, 0.5_f64).unwrap();
+        let mae = mean_absolute_error(&y_true, &y_pred).unwrap();
+        assert_abs_diff_eq!(pinball, mae / 2.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_pinball_alpha_high() {
+        // alpha=0.9: penalises under-prediction heavily
+        let y_true = array![3.0_f64];
+        let y_pred = array![1.0_f64]; // under-prediction by 2
+        // diff = 3 - 1 = 2 > 0 => alpha * diff = 0.9 * 2 = 1.8
+        let loss = mean_pinball_loss(&y_true, &y_pred, 0.9_f64).unwrap();
+        assert_abs_diff_eq!(loss, 1.8, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_pinball_alpha_low() {
+        // alpha=0.1: penalises over-prediction heavily
+        let y_true = array![1.0_f64];
+        let y_pred = array![3.0_f64]; // over-prediction by 2
+        // diff = 1 - 3 = -2 < 0 => (1-alpha) * |diff| = 0.9 * 2 = 1.8
+        let loss = mean_pinball_loss(&y_true, &y_pred, 0.1_f64).unwrap();
+        assert_abs_diff_eq!(loss, 1.8, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_pinball_invalid_alpha() {
+        let y = array![1.0_f64];
+        assert!(mean_pinball_loss(&y, &y, 1.5_f64).is_err());
+        assert!(mean_pinball_loss(&y, &y, -0.1_f64).is_err());
+    }
+
+    #[test]
+    fn test_pinball_empty() {
+        let y_true = Array1::<f64>::from_vec(vec![]);
+        let y_pred = Array1::<f64>::from_vec(vec![]);
+        assert!(mean_pinball_loss(&y_true, &y_pred, 0.5_f64).is_err());
+    }
+
+    #[test]
+    fn test_pinball_f32() {
+        let y_true = array![1.0_f32, 2.0, 3.0];
+        let y_pred = array![1.5_f32, 2.0, 2.5];
+        let loss = mean_pinball_loss(&y_true, &y_pred, 0.5_f32).unwrap();
+        assert!(loss >= 0.0_f32);
+    }
+
+    // -----------------------------------------------------------------------
+    // mean_poisson_deviance
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_poisson_deviance_perfect() {
+        let y = array![1.0_f64, 2.0, 3.0];
+        assert_abs_diff_eq!(mean_poisson_deviance(&y, &y).unwrap(), 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_poisson_deviance_basic() {
+        let y_true = array![1.0_f64, 2.0];
+        let y_pred = array![2.0_f64, 1.0];
+        // term1: 1*ln(1/2) + 2 - 1 = -ln(2) + 1
+        // term2: 2*ln(2/1) + 1 - 2 = 2*ln(2) - 1
+        // sum = ln(2)
+        // deviance = 2 * ln(2) / 2 = ln(2)
+        let expected = 2.0_f64.ln();
+        assert_abs_diff_eq!(
+            mean_poisson_deviance(&y_true, &y_pred).unwrap(),
+            expected,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_poisson_deviance_zero_true() {
+        let y_true = array![0.0_f64, 1.0];
+        let y_pred = array![1.0_f64, 1.0];
+        // term1: y_true=0 => contributes y_pred=1.0
+        // term2: 1*ln(1/1) + 1 - 1 = 0
+        // sum = 1, deviance = 2*1/2 = 1
+        assert_abs_diff_eq!(
+            mean_poisson_deviance(&y_true, &y_pred).unwrap(),
+            1.0,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_poisson_deviance_negative_true() {
+        let y_true = array![-1.0_f64, 2.0];
+        let y_pred = array![1.0_f64, 2.0];
+        assert!(mean_poisson_deviance(&y_true, &y_pred).is_err());
+    }
+
+    #[test]
+    fn test_poisson_deviance_zero_pred() {
+        let y_true = array![1.0_f64, 2.0];
+        let y_pred = array![0.0_f64, 2.0];
+        assert!(mean_poisson_deviance(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // mean_gamma_deviance
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_gamma_deviance_perfect() {
+        let y = array![1.0_f64, 2.0, 3.0];
+        assert_abs_diff_eq!(mean_gamma_deviance(&y, &y).unwrap(), 0.0, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_gamma_deviance_basic() {
+        let y_true = array![1.0_f64, 2.0];
+        let y_pred = array![2.0_f64, 1.0];
+        // term1: ln(2/1) + 1/2 - 1 = ln(2) - 0.5
+        // term2: ln(1/2) + 2/1 - 1 = -ln(2) + 1
+        // sum = 0.5
+        // deviance = 2 * 0.5 / 2 = 0.5
+        let expected = 0.5;
+        assert_abs_diff_eq!(
+            mean_gamma_deviance(&y_true, &y_pred).unwrap(),
+            expected,
+            epsilon = 1e-10
+        );
+    }
+
+    #[test]
+    fn test_gamma_deviance_zero_true() {
+        let y_true = array![0.0_f64, 2.0];
+        let y_pred = array![1.0_f64, 2.0];
+        assert!(mean_gamma_deviance(&y_true, &y_pred).is_err());
+    }
+
+    #[test]
+    fn test_gamma_deviance_zero_pred() {
+        let y_true = array![1.0_f64, 2.0];
+        let y_pred = array![0.0_f64, 2.0];
+        assert!(mean_gamma_deviance(&y_true, &y_pred).is_err());
+    }
+
+    // -----------------------------------------------------------------------
+    // mean_tweedie_deviance
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn test_tweedie_power_0_equals_mse() {
+        let y_true = array![1.0_f64, 2.0, 3.0];
+        let y_pred = array![1.5_f64, 2.5, 2.5];
+        let tweedie = mean_tweedie_deviance(&y_true, &y_pred, 0.0).unwrap();
+        let mse = mean_squared_error(&y_true, &y_pred).unwrap();
+        assert_abs_diff_eq!(tweedie, mse, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_tweedie_power_1_equals_poisson() {
+        let y_true = array![1.0_f64, 2.0, 3.0];
+        let y_pred = array![1.5_f64, 2.5, 2.5];
+        let tweedie = mean_tweedie_deviance(&y_true, &y_pred, 1.0).unwrap();
+        let poisson = mean_poisson_deviance(&y_true, &y_pred).unwrap();
+        assert_abs_diff_eq!(tweedie, poisson, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_tweedie_power_2_equals_gamma() {
+        let y_true = array![1.0_f64, 2.0, 3.0];
+        let y_pred = array![1.5_f64, 2.5, 2.5];
+        let tweedie = mean_tweedie_deviance(&y_true, &y_pred, 2.0).unwrap();
+        let gamma = mean_gamma_deviance(&y_true, &y_pred).unwrap();
+        assert_abs_diff_eq!(tweedie, gamma, epsilon = 1e-10);
+    }
+
+    #[test]
+    fn test_tweedie_perfect() {
+        let y = array![1.0_f64, 2.0, 3.0];
+        // For all power values, perfect predictions should give 0 deviance.
+        for &p in &[0.0, 1.0, 1.5, 2.0, 3.0] {
+            let dev = mean_tweedie_deviance(&y, &y, p).unwrap();
+            assert_abs_diff_eq!(dev, 0.0, epsilon = 1e-10);
+        }
+    }
+
+    #[test]
+    fn test_tweedie_invalid_power() {
+        let y = array![1.0_f64, 2.0];
+        assert!(mean_tweedie_deviance(&y, &y, 0.5).is_err());
+    }
+
+    #[test]
+    fn test_tweedie_negative_true_power_1() {
+        let y_true = array![-1.0_f64, 2.0];
+        let y_pred = array![1.0_f64, 2.0];
+        assert!(mean_tweedie_deviance(&y_true, &y_pred, 1.0).is_err());
+    }
+
+    #[test]
+    fn test_tweedie_zero_true_power_2() {
+        let y_true = array![0.0_f64, 2.0];
+        let y_pred = array![1.0_f64, 2.0];
+        assert!(mean_tweedie_deviance(&y_true, &y_pred, 2.0).is_err());
     }
 }

@@ -40,6 +40,14 @@
 //!   ANOVA F-scores against class labels.
 //! - [`feature_selection::SelectFromModel`] — keep features whose importance
 //!   weight (from a pre-fitted model) meets a configurable threshold.
+//! - [`SelectFromModelExt`] — extended model-importance selector with four
+//!   threshold strategies (mean, median, value, percentile) and optional
+//!   `max_features` cap.
+//! - [`SequentialFeatureSelector`] — greedy forward/backward sequential
+//!   feature selection via a user-supplied scoring callback.
+//! - [`SelectFpr`] / [`SelectFdr`] / [`SelectFwe`] — statistical-test-based
+//!   selectors controlling false positive rate, false discovery rate
+//!   (Benjamini-Hochberg), or family-wise error (Bonferroni).
 //!
 //! ## Feature Engineering
 //!
@@ -72,18 +80,15 @@
 pub mod binarizer;
 pub mod binary_encoder;
 pub mod column_transformer;
-pub mod feature_scoring;
 pub mod feature_selection;
 pub mod function_transformer;
 pub mod imputer;
 pub mod iterative_imputer;
 pub mod kbins_discretizer;
 pub mod knn_imputer;
-pub mod label_binarizer;
 pub mod label_encoder;
 pub mod max_abs_scaler;
 pub mod min_max_scaler;
-pub mod multi_label_binarizer;
 pub mod normalizer;
 pub mod one_hot_encoder;
 pub mod ordinal_encoder;
@@ -92,7 +97,10 @@ pub mod power_transformer;
 pub mod quantile_transformer;
 pub mod rfe;
 pub mod robust_scaler;
+pub mod select_from_model;
 pub mod select_percentile;
+pub mod sequential_feature_selector;
+pub mod stat_selectors;
 pub mod spline_transformer;
 pub mod standard_scaler;
 pub mod target_encoder;
@@ -108,10 +116,7 @@ pub use feature_selection::{
 };
 pub use function_transformer::FunctionTransformer;
 pub use imputer::{FittedSimpleImputer, ImputeStrategy, SimpleImputer};
-pub use feature_scoring::{chi2, f_classif, f_regression};
-pub use label_binarizer::{FittedLabelBinarizer, LabelBinarizer};
 pub use label_encoder::{FittedLabelEncoder, LabelEncoder};
-pub use multi_label_binarizer::{FittedMultiLabelBinarizer, MultiLabelBinarizer};
 pub use max_abs_scaler::{FittedMaxAbsScaler, MaxAbsScaler};
 pub use min_max_scaler::{FittedMinMaxScaler, MinMaxScaler};
 pub use normalizer::Normalizer;
@@ -131,6 +136,15 @@ pub use quantile_transformer::{
     FittedQuantileTransformer, OutputDistribution, QuantileTransformer,
 };
 pub use rfe::{RFE, RFECV};
+pub use select_from_model::{
+    FittedSelectFromModelExt, SelectFromModelExt, ThresholdStrategy,
+};
 pub use select_percentile::{FittedSelectPercentile, SelectPercentile};
+pub use sequential_feature_selector::{
+    Direction, FittedSequentialFeatureSelector, SequentialFeatureSelector,
+};
+pub use stat_selectors::{
+    FittedSelectFdr, FittedSelectFpr, FittedSelectFwe, SelectFdr, SelectFpr, SelectFwe,
+};
 pub use spline_transformer::{FittedSplineTransformer, KnotStrategy, SplineTransformer};
 pub use target_encoder::{FittedTargetEncoder, TargetEncoder};
