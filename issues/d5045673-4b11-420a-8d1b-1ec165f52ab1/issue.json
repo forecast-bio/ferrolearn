@@ -1,0 +1,11 @@
+{
+  "uuid": "d5045673-4b11-420a-8d1b-1ec165f52ab1",
+  "display_id": 194,
+  "title": "Add SkewedChi2Sampler for skewed chi-squared kernel",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "8bd67d1b-5b8b-4a4a-a246-d4f7852ac38c",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:27:44.623273407Z",
+  "updated_at": "2026-03-25T15:27:44.623273407Z"
+}
