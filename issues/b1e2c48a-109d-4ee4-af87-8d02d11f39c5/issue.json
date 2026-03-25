@@ -1,0 +1,11 @@
+{
+  "uuid": "b1e2c48a-109d-4ee4-af87-8d02d11f39c5",
+  "display_id": 121,
+  "title": "Add classification_report text summary",
+  "description": "Generate text report with per-class precision, recall, F1, and support.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:21:15.036204374Z",
+  "updated_at": "2026-03-25T15:21:15.036204374Z"
+}
