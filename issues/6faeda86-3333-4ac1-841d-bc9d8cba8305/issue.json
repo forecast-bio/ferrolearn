@@ -1,0 +1,11 @@
+{
+  "uuid": "6faeda86-3333-4ac1-841d-bc9d8cba8305",
+  "display_id": 201,
+  "title": "Add EllipticEnvelope outlier detection via covariance",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "9cbcf83c-996f-45fa-ac1b-efb43f535642",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:28:26.048654530Z",
+  "updated_at": "2026-03-25T15:28:26.048654530Z"
+}
