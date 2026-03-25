@@ -1,0 +1,11 @@
+{
+  "uuid": "8798947f-8182-41bd-a4a4-7a17786f3e18",
+  "display_id": 150,
+  "title": "Add d2 score variants (d2_absolute_error, d2_pinball, d2_tweedie, d2_log_loss)",
+  "description": "D-squared generalization of R-squared for various loss functions.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:23:57.278961161Z",
+  "updated_at": "2026-03-25T15:23:57.278961161Z"
+}
