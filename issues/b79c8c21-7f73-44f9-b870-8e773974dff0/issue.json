@@ -2,12 +2,13 @@
   "uuid": "b79c8c21-7f73-44f9-b870-8e773974dff0",
   "display_id": 44,
   "title": "Add VotingClassifier with hard and soft voting",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "b7448b66-949a-4c1f-b439-54cd7d9684c0",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:12:18.744603751Z",
-  "updated_at": "2026-03-25T15:12:20.826997506Z",
+  "updated_at": "2026-03-25T22:14:03.103556613Z",
+  "closed_at": "2026-03-25T22:14:03.103556613Z",
   "labels": [
     "feature"
   ]
