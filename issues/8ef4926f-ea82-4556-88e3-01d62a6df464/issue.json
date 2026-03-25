@@ -1,0 +1,11 @@
+{
+  "uuid": "8ef4926f-ea82-4556-88e3-01d62a6df464",
+  "display_id": 148,
+  "title": "Add DistanceMetric class for distance computation",
+  "description": "Pluggable distance metric object supporting many distance types.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:23:49.465387012Z",
+  "updated_at": "2026-03-25T15:23:49.465387012Z"
+}
