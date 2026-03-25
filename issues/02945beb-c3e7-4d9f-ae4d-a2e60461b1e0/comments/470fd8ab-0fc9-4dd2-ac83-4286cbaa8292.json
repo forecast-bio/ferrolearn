@@ -1,0 +1,8 @@
+{
+  "uuid": "470fd8ab-0fc9-4dd2-ac83-4286cbaa8292",
+  "issue_uuid": "02945beb-c3e7-4d9f-ae4d-a2e60461b1e0",
+  "author": "anon-4d887991",
+  "content": "Delivered: CategoricalNB with Laplace smoothing, predict_proba, unseen category handling. All tests pass, clippy clean.",
+  "created_at": "2026-03-25T15:39:42.613049656Z",
+  "kind": "result"
+}
