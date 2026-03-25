@@ -1,0 +1,11 @@
+{
+  "uuid": "88ea9563-172b-43b0-a4bc-1e45108ef466",
+  "display_id": 179,
+  "title": "Add Gaussian Process classifier and regressor",
+  "description": "GaussianProcessClassifier and GaussianProcessRegressor with full kernel library.",
+  "status": "open",
+  "priority": "high",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:26:07.556903939Z",
+  "updated_at": "2026-03-25T15:26:07.556903939Z"
+}
