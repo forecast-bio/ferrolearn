@@ -3,11 +3,12 @@
   "display_id": 106,
   "title": "Add CountVectorizer bag-of-words text feature extraction",
   "description": "Convert raw text documents to term frequency matrix.",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:19:26.617211438Z",
-  "updated_at": "2026-03-25T15:19:29.547535268Z",
+  "updated_at": "2026-03-25T22:15:19.475268451Z",
+  "closed_at": "2026-03-25T22:15:19.475268451Z",
   "labels": [
     "feature"
   ]
