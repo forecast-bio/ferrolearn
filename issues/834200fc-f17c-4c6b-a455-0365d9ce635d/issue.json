@@ -1,0 +1,11 @@
+{
+  "uuid": "834200fc-f17c-4c6b-a455-0365d9ce635d",
+  "display_id": 45,
+  "title": "Add VotingRegressor with averaging",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "b7448b66-949a-4c1f-b439-54cd7d9684c0",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:12:23.356139487Z",
+  "updated_at": "2026-03-25T15:12:23.356139487Z"
+}
