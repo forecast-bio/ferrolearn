@@ -2,12 +2,13 @@
   "uuid": "f36808f0-ab6a-4ba6-bbac-cad98ff5596d",
   "display_id": 187,
   "title": "Add MLPRegressor multi-layer perceptron regressor",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "47d6ba2d-a849-49c4-8436-04db3a9dfe07",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:26:58.563004313Z",
-  "updated_at": "2026-03-25T15:27:02.368441359Z",
+  "updated_at": "2026-03-25T16:55:08.770235991Z",
+  "closed_at": "2026-03-25T16:55:08.770235991Z",
   "labels": [
     "feature"
   ]
