@@ -1,0 +1,8 @@
+{
+  "uuid": "0dc8e8a2-43d2-4015-b0d1-9ae146ee7640",
+  "issue_uuid": "e9b926c8-26ec-4415-83dd-db655f927650",
+  "author": "anon-05953958",
+  "content": "Plan: implement ExtraTreeClassifier/Regressor by extending DecisionTree with random split thresholds, then ExtraTreesClassifier/ExtraTreesRegressor as ensemble wrappers",
+  "created_at": "2026-03-25T15:37:30.067308100Z",
+  "kind": "plan"
+}
