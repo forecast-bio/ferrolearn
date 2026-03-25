@@ -8,18 +8,17 @@
 //! - [`train_test_split`] — shuffle and split data into train/test sets.
 //! - [`KFold`] — k-fold cross-validation splitter.
 //! - [`StratifiedKFold`] — stratified k-fold that preserves class balance.
-//! - [`LeaveOneOut`] — leave-one-out cross-validation (n folds, 1 test sample each).
-//! - [`LeavePOut`] — leave-p-out cross-validation (all C(n, p) combinations).
-//! - [`RepeatedKFold`] — repeated k-fold with different shuffles per repeat.
-//! - [`RepeatedStratifiedKFold`] — repeated stratified k-fold.
-//! - [`ShuffleSplit`] — random train/test splits.
-//! - [`StratifiedShuffleSplit`] — stratified random train/test splits.
-//! - [`GroupKFold`] — k-fold where groups are kept together.
 //! - [`cross_val_score`] — evaluate a pipeline using cross-validation.
+//! - [`cross_validate`] — like `cross_val_score` but with timing and optional
+//!   training scores.
+//! - [`cross_val_predict`] — generate out-of-fold predictions for every sample.
+//! - [`learning_curve`] — train/test scores for varying training set sizes.
+//! - [`validation_curve`] — train/test scores for varying hyperparameter values.
 //! - [`GridSearchCV`] — exhaustive hyperparameter search over a parameter grid.
 //! - [`RandomizedSearchCV`] — randomized hyperparameter search over distributions.
 //! - [`TimeSeriesSplit`] — time-series aware cross-validation splitter.
 //! - [`HalvingGridSearchCV`] — successive-halving hyperparameter search.
+//! - [`HalvingRandomSearchCV`] — successive-halving search with random sampling.
 //! - [`param_grid!`] — macro for building Cartesian-product parameter grids.
 //! - [`ParamValue`] / [`ParamSet`] — hyperparameter value and set types.
 //! - [`distributions`] — sampling distributions for [`RandomizedSearchCV`].
@@ -50,22 +49,27 @@ pub mod cross_validation;
 pub mod distributions;
 pub mod grid_search;
 pub mod halving_grid_search;
+pub mod halving_random_search;
+pub mod learning_curve;
 pub mod param_grid;
 pub mod random_search;
 pub mod self_training;
 pub mod split;
 pub mod time_series_split;
+pub mod validation_curve;
 
 pub use calibration::{CalibratedClassifierCV, CalibrationMethod, FittedCalibratedClassifierCV};
 pub use cross_validation::{
-    CrossValidator, GroupKFold, KFold, LeaveOneOut, LeavePOut, RepeatedKFold,
-    RepeatedStratifiedKFold, ShuffleSplit, StratifiedKFold, StratifiedShuffleSplit,
-    cross_val_score,
+    CrossValidateResult, CrossValidator, KFold, StratifiedKFold, cross_val_predict,
+    cross_val_score, cross_validate,
 };
 pub use grid_search::{CvResults, GridSearchCV};
 pub use halving_grid_search::HalvingGridSearchCV;
+pub use halving_random_search::HalvingRandomSearchCV;
+pub use learning_curve::{LearningCurveResult, learning_curve};
 pub use param_grid::{ParamSet, ParamValue};
 pub use random_search::RandomizedSearchCV;
 pub use self_training::{FittedSelfTrainingClassifier, SelfTrainingClassifier, UNLABELED};
 pub use split::train_test_split;
 pub use time_series_split::TimeSeriesSplit;
+pub use validation_curve::{ValidationCurveResult, validation_curve};

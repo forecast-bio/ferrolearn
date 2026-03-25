@@ -420,7 +420,7 @@ fn correct_predecessor(
     r_plot: &[f64],
     pred_plot: &[Option<usize>],
     ordering: &[usize],
-    mut s: usize,
+    s: usize,
     mut e: usize,
 ) -> Option<(usize, usize)> {
     while s < e {
@@ -428,8 +428,8 @@ fn correct_predecessor(
             return Some((s, e));
         }
         let p_e = pred_plot[ordering[e]];
-        for i in s..e {
-            if p_e == Some(ordering[i]) {
+        for item in ordering.iter().take(e).skip(s) {
+            if p_e == Some(*item) {
                 return Some((s, e));
             }
         }
@@ -536,9 +536,9 @@ fn xi_cluster_extraction<F: Float>(
 
         // Update MIB with the max reachability between the last processed
         // index and the current steep index.
-        for k in index..=steep_index {
-            if r_plot[k] > mib {
-                mib = r_plot[k];
+        for item in r_plot.iter().take(steep_index + 1).skip(index) {
+            if *item > mib {
+                mib = *item;
             }
         }
 
@@ -658,8 +658,8 @@ fn xi_cluster_extraction<F: Float>(
         // Only assign if the entire interval is unassigned.
         let all_unassigned = (c_start..=end).all(|pos| ord_labels[pos] == -1);
         if all_unassigned {
-            for pos in c_start..=end {
-                ord_labels[pos] = label;
+            for item in ord_labels.iter_mut().take(end + 1).skip(c_start) {
+                *item = label;
             }
             label += 1;
         }

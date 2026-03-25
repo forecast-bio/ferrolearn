@@ -56,6 +56,7 @@
 //! assert_eq!(projected.ncols(), 1);
 //! ```
 
+pub mod cross_decomposition;
 pub mod dictionary_learning;
 pub mod factor_analysis;
 pub mod fast_ica;
@@ -73,6 +74,10 @@ pub mod tsne;
 pub mod umap;
 
 // Re-exports
+pub use cross_decomposition::{
+    CCA, FittedCCA, FittedPLSCanonical, FittedPLSRegression, FittedPLSSVD, PLSCanonical,
+    PLSRegression, PLSSVD,
+};
 pub use dictionary_learning::{
     DictFitAlgorithm, DictTransformAlgorithm, DictionaryLearning, FittedDictionaryLearning,
 };

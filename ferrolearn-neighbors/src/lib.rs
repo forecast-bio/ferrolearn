@@ -2,8 +2,9 @@
 //!
 //! Nearest neighbor models for the ferrolearn machine learning framework.
 //!
-//! This crate provides k-nearest neighbors classifiers and regressors with
-//! support for both brute-force and KD-tree spatial indexing.
+//! This crate provides k-nearest neighbors and radius-based nearest neighbor
+//! classifiers and regressors, plus an unsupervised nearest neighbor search,
+//! with support for brute-force, KD-tree, and ball tree spatial indexing.
 //!
 //! # Models
 //!
@@ -11,13 +12,19 @@
 //!   k nearest training samples.
 //! - **[`KNeighborsRegressor`]** — Predicts target values as the (weighted) mean
 //!   of the k nearest training samples.
+//! - **[`RadiusNeighborsClassifier`]** — Classifies samples by majority vote of
+//!   all training points within a given radius.
+//! - **[`RadiusNeighborsRegressor`]** — Predicts target values as the (weighted)
+//!   mean of all training points within a given radius.
+//! - **[`NearestNeighbors`]** — Unsupervised nearest neighbor search (no labels).
 //!
 //! # Spatial Indexing
 //!
 //! - **[`kdtree::KdTree`]** — A KD-Tree for efficient nearest neighbor search
-//!   in low-dimensional spaces (d <= 20).
-//! - **Brute Force** — Exhaustive search used as fallback for high-dimensional
-//!   data or when explicitly requested.
+//!   in low-dimensional spaces (d <= 15).
+//! - **[`balltree::BallTree`]** — A ball tree for moderate-to-high dimensions.
+//! - **Brute Force** — Exhaustive search used as fallback or when explicitly
+//!   requested.
 //!
 //! # Design
 //!
@@ -32,8 +39,9 @@
 //!
 //! # Pipeline Integration
 //!
-//! Both models implement [`PipelineEstimator`](ferrolearn_core::pipeline::PipelineEstimator)
-//! for `f64`, allowing them to be used as the final step in a
+//! All supervised models implement
+//! [`PipelineEstimator`](ferrolearn_core::pipeline::PipelineEstimator),
+//! allowing them to be used as the final step in a
 //! [`Pipeline`](ferrolearn_core::pipeline::Pipeline).
 //!
 //! # Float Generics
@@ -44,9 +52,16 @@
 pub mod balltree;
 pub mod kdtree;
 pub mod knn;
+pub mod nearest_neighbors;
+pub mod radius_neighbors;
 
 // Re-export the main types at the crate root.
 pub use knn::{
     Algorithm, FittedKNeighborsClassifier, FittedKNeighborsRegressor, KNeighborsClassifier,
     KNeighborsRegressor, Weights,
+};
+pub use nearest_neighbors::{FittedNearestNeighbors, NearestNeighbors};
+pub use radius_neighbors::{
+    FittedRadiusNeighborsClassifier, FittedRadiusNeighborsRegressor, RadiusNeighborsClassifier,
+    RadiusNeighborsRegressor,
 };

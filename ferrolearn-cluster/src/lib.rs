@@ -20,6 +20,10 @@
 //! - **[`Birch`]** — Balanced Iterative Reducing and Clustering using Hierarchies.
 //! - **[`LabelPropagation`]** — Semi-supervised label propagation through a similarity graph.
 //! - **[`LabelSpreading`]** — Semi-supervised label spreading via normalized graph Laplacian.
+//! - **[`AffinityPropagation`]** — Exemplar-based clustering via message passing,
+//!   automatically determines number of clusters.
+//! - **[`BisectingKMeans`]** — Divisive hierarchical clustering that recursively
+//!   bisects the largest cluster.
 //!
 //! # Design
 //!
@@ -52,14 +56,20 @@
 //!   [`Predict`](ferrolearn_core::Predict) for new data via nearest-neighbor lookup.
 //! - [`LabelSpreading`] produces [`FittedLabelSpreading`], which implements
 //!   [`Predict`](ferrolearn_core::Predict) for new data via nearest-neighbor lookup.
+//! - [`AffinityPropagation`] produces [`FittedAffinityPropagation`], which stores
+//!   exemplar indices and labels — it does **not** implement `Predict`.
+//! - [`BisectingKMeans`] produces [`FittedBisectingKMeans`], which implements
+//!   [`Predict`](ferrolearn_core::Predict) (assign to nearest center).
 //!
 //! # Float Generics
 //!
 //! All algorithms are generic over `F: num_traits::Float + Send + Sync + 'static`,
 //! supporting both `f32` and `f64`.
 
+pub mod affinity_propagation;
 pub mod agglomerative;
 pub mod birch;
+pub mod bisecting_kmeans;
 pub mod dbscan;
 pub mod gmm;
 pub mod hdbscan;
@@ -72,7 +82,9 @@ pub mod optics;
 pub mod spectral;
 
 // Re-export the main types at the crate root.
+pub use affinity_propagation::{AffinityPropagation, FittedAffinityPropagation};
 pub use agglomerative::{AgglomerativeClustering, FittedAgglomerativeClustering, Linkage};
+pub use bisecting_kmeans::{BisectingKMeans, BisectingStrategy, FittedBisectingKMeans};
 pub use birch::{Birch, FittedBirch};
 pub use dbscan::{DBSCAN, FittedDBSCAN};
 pub use gmm::{CovarianceType, FittedGaussianMixture, GaussianMixture};
