@@ -1,0 +1,11 @@
+{
+  "uuid": "8d1b4401-74f0-4f3e-892c-3c26d57fac64",
+  "display_id": 105,
+  "title": "Add SequentialFeatureSelector forward/backward greedy selection",
+  "description": "Greedy forward or backward feature selection with cross-validation scoring.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:19:18.527642952Z",
+  "updated_at": "2026-03-25T15:19:18.527642952Z"
+}
