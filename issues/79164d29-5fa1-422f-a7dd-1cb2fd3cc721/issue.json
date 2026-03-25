@@ -1,0 +1,11 @@
+{
+  "uuid": "79164d29-5fa1-422f-a7dd-1cb2fd3cc721",
+  "display_id": 141,
+  "title": "Add ndcg_score and dcg_score for ranking evaluation",
+  "description": "Normalized/discounted cumulative gain for ranking quality.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "anon-2101b8a8",
+  "created_at": "2026-03-25T15:23:13.203804673Z",
+  "updated_at": "2026-03-25T15:23:13.203804673Z"
+}
