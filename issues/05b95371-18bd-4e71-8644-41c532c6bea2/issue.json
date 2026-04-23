@@ -2,12 +2,13 @@
   "uuid": "05b95371-18bd-4e71-8644-41c532c6bea2",
   "display_id": 202,
   "title": "Add GraphicalLasso and GraphicalLassoCV sparse precision matrix",
-  "status": "open",
+  "status": "closed",
   "priority": "low",
   "parent_uuid": "9cbcf83c-996f-45fa-ac1b-efb43f535642",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:28:29.731067830Z",
-  "updated_at": "2026-03-25T15:28:31.519763742Z",
+  "updated_at": "2026-04-23T19:36:22.704498993Z",
+  "closed_at": "2026-04-23T19:36:22.704498993Z",
   "labels": [
     "feature"
   ]
