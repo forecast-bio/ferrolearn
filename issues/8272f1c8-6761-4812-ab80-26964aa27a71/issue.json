@@ -2,12 +2,13 @@
   "uuid": "8272f1c8-6761-4812-ab80-26964aa27a71",
   "display_id": 16,
   "title": "Add LassoLarsCV cross-validated LassoLars",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "66436a3a-bfba-46ef-8dd2-ff6378e41c65",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:09:31.796612871Z",
-  "updated_at": "2026-03-25T15:09:34.340465759Z",
+  "updated_at": "2026-04-23T19:36:31.877151325Z",
+  "closed_at": "2026-04-23T19:36:31.877151325Z",
   "labels": [
     "feature"
   ]
