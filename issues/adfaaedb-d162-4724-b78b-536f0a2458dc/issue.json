@@ -2,12 +2,13 @@
   "uuid": "adfaaedb-d162-4724-b78b-536f0a2458dc",
   "display_id": 193,
   "title": "Add AdditiveChi2Sampler for additive chi-squared kernel",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "8bd67d1b-5b8b-4a4a-a246-d4f7852ac38c",
   "created_by": "anon-2101b8a8",
   "created_at": "2026-03-25T15:27:40.865642776Z",
-  "updated_at": "2026-03-25T15:27:42.751326156Z",
+  "updated_at": "2026-04-23T19:36:26.608709926Z",
+  "closed_at": "2026-04-23T19:36:26.608709926Z",
   "labels": [
     "feature"
   ]
