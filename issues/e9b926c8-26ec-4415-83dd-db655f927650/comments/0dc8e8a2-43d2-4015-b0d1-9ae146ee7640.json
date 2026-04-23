@@ -4,5 +4,7 @@
   "author": "anon-05953958",
   "content": "Plan: implement ExtraTreeClassifier/Regressor by extending DecisionTree with random split thresholds, then ExtraTreesClassifier/ExtraTreesRegressor as ensemble wrappers",
   "created_at": "2026-03-25T15:37:30.067308100Z",
-  "kind": "plan"
+  "kind": "plan",
+  "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQMqTEi7PlGRngd7rFa6lA5MPAkgZ/licbB70s0wflB4k2ZnJ5OQ5BhkomB/CNCvmSEJfKJcOOJGHepNIwkUl4gY="
 }

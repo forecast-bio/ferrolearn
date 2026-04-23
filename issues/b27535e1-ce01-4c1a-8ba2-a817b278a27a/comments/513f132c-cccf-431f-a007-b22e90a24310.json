@@ -4,5 +4,7 @@
   "author": "anon-2101b8a8",
   "content": "Plan: clone sklearn, partition into ~10 logical segments, launch parallel subagents to examine each segment's public API surface, then cross-reference against ferrolearn's existing crates to produce a gap report.",
   "created_at": "2026-03-25T14:56:52.312439790Z",
-  "kind": "plan"
+  "kind": "plan",
+  "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQBU1cML25CIh9MUMoP1u9FePwXQ42jxaqIx/zQ1vJBeXTfJm/phj8dAzhK54S3JbOK28eH/WZ6UrGh1nirwNpA4="
 }

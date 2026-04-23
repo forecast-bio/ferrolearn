@@ -4,5 +4,7 @@
   "author": "anon-4d887991",
   "content": "Plan: implement CategoricalNB following the same pattern as MultinomialNB — unfitted/fitted split, Fit/Predict/HasClasses traits, predict_proba method",
   "created_at": "2026-03-25T15:39:35.967521257Z",
-  "kind": "plan"
+  "kind": "plan",
+  "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQPGUtgG7+Fu07vmu7peI1DZh3R7EVbShYQT+34eEAAMU032pLzwO2xb45HsifKICqIfEkjjMEYN5toLgPPPE7go="
 }

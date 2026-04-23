@@ -1,0 +1,4 @@
+# Crosslink trusted signers
+# Format: <principal> <key-type> <base64-key> [comment]
+# approved by human backfill at 2026-04-23
+backfill@crosslink ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKo+flEdaJYO8NPs2cLlm7FqczNhZVbMbKNZfq5/HUnw doll@dollspace

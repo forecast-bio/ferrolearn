@@ -16,14 +16,18 @@
       "author": "anon-2101b8a8",
       "content": "Plan: extend scripts/generate_fixtures.py with ~35 new generators for 6 crates (bayes, cluster, preprocess, model-sel, metrics, numerical), generate JSON fixtures, then write/extend oracle_tests.rs in each crate. All Python deps available (sklearn 1.7.2, numpy 2.3.5, scipy 1.16.3).",
       "created_at": "2026-03-14T17:04:59.849296550Z",
-      "kind": "plan"
+      "kind": "plan",
+      "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+      "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQPKSJF82foKq6aIXPWuyjtFJi2VtNaV14RJOaG2wVpEkcBie7W9uLSkF6Z84PZV6oCKRC0LK6g0KiA3vbi1wbAI="
     },
     {
       "id": 2,
       "author": "anon-2101b8a8",
       "content": "All 54 fixtures generated successfully (28 new). Now writing Rust oracle tests for 6 crates in parallel.",
       "created_at": "2026-03-14T17:07:23.347335028Z",
-      "kind": "observation"
+      "kind": "observation",
+      "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+      "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQPkKZzAtUhuAwT6KkJDr1mZY9ZNjygYaQAq3iHYCylAJt+OaOyZCd1TjdjqzexksC5QoReKmUsrbC0txk7uWJQU="
     }
   ]
 }

@@ -16,14 +16,18 @@
       "author": "anon-2101b8a8",
       "content": "Updating BENCHMARKS.md with fresh numbers, bumping crate versions for ferrolearn-cluster, ferrolearn-preprocess, ferrolearn-model-sel, ferrolearn-numerical, then committing everything.",
       "created_at": "2026-03-14T18:40:17.962631426Z",
-      "kind": "plan"
+      "kind": "plan",
+      "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+      "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQIQrlZ07FwX+YCmWLSYEND//cN3+am9Luigx3oSarTj8Y2ntL71WMiVIZDsLLtz9Bmg/MTd4BgVzOtS7m8plNAQ="
     },
     {
       "id": 6,
       "author": "anon-2101b8a8",
       "content": "Committed cf3fe1a: 48 files changed, 20145 insertions. Versions bumped: ferrolearn-cluster 0.1.2, ferrolearn-model-sel 0.1.2, ferrolearn-preprocess 0.1.3, ferrolearn-numerical 0.1.1. BENCHMARKS.md and CHANGELOG.md updated.",
       "created_at": "2026-03-14T18:44:21.300444923Z",
-      "kind": "result"
+      "kind": "result",
+      "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+      "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQLDMlteaCh+CRk1MDTu9GDnfvIwXbzybHnAOEjaAHnIuDaQrhgdXdfgObOLWsVZtHwoZHnN/3TUjegh+zSUI9gw="
     }
   ]
 }

@@ -4,5 +4,7 @@
   "author": "anon-05953958",
   "content": "Delivered: RidgeCV, LassoCV, ElasticNetCV with auto alpha grids, internal k-fold CV, best_alpha/best_l1_ratio introspection. 39 new tests, clippy clean. Worktree: agent-a54ac162",
   "created_at": "2026-03-25T15:46:56.310146955Z",
-  "kind": "result"
+  "kind": "result",
+  "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQL6hQTQ/CWN6RkDVVykJ0PVSLpxiRqZJjfV4/Qh8o9jQ9xjIiqu77uXqMn9hvzBg4/HVe7nAKk8DHrf+BsyTew4="
 }

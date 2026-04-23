@@ -4,5 +4,7 @@
   "author": "anon-2101b8a8",
   "content": "Delivered: all 18 crates bumped from 0.1.x to 0.2.0, workspace dependency versions updated, cargo check passes",
   "created_at": "2026-03-25T22:17:46.470117304Z",
-  "kind": "result"
+  "kind": "result",
+  "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQB9UxJReyXk5zZEPv2ePNFMCDaCZv2OvY7K9yFu+DVJLxkydGH7X/9S+PKLlzIpvoED7rkI1alQpV7vtylsCsgI="
 }

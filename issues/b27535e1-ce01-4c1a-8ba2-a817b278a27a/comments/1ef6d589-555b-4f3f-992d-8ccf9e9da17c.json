@@ -4,5 +4,7 @@
   "author": "anon-2101b8a8",
   "content": "Created 218 issues (IDs #6-#222) covering every gap identified in the sklearn vs ferrolearn analysis. Issues are organized hierarchically with parent epics and subissues. All issues have priority (high/medium/low) and feature/enhancement labels.",
   "created_at": "2026-03-25T15:31:02.631976924Z",
-  "kind": "result"
+  "kind": "result",
+  "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQGszXYEcAN6xSKI72Ub+bhRGKoaSYMzUN+xx4bYvHDyG4KCFc2ior+q4WOT42fEYuUJXvS6feYw7I7Gm/4i20Qw="
 }
