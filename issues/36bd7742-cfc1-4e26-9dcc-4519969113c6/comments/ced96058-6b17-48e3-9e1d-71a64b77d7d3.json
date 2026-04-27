@@ -1,0 +1,10 @@
+{
+  "uuid": "ced96058-6b17-48e3-9e1d-71a64b77d7d3",
+  "issue_uuid": "36bd7742-cfc1-4e26-9dcc-4519969113c6",
+  "author": "doll-agent",
+  "content": "Companion to qnd-trial-intel-rs#4 (umbrella qnd-trial-intel-rs#3). This module is the Phase 0a deliverable for the Rust port of qnd-trial-intel.\n\n## Scope\nNew module ferrolearn-bayes/src/conjugate/normal_normal.rs:\n\n```rust\npub fn posterior_normal_normal(\n    prior_mean: f64,\n    prior_var: f64,\n    observations: &[(f64 /* y_i */, f64 /* obs_var_i */)],\n) -> (f64 /* post_mean */, f64 /* post_var */);\n```\n\nClosed-form normal-normal conjugate update:\n- precision_prior = 1 / prior_var\n- precision_obs_i = 1 / obs_var_i\n- post_precision = precision_prior + sum(precision_obs_i)\n- post_mean = (precision_prior * prior_mean + sum(precision_obs_i * y_i)) / post_precision\n- post_var = 1 / post_precision\n\n## Crate metadata update\nUpdate ferrolearn-bayes/Cargo.toml description, keywords, categories to drop the naive-Bayes-only framing — the crate now also exposes conjugate priors.\n\n## Acceptance\n- proptest suite with >=10000 random cases matching a NumPy reference to 1e-9 absolute tolerance\n- handles obs_var_i <= 0 by clipping to a small epsilon (matches Python estimate/bayesian.py:68)\n- doctest example\n- README section under 'Conjugate priors'\n\n## Consumer\nqnd-trial-intel-rs uses this in qnd-trial-intel-estimate::bayesian::compute_posterior. Until released, consumed as a workspace path dependency.",
+  "created_at": "2026-04-27T15:55:27.976375644Z",
+  "kind": "plan",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAVCm3IeNgxy8f3gOxktiVyCiN2vJqGXaSE/JbuXF07yQLI7I3HxVi60bPvJpY/OTaFgrtZqRwLOjF1Mf3vW86CA=="
+}
