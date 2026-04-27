@@ -1,0 +1,10 @@
+{
+  "uuid": "17999b22-fb98-44b3-89ac-b20dbfad36bf",
+  "issue_uuid": "36bd7742-cfc1-4e26-9dcc-4519969113c6",
+  "author": "doll-agent",
+  "content": "Done. ferrolearn-bayes::conjugate::normal_normal landed: new src/conjugate.rs with NormalNormalPosterior struct and posterior_normal_normal free function. Closed-form precision-weighted update with empty-obs short-circuit and obs_var<=0 clipping. 8 unit tests + 4 proptest properties at 10000 cases each (40000 inputs verified). Doctest example. Cargo.toml description, keywords, categories updated to drop naive-Bayes-only framing. Adjacent: pre-existing tests/proptest_invariants.rs clippy::manual_range_contains fixed. cargo test -p ferrolearn-bayes -> 108 passed; cargo clippy --all-targets -- -D warnings -> clean. Consumable as path dep from qnd-trial-intel-rs.",
+  "created_at": "2026-04-27T16:26:09.713253075Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAeKj9Uut0uMFFckjDjJpdq1G/rPBIhLMgoafy0LIfEnuRGqEEGNUNUiSJlcyxgJ+2dbIjSnAjBWQ7a2pYgpt5Ag=="
+}
