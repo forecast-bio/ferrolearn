@@ -1,6 +1,12 @@
 //! # ferrolearn-bayes
 //!
-//! Naive Bayes classifiers for the ferrolearn machine learning framework.
+//! Bayesian methods for the ferrolearn machine learning framework.
+//!
+//! Two families of tools live here:
+//!
+//! 1. **Naive Bayes classifiers** — five variants for classification.
+//! 2. **Conjugate priors** — closed-form posterior updates for parameter
+//!    estimation. See [`conjugate`].
 //!
 //! This crate provides five Naive Bayes variants:
 //!
@@ -49,6 +55,7 @@
 pub mod bernoulli;
 pub mod categorical;
 pub mod complement;
+pub mod conjugate;
 pub mod gaussian;
 pub mod multinomial;
 
