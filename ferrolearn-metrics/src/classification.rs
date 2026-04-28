@@ -577,9 +577,7 @@ fn validate_binary_scores<F: Float + Send + Sync + 'static>(
         if label > 1 {
             return Err(FerroError::InvalidParameter {
                 name: "y_true".into(),
-                reason: format!(
-                    "{context} requires binary labels (0 or 1), found label {label}"
-                ),
+                reason: format!("{context} requires binary labels (0 or 1), found label {label}"),
             });
         }
     }
@@ -590,9 +588,7 @@ fn validate_binary_scores<F: Float + Send + Sync + 'static>(
     if n_pos == 0 || n_neg == 0 {
         return Err(FerroError::InvalidParameter {
             name: "y_true".into(),
-            reason: format!(
-                "{context} requires at least one positive and one negative sample"
-            ),
+            reason: format!("{context} requires at least one positive and one negative sample"),
         });
     }
 
@@ -600,10 +596,7 @@ fn validate_binary_scores<F: Float + Send + Sync + 'static>(
 }
 
 /// Sort by descending score, returning `(score, label)` pairs.
-fn sort_by_score_desc<F: Float>(
-    y_true: &Array1<usize>,
-    y_score: &Array1<F>,
-) -> Vec<(F, usize)> {
+fn sort_by_score_desc<F: Float>(y_true: &Array1<usize>, y_score: &Array1<F>) -> Vec<(F, usize)> {
     let mut pairs: Vec<(F, usize)> = y_score
         .iter()
         .zip(y_true.iter())
@@ -653,10 +646,7 @@ fn sort_by_score_desc<F: Float>(
 /// assert!((fpr[last] - 1.0).abs() < 1e-10);
 /// assert!((tpr[last] - 1.0).abs() < 1e-10);
 /// ```
-pub fn roc_curve<F>(
-    y_true: &Array1<usize>,
-    y_score: &Array1<F>,
-) -> CurveResult<F>
+pub fn roc_curve<F>(y_true: &Array1<usize>, y_score: &Array1<F>) -> CurveResult<F>
 where
     F: Float + Send + Sync + 'static,
 {
@@ -734,10 +724,7 @@ where
 /// assert!((precision[last] - 1.0).abs() < 1e-10);
 /// assert!((recall[last] - 0.0).abs() < 1e-10);
 /// ```
-pub fn precision_recall_curve<F>(
-    y_true: &Array1<usize>,
-    y_score: &Array1<F>,
-) -> CurveResult<F>
+pub fn precision_recall_curve<F>(y_true: &Array1<usize>, y_score: &Array1<F>) -> CurveResult<F>
 where
     F: Float + Send + Sync + 'static,
 {
@@ -1243,9 +1230,7 @@ where
         if label > 1 {
             return Err(FerroError::InvalidParameter {
                 name: "y_true".into(),
-                reason: format!(
-                    "calibration_curve requires binary labels (0 or 1), found {label}"
-                ),
+                reason: format!("calibration_curve requires binary labels (0 or 1), found {label}"),
             });
         }
     }
@@ -1692,9 +1677,10 @@ mod tests {
         // Perfect classifier: should go (0,0) -> (0,0.5) -> (0,1) -> ...
         // FPR stays 0 while TPR increases.
         // Verify there's a point with FPR=0, TPR=1.
-        let has_perfect_point = fpr.iter().zip(tpr.iter()).any(|(&f, &t)| {
-            (f - 0.0).abs() < 1e-10 && (t - 1.0).abs() < 1e-10
-        });
+        let has_perfect_point = fpr
+            .iter()
+            .zip(tpr.iter())
+            .any(|(&f, &t)| (f - 0.0).abs() < 1e-10 && (t - 1.0).abs() < 1e-10);
         assert!(has_perfect_point);
     }
 
@@ -1745,8 +1731,7 @@ mod tests {
     fn test_precision_recall_curve_basic() {
         let y_true = array![0usize, 0, 1, 1];
         let y_score = array![0.1_f64, 0.4, 0.35, 0.8];
-        let (precision, recall, _thresholds) =
-            precision_recall_curve(&y_true, &y_score).unwrap();
+        let (precision, recall, _thresholds) = precision_recall_curve(&y_true, &y_score).unwrap();
 
         // Last point is (precision=1, recall=0) sentinel.
         let last = precision.len() - 1;
@@ -1767,8 +1752,7 @@ mod tests {
     fn test_precision_recall_curve_perfect() {
         let y_true = array![0usize, 0, 1, 1];
         let y_score = array![0.1_f64, 0.2, 0.8, 0.9];
-        let (precision, recall, _thresholds) =
-            precision_recall_curve(&y_true, &y_score).unwrap();
+        let (precision, recall, _thresholds) = precision_recall_curve(&y_true, &y_score).unwrap();
 
         // For a perfect classifier, at the highest threshold both predictions
         // are positives and correct.
@@ -2086,11 +2070,9 @@ mod kani_proofs {
     #[test]
     fn test_top_k_accuracy_perfect_top1() {
         let y_true = array![0usize, 1, 2];
-        let y_score = Array2::from_shape_vec(
-            (3, 3),
-            vec![0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8],
-        )
-        .unwrap();
+        let y_score =
+            Array2::from_shape_vec((3, 3), vec![0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8])
+                .unwrap();
         let acc = top_k_accuracy_score(&y_true, &y_score, 1).unwrap();
         assert_abs_diff_eq!(acc, 1.0, epsilon = 1e-10);
     }
@@ -2147,11 +2129,9 @@ mod kani_proofs {
     fn test_top_k_accuracy_k_equals_n_classes() {
         // When k = n_classes, all samples should be correct
         let y_true = array![0usize, 1, 2];
-        let y_score = Array2::from_shape_vec(
-            (3, 3),
-            vec![0.1, 0.2, 0.7, 0.5, 0.3, 0.2, 0.3, 0.3, 0.4],
-        )
-        .unwrap();
+        let y_score =
+            Array2::from_shape_vec((3, 3), vec![0.1, 0.2, 0.7, 0.5, 0.3, 0.2, 0.3, 0.3, 0.4])
+                .unwrap();
         let acc = top_k_accuracy_score(&y_true, &y_score, 3).unwrap();
         assert_abs_diff_eq!(acc, 1.0, epsilon = 1e-10);
     }

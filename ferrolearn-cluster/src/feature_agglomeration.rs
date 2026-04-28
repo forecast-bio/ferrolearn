@@ -215,11 +215,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for FeatureAgglomerati
     ///
     /// - [`FerroError::InvalidParameter`] if `n_clusters == 0`.
     /// - [`FerroError::InsufficientSamples`] if `n_features < n_clusters`.
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        _y: &(),
-    ) -> Result<FittedFeatureAgglomeration<F>, FerroError> {
+    fn fit(&self, x: &Array2<F>, _y: &()) -> Result<FittedFeatureAgglomeration<F>, FerroError> {
         let n_features = x.ncols();
 
         if self.n_clusters == 0 {
@@ -308,8 +304,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedFeatureAgg
                 for i in 0..n_samples {
                     for c in 0..self.n_clusters_ {
                         if counts[c] > 0 {
-                            result[[i, c]] =
-                                result[[i, c]] / F::from(counts[c]).unwrap();
+                            result[[i, c]] = result[[i, c]] / F::from(counts[c]).unwrap();
                         }
                     }
                 }
@@ -346,8 +341,8 @@ mod tests {
         Array2::from_shape_vec(
             (5, 6),
             vec![
-                1.0, 1.1, 5.0, 5.1, 9.0, 9.1, 2.0, 2.1, 6.0, 6.1, 8.0, 8.1, 3.0, 3.1, 7.0,
-                7.1, 7.0, 7.1, 4.0, 4.1, 8.0, 8.1, 6.0, 6.1, 5.0, 5.1, 9.0, 9.1, 5.0, 5.1,
+                1.0, 1.1, 5.0, 5.1, 9.0, 9.1, 2.0, 2.1, 6.0, 6.1, 8.0, 8.1, 3.0, 3.1, 7.0, 7.1,
+                7.0, 7.1, 4.0, 4.1, 8.0, 8.1, 6.0, 6.1, 5.0, 5.1, 9.0, 9.1, 5.0, 5.1,
             ],
         )
         .unwrap()
@@ -391,16 +386,12 @@ mod tests {
             (5, 4),
             vec![
                 // feat 0  feat 1  feat 2   feat 3
-                1.0, 1.001, 100.0, 100.001,
-                2.0, 2.001, 90.0, 90.001,
-                3.0, 3.001, 80.0, 80.001,
-                4.0, 4.001, 70.0, 70.001,
-                5.0, 5.001, 60.0, 60.001,
+                1.0, 1.001, 100.0, 100.001, 2.0, 2.001, 90.0, 90.001, 3.0, 3.001, 80.0, 80.001, 4.0,
+                4.001, 70.0, 70.001, 5.0, 5.001, 60.0, 60.001,
             ],
         )
         .unwrap();
-        let fa = FeatureAgglomeration::<f64>::new(2)
-            .with_linkage(AgglomerativeLinkage::Single);
+        let fa = FeatureAgglomeration::<f64>::new(2).with_linkage(AgglomerativeLinkage::Single);
         let fitted = fa.fit(&x, &()).unwrap();
         let labels = fitted.feature_labels();
         // Features 0 and 1 are nearly identical, should be in the same cluster.
@@ -414,11 +405,7 @@ mod tests {
     #[test]
     fn test_feature_agglom_mean_pooling() {
         // Simple case: two features that should be grouped.
-        let x = Array2::from_shape_vec(
-            (3, 2),
-            vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((3, 2), vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0]).unwrap();
         let fa = FeatureAgglomeration::<f64>::new(1);
         let fitted = fa.fit(&x, &()).unwrap();
         let reduced = fitted.transform(&x).unwrap();
@@ -431,11 +418,7 @@ mod tests {
 
     #[test]
     fn test_feature_agglom_max_pooling() {
-        let x = Array2::from_shape_vec(
-            (3, 2),
-            vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((3, 2), vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0]).unwrap();
         let fa = FeatureAgglomeration::<f64>::new(1).with_pooling_func(PoolingFunc::Max);
         let fitted = fa.fit(&x, &()).unwrap();
         let reduced = fitted.transform(&x).unwrap();
@@ -449,8 +432,7 @@ mod tests {
     #[test]
     fn test_feature_agglom_complete_linkage() {
         let x = make_correlated_features();
-        let fa = FeatureAgglomeration::<f64>::new(3)
-            .with_linkage(AgglomerativeLinkage::Complete);
+        let fa = FeatureAgglomeration::<f64>::new(3).with_linkage(AgglomerativeLinkage::Complete);
         let fitted = fa.fit(&x, &()).unwrap();
         let reduced = fitted.transform(&x).unwrap();
         assert_eq!(reduced.ncols(), 3);
@@ -459,8 +441,7 @@ mod tests {
     #[test]
     fn test_feature_agglom_average_linkage() {
         let x = make_correlated_features();
-        let fa = FeatureAgglomeration::<f64>::new(3)
-            .with_linkage(AgglomerativeLinkage::Average);
+        let fa = FeatureAgglomeration::<f64>::new(3).with_linkage(AgglomerativeLinkage::Average);
         let fitted = fa.fit(&x, &()).unwrap();
         let reduced = fitted.transform(&x).unwrap();
         assert_eq!(reduced.ncols(), 3);
@@ -469,8 +450,7 @@ mod tests {
     #[test]
     fn test_feature_agglom_single_linkage() {
         let x = make_correlated_features();
-        let fa = FeatureAgglomeration::<f64>::new(3)
-            .with_linkage(AgglomerativeLinkage::Single);
+        let fa = FeatureAgglomeration::<f64>::new(3).with_linkage(AgglomerativeLinkage::Single);
         let fitted = fa.fit(&x, &()).unwrap();
         let reduced = fitted.transform(&x).unwrap();
         assert_eq!(reduced.ncols(), 3);
@@ -512,8 +492,8 @@ mod tests {
         let x = make_correlated_features();
         let fa = FeatureAgglomeration::<f64>::new(3);
         let fitted = fa.fit(&x, &()).unwrap();
-        let x_bad = Array2::from_shape_vec((2, 4), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
-            .unwrap();
+        let x_bad =
+            Array2::from_shape_vec((2, 4), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         assert!(fitted.transform(&x_bad).is_err());
     }
 
@@ -522,8 +502,7 @@ mod tests {
         let x = Array2::<f32>::from_shape_vec(
             (4, 4),
             vec![
-                1.0, 1.1, 5.0, 5.1, 2.0, 2.1, 6.0, 6.1, 3.0, 3.1, 7.0, 7.1, 4.0, 4.1, 8.0,
-                8.1,
+                1.0, 1.1, 5.0, 5.1, 2.0, 2.1, 6.0, 6.1, 3.0, 3.1, 7.0, 7.1, 4.0, 4.1, 8.0, 8.1,
             ],
         )
         .unwrap();

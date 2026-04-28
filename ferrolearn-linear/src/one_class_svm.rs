@@ -130,8 +130,8 @@ pub struct FittedOneClassSVM<F, K> {
     rho: F,
 }
 
-impl<F: Float + Send + Sync + ScalarOperand + 'static, K: Kernel<F> + 'static>
-    Fit<Array2<F>, ()> for OneClassSVM<F, K>
+impl<F: Float + Send + Sync + ScalarOperand + 'static, K: Kernel<F> + 'static> Fit<Array2<F>, ()>
+    for OneClassSVM<F, K>
 {
     type Fitted = FittedOneClassSVM<F, K>;
     type Error = FerroError;
@@ -142,11 +142,7 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static, K: Kernel<F> + 'static>
     ///
     /// - [`FerroError::InvalidParameter`] if `nu` is not in `(0, 1]`.
     /// - [`FerroError::InsufficientSamples`] if no training data is provided.
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        _y: &(),
-    ) -> Result<FittedOneClassSVM<F, K>, FerroError> {
+    fn fit(&self, x: &Array2<F>, _y: &()) -> Result<FittedOneClassSVM<F, K>, FerroError> {
         if self.nu <= F::zero() || self.nu > F::one() {
             return Err(FerroError::InvalidParameter {
                 name: "nu".into(),
@@ -389,8 +385,7 @@ mod tests {
         Array2::from_shape_vec(
             (8, 2),
             vec![
-                1.0, 1.0, 1.1, 1.0, 1.0, 1.1, 1.1, 1.1,
-                0.9, 0.9, 1.0, 0.9, 0.9, 1.0, 1.05, 1.05,
+                1.0, 1.0, 1.1, 1.0, 1.0, 1.1, 1.1, 1.1, 0.9, 0.9, 1.0, 0.9, 0.9, 1.0, 1.05, 1.05,
             ],
         )
         .unwrap()
@@ -413,10 +408,7 @@ mod tests {
 
         // Most training points should be classified as inliers.
         let inliers: usize = preds.iter().filter(|&&p| p == 1).count();
-        assert!(
-            inliers >= 6,
-            "Expected at least 6 inliers, got {inliers}"
-        );
+        assert!(inliers >= 6, "Expected at least 6 inliers, got {inliers}");
     }
 
     #[test]
@@ -424,8 +416,8 @@ mod tests {
         let x_train = Array2::from_shape_vec(
             (8, 2),
             vec![
-                0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 0.1, 0.1,
-                -0.1, 0.0, 0.0, -0.1, 0.05, 0.05, -0.05, -0.05,
+                0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 0.1, 0.1, -0.1, 0.0, 0.0, -0.1, 0.05, 0.05, -0.05,
+                -0.05,
             ],
         )
         .unwrap();
@@ -450,7 +442,10 @@ mod tests {
 
         // Most decision values should be non-negative for training data.
         let positive: usize = df.iter().filter(|&&v| v >= 0.0).count();
-        assert!(positive >= 6, "Expected at least 6 positive df, got {positive}");
+        assert!(
+            positive >= 6,
+            "Expected at least 6 positive df, got {positive}"
+        );
     }
 
     #[test]

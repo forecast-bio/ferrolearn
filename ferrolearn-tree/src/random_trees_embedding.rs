@@ -376,8 +376,7 @@ fn build_random_tree<F: Float>(
     let n = indices.len();
 
     // Stop if: too few samples, or max depth reached.
-    let should_stop =
-        n < min_samples_split || max_depth.is_some_and(|d| depth >= d);
+    let should_stop = n < min_samples_split || max_depth.is_some_and(|d| depth >= d);
 
     if should_stop {
         let idx = nodes.len();

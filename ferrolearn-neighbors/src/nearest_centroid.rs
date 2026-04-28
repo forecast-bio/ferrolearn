@@ -180,12 +180,10 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Nearest
 
                 for j in 0..n_features {
                     let mean = centroids[[ci, j]];
-                    let var_sum = class_indices
-                        .iter()
-                        .fold(F::zero(), |acc, &i| {
-                            let d = x[[i, j]] - mean;
-                            acc + d * d
-                        });
+                    let var_sum = class_indices.iter().fold(F::zero(), |acc, &i| {
+                        let d = x[[i, j]] - mean;
+                        acc + d * d
+                    });
                     pooled_var[j] = pooled_var[j] + var_sum;
                 }
             }
@@ -203,9 +201,11 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Nearest
                 let class_indices: Vec<usize> = y
                     .iter()
                     .enumerate()
-                    .filter_map(|(i, &label)| {
-                        if label == classes[ci] { Some(i) } else { None }
-                    })
+                    .filter_map(
+                        |(i, &label)| {
+                            if label == classes[ci] { Some(i) } else { None }
+                        },
+                    )
                     .collect();
 
                 let n_c_f = F::from(class_indices.len()).unwrap();
@@ -311,8 +311,7 @@ mod tests {
         let x = Array2::from_shape_vec(
             (8, 2),
             vec![
-                0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.5,
-                5.0, 5.0, 5.5, 5.0, 5.0, 5.5, 5.5, 5.5,
+                0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.5, 5.0, 5.0, 5.5, 5.0, 5.0, 5.5, 5.5, 5.5,
             ],
         )
         .unwrap();
@@ -364,9 +363,8 @@ mod tests {
         let x = Array2::from_shape_vec(
             (9, 2),
             vec![
-                0.0, 0.0, 0.5, 0.0, 0.0, 0.5,
-                5.0, 0.0, 5.5, 0.0, 5.0, 0.5,
-                0.0, 5.0, 0.5, 5.0, 0.0, 5.5,
+                0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 5.0, 0.0, 5.5, 0.0, 5.0, 0.5, 0.0, 5.0, 0.5, 5.0,
+                0.0, 5.5,
             ],
         )
         .unwrap();
@@ -389,7 +387,10 @@ mod tests {
         let preds = fitted.predict(&x).unwrap();
 
         let correct: usize = preds.iter().zip(y.iter()).filter(|(p, a)| p == a).count();
-        assert!(correct >= 6, "Expected at least 6 correct with shrinkage, got {correct}");
+        assert!(
+            correct >= 6,
+            "Expected at least 6 correct with shrinkage, got {correct}"
+        );
     }
 
     #[test]
@@ -459,10 +460,7 @@ mod tests {
     fn test_nearest_centroid_noncontiguous_labels() {
         let x = Array2::from_shape_vec(
             (6, 2),
-            vec![
-                0.0, 0.0, 0.5, 0.0, 0.0, 0.5,
-                5.0, 5.0, 5.5, 5.0, 5.0, 5.5,
-            ],
+            vec![0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 5.0, 5.0, 5.5, 5.0, 5.0, 5.5],
         )
         .unwrap();
         let y = array![10usize, 10, 10, 20, 20, 20];

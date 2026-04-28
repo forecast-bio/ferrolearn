@@ -322,9 +322,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>>
     }
 }
 
-impl<F: Float + Send + Sync + 'static> Predict<Array2<F>>
-    for FittedRadiusNeighborsClassifier<F>
-{
+impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedRadiusNeighborsClassifier<F> {
     type Output = Array1<usize>;
     type Error = FerroError;
 
@@ -356,12 +354,8 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>>
 
         for i in 0..n_samples {
             let query: Vec<F> = (0..n_features).map(|j| x[[i, j]]).collect();
-            let neighbors = find_radius_neighbors(
-                &self.x_train,
-                &query,
-                self.radius,
-                &self.spatial_index,
-            );
+            let neighbors =
+                find_radius_neighbors(&self.x_train, &query, self.radius, &self.spatial_index);
 
             if neighbors.is_empty() {
                 match self.outlier_label {
@@ -465,14 +459,8 @@ struct FittedRadiusNeighborsClassifierPipeline<F: Float + Send + Sync + 'static>
     FittedRadiusNeighborsClassifier<F>,
 );
 
-unsafe impl<F: Float + Send + Sync + 'static> Send
-    for FittedRadiusNeighborsClassifierPipeline<F>
-{
-}
-unsafe impl<F: Float + Send + Sync + 'static> Sync
-    for FittedRadiusNeighborsClassifierPipeline<F>
-{
-}
+unsafe impl<F: Float + Send + Sync + 'static> Send for FittedRadiusNeighborsClassifierPipeline<F> {}
+unsafe impl<F: Float + Send + Sync + 'static> Sync for FittedRadiusNeighborsClassifierPipeline<F> {}
 
 impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipelineEstimator<F>
     for FittedRadiusNeighborsClassifierPipeline<F>
@@ -582,9 +570,7 @@ pub struct FittedRadiusNeighborsRegressor<F> {
     spatial_index: SpatialIndex,
 }
 
-impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>>
-    for RadiusNeighborsRegressor<F>
-{
+impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for RadiusNeighborsRegressor<F> {
     type Fitted = FittedRadiusNeighborsRegressor<F>;
     type Error = FerroError;
 
@@ -639,9 +625,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>>
     }
 }
 
-impl<F: Float + Send + Sync + 'static> Predict<Array2<F>>
-    for FittedRadiusNeighborsRegressor<F>
-{
+impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedRadiusNeighborsRegressor<F> {
     type Output = Array1<F>;
     type Error = FerroError;
 
@@ -673,12 +657,8 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>>
 
         for i in 0..n_samples {
             let query: Vec<F> = (0..n_features).map(|j| x[[i, j]]).collect();
-            let neighbors = find_radius_neighbors(
-                &self.x_train,
-                &query,
-                self.radius,
-                &self.spatial_index,
-            );
+            let neighbors =
+                find_radius_neighbors(&self.x_train, &query, self.radius, &self.spatial_index);
 
             if neighbors.is_empty() {
                 return Err(FerroError::InvalidParameter {
@@ -753,14 +733,8 @@ struct FittedRadiusNeighborsRegressorPipeline<F: Float + Send + Sync + 'static>(
     FittedRadiusNeighborsRegressor<F>,
 );
 
-unsafe impl<F: Float + Send + Sync + 'static> Send
-    for FittedRadiusNeighborsRegressorPipeline<F>
-{
-}
-unsafe impl<F: Float + Send + Sync + 'static> Sync
-    for FittedRadiusNeighborsRegressorPipeline<F>
-{
-}
+unsafe impl<F: Float + Send + Sync + 'static> Send for FittedRadiusNeighborsRegressorPipeline<F> {}
+unsafe impl<F: Float + Send + Sync + 'static> Sync for FittedRadiusNeighborsRegressorPipeline<F> {}
 
 impl<F: Float + Send + Sync + 'static> FittedPipelineEstimator<F>
     for FittedRadiusNeighborsRegressorPipeline<F>
@@ -785,10 +759,7 @@ mod tests {
     fn clf_train_data() -> (Array2<f64>, Array1<usize>) {
         let x = Array2::from_shape_vec(
             (6, 2),
-            vec![
-                0.0, 0.0, 0.5, 0.0, 0.0, 0.5,
-                5.0, 5.0, 5.5, 5.0, 5.0, 5.5,
-            ],
+            vec![0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 5.0, 5.0, 5.5, 5.0, 5.0, 5.5],
         )
         .unwrap();
         let y = array![0, 0, 0, 1, 1, 1];
@@ -951,11 +922,8 @@ mod tests {
 
     #[test]
     fn test_classifier_f32() {
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0f32, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((4, 2), vec![0.0f32, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .unwrap();
         let y = array![0, 0, 1, 1];
 
         let clf = RadiusNeighborsClassifier::<f32>::new().with_radius(1.5);
@@ -1177,11 +1145,8 @@ mod tests {
     #[test]
     fn test_classifier_and_regressor_agree_on_neighbors() {
         // Verify that both find the same neighbors for a given radius.
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0],
-        )
-        .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
         let y_cls = array![0, 0, 0, 1];
         let y_reg = array![0.0, 1.0, 2.0, 3.0];
 

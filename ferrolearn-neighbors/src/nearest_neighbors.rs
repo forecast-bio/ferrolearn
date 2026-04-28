@@ -198,11 +198,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for NearestNeighbors<F
     /// Returns [`FerroError::InvalidParameter`] if `n_neighbors` is zero.
     /// Returns [`FerroError::InsufficientSamples`] if there are fewer
     /// samples than `n_neighbors`.
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        _y: &(),
-    ) -> Result<FittedNearestNeighbors<F>, FerroError> {
+    fn fit(&self, x: &Array2<F>, _y: &()) -> Result<FittedNearestNeighbors<F>, FerroError> {
         let n_samples = x.nrows();
 
         if self.n_neighbors == 0 {
@@ -284,9 +280,7 @@ impl<F: Float + Send + Sync + 'static> FittedNearestNeighbors<F> {
         if k > n_train {
             return Err(FerroError::InvalidParameter {
                 name: "n_neighbors".into(),
-                reason: format!(
-                    "n_neighbors={k} exceeds number of training samples={n_train}"
-                ),
+                reason: format!("n_neighbors={k} exceeds number of training samples={n_train}"),
             });
         }
 
@@ -454,10 +448,7 @@ mod tests {
     fn sample_data() -> Array2<f64> {
         Array2::from_shape_vec(
             (6, 2),
-            vec![
-                0.0, 0.0, 1.0, 0.0, 0.0, 1.0,
-                5.0, 5.0, 6.0, 5.0, 5.0, 6.0,
-            ],
+            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0, 6.0, 5.0, 5.0, 6.0],
         )
         .unwrap()
     }
@@ -558,11 +549,8 @@ mod tests {
 
     #[test]
     fn test_radius_neighbors_basic() {
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0],
-        )
-        .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
 
         let nn = NearestNeighbors::<f64>::new().with_n_neighbors(1);
         let fitted = nn.fit(&x, &()).unwrap();
@@ -579,11 +567,7 @@ mod tests {
 
     #[test]
     fn test_radius_neighbors_empty() {
-        let x = Array2::from_shape_vec(
-            (2, 2),
-            vec![0.0, 0.0, 10.0, 10.0],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((2, 2), vec![0.0, 0.0, 10.0, 10.0]).unwrap();
 
         let nn = NearestNeighbors::<f64>::new().with_n_neighbors(1);
         let fitted = nn.fit(&x, &()).unwrap();
@@ -615,11 +599,7 @@ mod tests {
 
     #[test]
     fn test_radius_neighbors_sorted_by_distance() {
-        let x = Array2::from_shape_vec(
-            (4, 1),
-            vec![0.0, 1.0, 2.0, 3.0],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((4, 1), vec![0.0, 1.0, 2.0, 3.0]).unwrap();
 
         let nn = NearestNeighbors::<f64>::new().with_n_neighbors(1);
         let fitted = nn.fit(&x, &()).unwrap();
@@ -715,11 +695,8 @@ mod tests {
 
     #[test]
     fn test_radius_neighbors_brute_force() {
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0],
-        )
-        .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
 
         let nn = NearestNeighbors::<f64>::new()
             .with_n_neighbors(1)
@@ -736,11 +713,8 @@ mod tests {
 
     #[test]
     fn test_radius_neighbors_balltree() {
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0],
-        )
-        .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 5.0, 5.0]).unwrap();
 
         let nn = NearestNeighbors::<f64>::new()
             .with_n_neighbors(1)
@@ -787,11 +761,7 @@ mod tests {
 
     #[test]
     fn test_radius_zero() {
-        let x = Array2::from_shape_vec(
-            (3, 1),
-            vec![0.0, 1.0, 2.0],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 2.0]).unwrap();
 
         let nn = NearestNeighbors::<f64>::new().with_n_neighbors(1);
         let fitted = nn.fit(&x, &()).unwrap();

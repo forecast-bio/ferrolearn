@@ -77,7 +77,7 @@ pub mod umap;
 // Re-exports
 pub use covariance::{
     EllipticEnvelope, EmpiricalCovariance, FittedCovariance, FittedEllipticEnvelope,
-    FittedLedoitWolf, FittedMinCovDet, FittedOAS, LedoitWolf, MinCovDet, ShrunkCovariance, OAS,
+    FittedLedoitWolf, FittedMinCovDet, FittedOAS, LedoitWolf, MinCovDet, OAS, ShrunkCovariance,
 };
 pub use cross_decomposition::{
     CCA, FittedCCA, FittedPLSCanonical, FittedPLSRegression, FittedPLSSVD, PLSCanonical,

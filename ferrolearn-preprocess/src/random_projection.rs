@@ -89,11 +89,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for GaussianRandomProj
     ///
     /// Returns [`FerroError::InvalidParameter`] if `n_components == 0`.
     /// Returns [`FerroError::InsufficientSamples`] if `x` has zero rows.
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        _y: &(),
-    ) -> Result<FittedGaussianRandomProjection<F>, FerroError> {
+    fn fit(&self, x: &Array2<F>, _y: &()) -> Result<FittedGaussianRandomProjection<F>, FerroError> {
         if self.n_components == 0 {
             return Err(FerroError::InvalidParameter {
                 name: "n_components".into(),
@@ -126,9 +122,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for GaussianRandomProj
     }
 }
 
-impl<F: Float + Send + Sync + 'static> Transform<Array2<F>>
-    for FittedGaussianRandomProjection<F>
-{
+impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedGaussianRandomProjection<F> {
     type Output = Array2<F>;
     type Error = FerroError;
 
@@ -280,11 +274,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SparseRandomProjec
     /// Returns [`FerroError::InvalidParameter`] if `n_components == 0` or
     /// `density` is not in `(0, 1]`.
     /// Returns [`FerroError::InsufficientSamples`] if `x` has zero rows.
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        _y: &(),
-    ) -> Result<FittedSparseRandomProjection<F>, FerroError> {
+    fn fit(&self, x: &Array2<F>, _y: &()) -> Result<FittedSparseRandomProjection<F>, FerroError> {
         if self.n_components == 0 {
             return Err(FerroError::InvalidParameter {
                 name: "n_components".into(),
@@ -334,9 +324,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SparseRandomProjec
     }
 }
 
-impl<F: Float + Send + Sync + 'static> Transform<Array2<F>>
-    for FittedSparseRandomProjection<F>
-{
+impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedSparseRandomProjection<F> {
     type Output = Array2<F>;
     type Error = FerroError;
 
@@ -506,7 +494,10 @@ mod tests {
         let total = r.len();
         let zeros = r.iter().filter(|&&v| v == 0.0).count();
         let sparsity = zeros as f64 / total as f64;
-        assert!(sparsity > 0.5, "expected sparse matrix, got sparsity={sparsity}");
+        assert!(
+            sparsity > 0.5,
+            "expected sparse matrix, got sparsity={sparsity}"
+        );
     }
 
     #[test]

@@ -98,12 +98,12 @@ pub use agglomerative::{AgglomerativeClustering, FittedAgglomerativeClustering, 
 pub use bayesian_gmm::{
     BayesianCovType, BayesianGaussianMixture, FittedBayesianGaussianMixture, WeightPriorType,
 };
+pub use birch::{Birch, FittedBirch};
+pub use bisecting_kmeans::{BisectingKMeans, BisectingStrategy, FittedBisectingKMeans};
+pub use dbscan::{DBSCAN, FittedDBSCAN};
 pub use feature_agglomeration::{
     AgglomerativeLinkage, FeatureAgglomeration, FittedFeatureAgglomeration, PoolingFunc,
 };
-pub use bisecting_kmeans::{BisectingKMeans, BisectingStrategy, FittedBisectingKMeans};
-pub use birch::{Birch, FittedBirch};
-pub use dbscan::{DBSCAN, FittedDBSCAN};
 pub use gmm::{CovarianceType, FittedGaussianMixture, GaussianMixture};
 pub use hdbscan::{FittedHdbscan, Hdbscan};
 pub use kmeans::{FittedKMeans, KMeans};

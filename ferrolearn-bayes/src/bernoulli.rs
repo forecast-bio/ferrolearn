@@ -262,11 +262,7 @@ impl<F: Float + Send + Sync + 'static> FittedBernoulliNB<F> {
     ///
     /// - [`FerroError::ShapeMismatch`] if `x` and `y` have different row counts
     ///   or the number of features does not match the fitted model.
-    pub fn partial_fit(
-        &mut self,
-        x: &Array2<F>,
-        y: &Array1<usize>,
-    ) -> Result<(), FerroError> {
+    pub fn partial_fit(&mut self, x: &Array2<F>, y: &Array1<usize>) -> Result<(), FerroError> {
         let (n_samples, n_features) = x.dim();
 
         if n_samples == 0 {
@@ -323,8 +319,7 @@ impl<F: Float + Send + Sync + 'static> FittedBernoulliNB<F> {
         for ci in 0..n_classes {
             let n_c_f = F::from(self.class_counts[ci]).unwrap();
             for j in 0..n_features {
-                let p =
-                    (self.feature_counts[[ci, j]] + self.alpha) / (n_c_f + two * self.alpha);
+                let p = (self.feature_counts[[ci, j]] + self.alpha) / (n_c_f + two * self.alpha);
                 self.log_prob[[ci, j]] = p.ln();
                 self.log_neg_prob[[ci, j]] = (F::one() - p).ln();
             }
@@ -666,11 +661,7 @@ mod tests {
         let model = BernoulliNB::<f64>::new();
         let mut fitted = model.fit(&x1, &y1).unwrap();
 
-        let x2 = Array2::from_shape_vec(
-            (2, 3),
-            vec![1.0, 1.0, 0.0, 0.0, 0.0, 1.0],
-        )
-        .unwrap();
+        let x2 = Array2::from_shape_vec((2, 3), vec![1.0, 1.0, 0.0, 0.0, 0.0, 1.0]).unwrap();
         let y2 = array![0usize, 1];
 
         fitted.partial_fit(&x2, &y2).unwrap();

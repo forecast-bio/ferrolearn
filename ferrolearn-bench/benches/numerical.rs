@@ -1,12 +1,12 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use ndarray::{array, Array1};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use ndarray::{Array1, array};
 use sprs::{CsMat, TriMat};
 
 use ferrolearn_numerical::distributions::{ChiSquared, ContinuousDistribution, Normal};
 use ferrolearn_numerical::integrate::{gauss_legendre, quad};
 use ferrolearn_numerical::interpolate::{BoundaryCondition, CubicSpline};
 use ferrolearn_numerical::optimize::TrustRegionNCG;
-use ferrolearn_numerical::sparse_eig::{eigsh, WhichEigenvalues};
+use ferrolearn_numerical::sparse_eig::{WhichEigenvalues, eigsh};
 use ferrolearn_numerical::sparse_graph::{
     connected_components, dijkstra, dijkstra_all_pairs, minimum_spanning_tree,
 };
@@ -68,14 +68,7 @@ fn sparse_eig_benchmarks(c: &mut Criterion) {
 
     // 1000x1000 tridiagonal, k=10, LargestAlgebraic
     group.bench_function("eigsh_1000_la", |b| {
-        b.iter(|| {
-            eigsh(
-                black_box(&mat_1000),
-                10,
-                WhichEigenvalues::LargestAlgebraic,
-            )
-            .unwrap()
-        });
+        b.iter(|| eigsh(black_box(&mat_1000), 10, WhichEigenvalues::LargestAlgebraic).unwrap());
     });
 
     // 5000x5000 tridiagonal, k=10, SmallestAlgebraic
@@ -131,7 +124,9 @@ fn sparse_graph_benchmarks(c: &mut Criterion) {
 fn distribution_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("distributions");
     let n = 100_000;
-    let xs: Vec<f64> = (0..n).map(|i| -3.0 + 6.0 * (i as f64) / (n as f64 - 1.0)).collect();
+    let xs: Vec<f64> = (0..n)
+        .map(|i| -3.0 + 6.0 * (i as f64) / (n as f64 - 1.0))
+        .collect();
 
     let normal = Normal::new(0.0, 1.0).unwrap();
     group.bench_function("normal_pdf_100k", |b| {
@@ -156,7 +151,9 @@ fn distribution_benchmarks(c: &mut Criterion) {
 
     let chi2 = ChiSquared::new(5.0).unwrap();
     // Chi-squared CDF only meaningful for x >= 0; use linspace 0..20
-    let chi2_xs: Vec<f64> = (0..n).map(|i| 20.0 * (i as f64) / (n as f64 - 1.0)).collect();
+    let chi2_xs: Vec<f64> = (0..n)
+        .map(|i| 20.0 * (i as f64) / (n as f64 - 1.0))
+        .collect();
     group.bench_function("chi2_cdf_100k", |b| {
         b.iter(|| {
             let mut sum = 0.0;
@@ -297,14 +294,7 @@ fn quadrature_benchmarks(c: &mut Criterion) {
 
     // Adaptive Simpson: integral of sin(x) from 0 to pi = 2
     group.bench_function("quad_sin", |b| {
-        b.iter(|| {
-            black_box(quad(
-                |x| x.sin(),
-                0.0,
-                std::f64::consts::PI,
-                1e-10,
-            ))
-        });
+        b.iter(|| black_box(quad(|x| x.sin(), 0.0, std::f64::consts::PI, 1e-10)));
     });
 
     // Adaptive Simpson: integral of exp(-x^2) from -5 to 5 ~ sqrt(pi)
@@ -314,11 +304,7 @@ fn quadrature_benchmarks(c: &mut Criterion) {
 
     // Gauss-Legendre 10-point on sin integral
     group.bench_function("gauss_legendre_10_sin", |b| {
-        b.iter(|| {
-            black_box(
-                gauss_legendre(|x| x.sin(), 0.0, std::f64::consts::PI, 10).unwrap(),
-            )
-        });
+        b.iter(|| black_box(gauss_legendre(|x| x.sin(), 0.0, std::f64::consts::PI, 10).unwrap()));
     });
 
     group.finish();

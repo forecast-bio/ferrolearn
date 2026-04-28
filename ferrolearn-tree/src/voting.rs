@@ -414,11 +414,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for VotingRegre
     /// numbers of samples.
     /// Returns [`FerroError::InsufficientSamples`] if there are no samples.
     /// Returns [`FerroError::InvalidParameter`] if configuration is invalid.
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        y: &Array1<F>,
-    ) -> Result<FittedVotingRegressor<F>, FerroError> {
+    fn fit(&self, x: &Array2<F>, y: &Array1<F>) -> Result<FittedVotingRegressor<F>, FerroError> {
         let n_samples = x.nrows();
 
         if n_samples != y.len() {
@@ -590,8 +586,7 @@ mod tests {
     #[test]
     fn test_voting_classifier_n_estimators() {
         let (x, y) = make_classification_data();
-        let model = VotingClassifier::<f64>::new()
-            .with_max_depths(vec![Some(2), Some(4), None]);
+        let model = VotingClassifier::<f64>::new().with_max_depths(vec![Some(2), Some(4), None]);
         let fitted = model.fit(&x, &y).unwrap();
         assert_eq!(fitted.n_estimators(), 3);
     }
@@ -686,8 +681,7 @@ mod tests {
     #[test]
     fn test_voting_regressor_n_estimators() {
         let (x, y) = make_regression_data();
-        let model = VotingRegressor::<f64>::new()
-            .with_max_depths(vec![Some(2), None]);
+        let model = VotingRegressor::<f64>::new().with_max_depths(vec![Some(2), None]);
         let fitted = model.fit(&x, &y).unwrap();
         assert_eq!(fitted.n_estimators(), 2);
     }

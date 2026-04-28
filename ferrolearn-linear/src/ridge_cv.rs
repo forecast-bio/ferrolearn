@@ -55,11 +55,7 @@ impl<F: Float + FromPrimitive> RidgeCV<F> {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            alphas: vec![
-                F::from(0.1).unwrap(),
-                F::one(),
-                F::from(10.0).unwrap(),
-            ],
+            alphas: vec![F::from(0.1).unwrap(), F::one(), F::from(10.0).unwrap()],
             cv: 5,
             fit_intercept: true,
         }
@@ -325,11 +321,7 @@ mod tests {
 
     #[test]
     fn test_ridge_cv_fit_selects_alpha() {
-        let x = Array2::from_shape_vec(
-            (20, 1),
-            (1..=20).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((20, 1), (1..=20).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((1..=20).map(|i| 2.0 * i as f64 + 1.0));
 
         let model = RidgeCV::<f64>::new()
@@ -344,11 +336,7 @@ mod tests {
 
     #[test]
     fn test_ridge_cv_predict() {
-        let x = Array2::from_shape_vec(
-            (10, 1),
-            (1..=10).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((10, 1), (1..=10).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((1..=10).map(|i| 2.0 * i as f64 + 1.0));
 
         let model = RidgeCV::<f64>::new().with_cv(3);
@@ -365,11 +353,7 @@ mod tests {
 
     #[test]
     fn test_ridge_cv_has_coefficients() {
-        let x = Array2::from_shape_vec(
-            (10, 2),
-            (0..20).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((0..10).map(|i| i as f64));
 
         let model = RidgeCV::<f64>::new().with_cv(3);
@@ -430,16 +414,10 @@ mod tests {
 
     #[test]
     fn test_ridge_cv_no_intercept() {
-        let x = Array2::from_shape_vec(
-            (10, 1),
-            (1..=10).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((10, 1), (1..=10).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((1..=10).map(|i| 2.0 * i as f64));
 
-        let model = RidgeCV::<f64>::new()
-            .with_cv(3)
-            .with_fit_intercept(false);
+        let model = RidgeCV::<f64>::new().with_cv(3).with_fit_intercept(false);
         let fitted = model.fit(&x, &y).unwrap();
 
         // With no intercept and origin-passing data, predictions should be close.
@@ -449,17 +427,10 @@ mod tests {
 
     #[test]
     fn test_ridge_cv_predict_feature_mismatch() {
-        let x_train = Array2::from_shape_vec(
-            (10, 2),
-            (0..20).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x_train = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((0..10).map(|i| i as f64));
 
-        let fitted = RidgeCV::<f64>::new()
-            .with_cv(3)
-            .fit(&x_train, &y)
-            .unwrap();
+        let fitted = RidgeCV::<f64>::new().with_cv(3).fit(&x_train, &y).unwrap();
 
         let x_bad = Array2::from_shape_vec((3, 1), vec![1.0, 2.0, 3.0]).unwrap();
         let result = fitted.predict(&x_bad);

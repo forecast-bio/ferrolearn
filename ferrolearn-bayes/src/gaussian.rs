@@ -243,11 +243,7 @@ impl<F: Float + Send + Sync + 'static> FittedGaussianNB<F> {
     ///
     /// - [`FerroError::ShapeMismatch`] if `x` and `y` have different row counts
     ///   or the number of features does not match the fitted model.
-    pub fn partial_fit(
-        &mut self,
-        x: &Array2<F>,
-        y: &Array1<usize>,
-    ) -> Result<(), FerroError> {
+    pub fn partial_fit(&mut self, x: &Array2<F>, y: &Array1<usize>) -> Result<(), FerroError> {
         let (n_samples, n_features) = x.dim();
 
         if n_samples == 0 {
@@ -375,7 +371,8 @@ impl<F: Float + Send + Sync + 'static> FittedGaussianNB<F> {
 
                 // Combined variance.
                 let delta = new_mean_batch - old_mean;
-                let combined_var = (old_count_f * old_var + new_count_f * new_var_batch
+                let combined_var = (old_count_f * old_var
+                    + new_count_f * new_var_batch
                     + old_count_f * new_count_f * delta * delta / total_f)
                     / total_f;
 
@@ -753,31 +750,21 @@ mod tests {
     #[test]
     fn test_gaussian_nb_partial_fit() {
         // Fit on first batch, then partial_fit on second batch.
-        let x1 = Array2::from_shape_vec(
-            (4, 2),
-            vec![1.0, 1.0, 1.2, 0.8, 5.0, 5.0, 5.1, 4.9],
-        )
-        .unwrap();
+        let x1 =
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.2, 0.8, 5.0, 5.0, 5.1, 4.9]).unwrap();
         let y1 = array![0usize, 0, 1, 1];
 
         let model = GaussianNB::<f64>::new();
         let mut fitted = model.fit(&x1, &y1).unwrap();
 
-        let x2 = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.9, 1.1, 1.1, 0.9, 4.8, 5.2, 5.0, 4.8],
-        )
-        .unwrap();
+        let x2 =
+            Array2::from_shape_vec((4, 2), vec![0.9, 1.1, 1.1, 0.9, 4.8, 5.2, 5.0, 4.8]).unwrap();
         let y2 = array![0usize, 0, 1, 1];
 
         fitted.partial_fit(&x2, &y2).unwrap();
 
         // Should still classify correctly after partial_fit.
-        let x_test = Array2::from_shape_vec(
-            (2, 2),
-            vec![1.0, 1.0, 5.0, 5.0],
-        )
-        .unwrap();
+        let x_test = Array2::from_shape_vec((2, 2), vec![1.0, 1.0, 5.0, 5.0]).unwrap();
         let preds = fitted.predict(&x_test).unwrap();
         assert_eq!(preds[0], 0);
         assert_eq!(preds[1], 1);

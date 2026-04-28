@@ -134,11 +134,7 @@ fn euclidean_dist<F: Float>(a: &[F], b: &[F]) -> F {
 
 /// Find k nearest neighbors (brute force), excluding self.
 /// Returns (neighbor_index, distance) sorted by distance.
-fn knn_brute_force<F: Float>(
-    data: &[Vec<F>],
-    query_idx: usize,
-    k: usize,
-) -> Vec<(usize, F)> {
+fn knn_brute_force<F: Float>(data: &[Vec<F>], query_idx: usize, k: usize) -> Vec<(usize, F)> {
     let mut dists: Vec<(usize, F)> = data
         .iter()
         .enumerate()
@@ -231,11 +227,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for LocalOutlierFactor
     /// - [`FerroError::InvalidParameter`] if `n_neighbors` is zero or
     ///   `contamination` is not in `(0, 0.5]`.
     /// - [`FerroError::InsufficientSamples`] if there are fewer than 2 samples.
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        _y: &(),
-    ) -> Result<FittedLocalOutlierFactor<F>, FerroError> {
+    fn fit(&self, x: &Array2<F>, _y: &()) -> Result<FittedLocalOutlierFactor<F>, FerroError> {
         let n_samples = x.nrows();
 
         if self.n_neighbors == 0 {
@@ -316,17 +308,14 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedLocalOutlier
         // Check if x is exactly the training data (by pointer comparison of shape).
         // This is a heuristic; for general case we recompute.
         let is_training = n_samples == n_train
-            && (0..n_samples).all(|i| {
-                (0..n_features).all(|j| x[[i, j]] == self.x_train[[i, j]])
-            });
+            && (0..n_samples).all(|i| (0..n_features).all(|j| x[[i, j]] == self.x_train[[i, j]]));
 
         let scores = if is_training {
             self.lof_scores.clone()
         } else {
             // Compute LOF for new data against training set.
-            let train_data: Vec<Vec<F>> = (0..n_train)
-                .map(|i| self.x_train.row(i).to_vec())
-                .collect();
+            let train_data: Vec<Vec<F>> =
+                (0..n_train).map(|i| self.x_train.row(i).to_vec()).collect();
 
             let effective_k = self.n_neighbors.min(n_train);
             let eps = F::from(1e-15).unwrap();
@@ -445,9 +434,8 @@ mod tests {
         Array2::from_shape_vec(
             (9, 2),
             vec![
-                0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 0.1, 0.1,
-                -0.1, 0.0, 0.0, -0.1, 0.05, 0.05, -0.05, -0.05,
-                10.0, 10.0, // outlier
+                0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 0.1, 0.1, -0.1, 0.0, 0.0, -0.1, 0.05, 0.05, -0.05,
+                -0.05, 10.0, 10.0, // outlier
             ],
         )
         .unwrap()
@@ -502,8 +490,8 @@ mod tests {
         let x_train = Array2::from_shape_vec(
             (8, 2),
             vec![
-                0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 0.1, 0.1,
-                -0.1, 0.0, 0.0, -0.1, 0.05, 0.05, -0.05, -0.05,
+                0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 0.1, 0.1, -0.1, 0.0, 0.0, -0.1, 0.05, 0.05, -0.05,
+                -0.05,
             ],
         )
         .unwrap();
@@ -521,11 +509,8 @@ mod tests {
 
     #[test]
     fn test_lof_shape_mismatch() {
-        let x_train = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0],
-        )
-        .unwrap();
+        let x_train =
+            Array2::from_shape_vec((4, 2), vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0]).unwrap();
 
         let model = LocalOutlierFactor::<f64>::new().with_n_neighbors(2);
         let fitted = model.fit(&x_train, &()).unwrap();
@@ -572,8 +557,7 @@ mod tests {
         let x = Array2::from_shape_vec(
             (6, 2),
             vec![
-                0.0, 0.0, 0.01, 0.0, 0.0, 0.01, 0.01, 0.01,
-                -0.01, 0.0, 0.0, -0.01,
+                0.0, 0.0, 0.01, 0.0, 0.0, 0.01, 0.01, 0.01, -0.01, 0.0, 0.0, -0.01,
             ],
         )
         .unwrap();

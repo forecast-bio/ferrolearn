@@ -460,16 +460,10 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_auto_alpha_grid() {
-        let x = Array2::from_shape_vec(
-            (20, 1),
-            (1..=20).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((20, 1), (1..=20).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((1..=20).map(|i| 2.0 * i as f64 + 1.0));
 
-        let model = LassoCV::<f64>::new()
-            .with_n_alphas(10)
-            .with_cv(3);
+        let model = LassoCV::<f64>::new().with_n_alphas(10).with_cv(3);
 
         let fitted = model.fit(&x, &y).unwrap();
 
@@ -480,31 +474,25 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_explicit_alphas() {
-        let x = Array2::from_shape_vec(
-            (20, 1),
-            (1..=20).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((20, 1), (1..=20).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((1..=20).map(|i| 2.0 * i as f64 + 1.0));
 
         let alphas = vec![0.001, 0.01, 0.1, 1.0, 10.0];
-        let model = LassoCV::<f64>::new()
-            .with_alphas(alphas.clone())
-            .with_cv(3);
+        let model = LassoCV::<f64>::new().with_alphas(alphas.clone()).with_cv(3);
 
         let fitted = model.fit(&x, &y).unwrap();
 
         // Best alpha must be one of the supplied candidates.
-        assert!(alphas.iter().any(|&a| (a - fitted.best_alpha()).abs() < 1e-12));
+        assert!(
+            alphas
+                .iter()
+                .any(|&a| (a - fitted.best_alpha()).abs() < 1e-12)
+        );
     }
 
     #[test]
     fn test_lasso_cv_predict() {
-        let x = Array2::from_shape_vec(
-            (10, 1),
-            (1..=10).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((10, 1), (1..=10).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((1..=10).map(|i| 2.0 * i as f64 + 1.0));
 
         let model = LassoCV::<f64>::new()
@@ -522,11 +510,7 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_has_coefficients() {
-        let x = Array2::from_shape_vec(
-            (10, 2),
-            (0..20).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((0..10).map(|i| i as f64));
 
         let model = LassoCV::<f64>::new()
@@ -589,11 +573,7 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_predict_feature_mismatch() {
-        let x_train = Array2::from_shape_vec(
-            (10, 2),
-            (0..20).map(|i| i as f64).collect(),
-        )
-        .unwrap();
+        let x_train = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
         let y = Array1::from_iter((0..10).map(|i| i as f64));
 
         let fitted = LassoCV::<f64>::new()

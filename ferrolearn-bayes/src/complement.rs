@@ -241,11 +241,7 @@ impl<F: Float + Send + Sync + 'static> FittedComplementNB<F> {
     /// - [`FerroError::ShapeMismatch`] if `x` and `y` have different row counts
     ///   or the number of features does not match the fitted model.
     /// - [`FerroError::InvalidParameter`] if any feature value is negative.
-    pub fn partial_fit(
-        &mut self,
-        x: &Array2<F>,
-        y: &Array1<usize>,
-    ) -> Result<(), FerroError> {
+    pub fn partial_fit(&mut self, x: &Array2<F>, y: &Array1<usize>) -> Result<(), FerroError> {
         let (n_samples, n_features) = x.dim();
 
         if n_samples == 0 {
@@ -317,8 +313,7 @@ impl<F: Float + Send + Sync + 'static> FittedComplementNB<F> {
             let complement_total = total_all - self.feature_counts.row(ci).sum();
             let denom = complement_total + self.alpha * n_feat_f;
             for j in 0..n_features {
-                let complement_count_j =
-                    total_feature_counts[j] - self.feature_counts[[ci, j]];
+                let complement_count_j = total_feature_counts[j] - self.feature_counts[[ci, j]];
                 self.weights[[ci, j]] = ((complement_count_j + self.alpha) / denom).ln();
             }
         }
@@ -619,11 +614,7 @@ mod tests {
         let model = ComplementNB::<f64>::new();
         let mut fitted = model.fit(&x1, &y1).unwrap();
 
-        let x2 = Array2::from_shape_vec(
-            (2, 3),
-            vec![6.0, 0.0, 1.0, 0.0, 2.0, 6.0],
-        )
-        .unwrap();
+        let x2 = Array2::from_shape_vec((2, 3), vec![6.0, 0.0, 1.0, 0.0, 2.0, 6.0]).unwrap();
         let y2 = array![0usize, 1];
 
         fitted.partial_fit(&x2, &y2).unwrap();

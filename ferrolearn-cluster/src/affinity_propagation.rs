@@ -418,8 +418,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for AffinityPropagatio
         if exemplar_indices.is_empty() {
             return Err(FerroError::ConvergenceFailure {
                 iterations: n_iter,
-                message: "no exemplars identified; try adjusting the preference or damping"
-                    .into(),
+                message: "no exemplars identified; try adjusting the preference or damping".into(),
             });
         }
 
@@ -475,8 +474,7 @@ mod tests {
             (8, 2),
             vec![
                 // Cluster A near (0, 0)
-                0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.5,
-                // Cluster B near (10, 10)
+                0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.5, // Cluster B near (10, 10)
                 10.0, 10.0, 10.5, 10.0, 10.0, 10.5, 10.5, 10.5,
             ],
         )
@@ -648,9 +646,8 @@ mod tests {
         let x = Array2::from_shape_vec(
             (9, 2),
             vec![
-                0.0, 0.0, 0.1, 0.0, 0.0, 0.1,
-                10.0, 10.0, 10.1, 10.0, 10.0, 10.1,
-                20.0, 0.0, 20.1, 0.0, 20.0, 0.1,
+                0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 10.0, 10.0, 10.1, 10.0, 10.0, 10.1, 20.0, 0.0, 20.1,
+                0.0, 20.0, 0.1,
             ],
         )
         .unwrap();

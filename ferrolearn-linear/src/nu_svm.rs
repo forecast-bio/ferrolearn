@@ -128,11 +128,7 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static, K: Kernel<F> + 'static>
     ///
     /// - [`FerroError::InvalidParameter`] if `nu` is not in `(0, 1]`.
     /// - All errors from [`SVC::fit`].
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        y: &Array1<usize>,
-    ) -> Result<FittedNuSVC<F, K>, FerroError> {
+    fn fit(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<FittedNuSVC<F, K>, FerroError> {
         if self.nu <= F::zero() || self.nu > F::one() {
             return Err(FerroError::InvalidParameter {
                 name: "nu".into(),
@@ -280,11 +276,7 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static, K: Kernel<F> + 'static>
     ///
     /// - [`FerroError::InvalidParameter`] if `nu` is not in `(0, 1]`.
     /// - All errors from [`SVR::fit`].
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        y: &Array1<F>,
-    ) -> Result<FittedNuSVR<F, K>, FerroError> {
+    fn fit(&self, x: &Array2<F>, y: &Array1<F>) -> Result<FittedNuSVR<F, K>, FerroError> {
         if self.nu <= F::zero() || self.nu > F::one() {
             return Err(FerroError::InvalidParameter {
                 name: "nu".into(),
@@ -376,8 +368,7 @@ mod tests {
         let x = Array2::from_shape_vec(
             (8, 2),
             vec![
-                1.0, 1.0, 1.5, 1.0, 1.0, 1.5, 1.5, 1.5,
-                5.0, 5.0, 5.5, 5.0, 5.0, 5.5, 5.5, 5.5,
+                1.0, 1.0, 1.5, 1.0, 1.0, 1.5, 1.5, 1.5, 5.0, 5.0, 5.5, 5.0, 5.0, 5.5, 5.5, 5.5,
             ],
         )
         .unwrap();
@@ -395,10 +386,7 @@ mod tests {
     fn test_nusvc_decision_function() {
         let x = Array2::from_shape_vec(
             (6, 2),
-            vec![
-                1.0, 1.0, 1.5, 1.0, 1.0, 1.5,
-                5.0, 5.0, 5.5, 5.0, 5.0, 5.5,
-            ],
+            vec![1.0, 1.0, 1.5, 1.0, 1.0, 1.5, 5.0, 5.0, 5.5, 5.0, 5.0, 5.5],
         )
         .unwrap();
         let y = array![0usize, 0, 0, 1, 1, 1];
@@ -431,10 +419,7 @@ mod tests {
     fn test_nusvc_nu_one() {
         let x = Array2::from_shape_vec(
             (6, 2),
-            vec![
-                1.0, 1.0, 1.5, 1.0, 1.0, 1.5,
-                5.0, 5.0, 5.5, 5.0, 5.0, 5.5,
-            ],
+            vec![1.0, 1.0, 1.5, 1.0, 1.0, 1.5, 5.0, 5.0, 5.5, 5.0, 5.0, 5.5],
         )
         .unwrap();
         let y = array![0usize, 0, 0, 1, 1, 1];

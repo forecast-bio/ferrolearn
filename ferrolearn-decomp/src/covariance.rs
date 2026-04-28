@@ -110,9 +110,7 @@ fn cholesky<F: Float>(a: &Array2<F>, d: usize) -> Result<Array2<F>, FerroError> 
             if i == j {
                 if s <= F::zero() {
                     return Err(FerroError::NumericalInstability {
-                        message: format!(
-                            "covariance not positive-definite at diagonal [{i},{i}]"
-                        ),
+                        message: format!("covariance not positive-definite at diagonal [{i},{i}]"),
                     });
                 }
                 l[[i, j]] = s.sqrt();
@@ -132,9 +130,7 @@ fn cholesky<F: Float>(a: &Array2<F>, d: usize) -> Result<Array2<F>, FerroError> 
 /// Compute the inverse of a symmetric positive-definite matrix via Cholesky.
 ///
 /// Given `A = L L^T`, computes `A^{-1} = L^{-T} L^{-1}`.
-fn spd_inverse<F: Float + Send + Sync + 'static>(
-    a: &Array2<F>,
-) -> Result<Array2<F>, FerroError> {
+fn spd_inverse<F: Float + Send + Sync + 'static>(a: &Array2<F>) -> Result<Array2<F>, FerroError> {
     let d = a.nrows();
     let l = cholesky(a, d)?;
 
@@ -1135,11 +1131,9 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for MinCovDet<F> {
                 let dists = mahalanobis_distances(x, &loc, &prec);
 
                 // Sort by distance and select the h closest.
-                let mut indices_dists: Vec<(usize, F)> =
-                    (0..n).map(|i| (i, dists[i])).collect();
-                indices_dists.sort_by(|a, b| {
-                    a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)
-                });
+                let mut indices_dists: Vec<(usize, F)> = (0..n).map(|i| (i, dists[i])).collect();
+                indices_dists
+                    .sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
                 let new_subset: Vec<usize> =
                     indices_dists.iter().take(h).map(|&(idx, _)| idx).collect();
@@ -1399,13 +1393,7 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedEllipticEnve
     /// Returns [`FerroError::ShapeMismatch`] if `x` has wrong number of columns.
     fn predict(&self, x: &Array2<F>) -> Result<Array1<i32>, FerroError> {
         let dists = self.mcd.mahalanobis(x)?;
-        Ok(dists.mapv(|d| {
-            if d * d > self.threshold_ {
-                -1
-            } else {
-                1
-            }
-        }))
+        Ok(dists.mapv(|d| if d * d > self.threshold_ { -1 } else { 1 }))
     }
 }
 
@@ -1424,12 +1412,7 @@ mod tests {
     #[test]
     fn test_empirical_covariance_basic() {
         let est = EmpiricalCovariance::<f64>::new();
-        let x = array![
-            [1.0, 2.0],
-            [3.0, 4.0],
-            [5.0, 6.0],
-            [7.0, 8.0],
-        ];
+        let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0],];
         let fitted = est.fit(&x, &()).unwrap();
         assert_eq!(fitted.covariance().dim(), (2, 2));
         assert_eq!(fitted.location().len(), 2);
@@ -1595,13 +1578,7 @@ mod tests {
     #[test]
     fn test_ledoit_wolf_basic() {
         let est = LedoitWolf::<f64>::new();
-        let x = array![
-            [1.0, 2.0],
-            [3.0, 4.0],
-            [5.0, 6.0],
-            [7.0, 8.0],
-            [2.0, 3.0],
-        ];
+        let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [2.0, 3.0],];
         let fitted = est.fit(&x, &()).unwrap();
         assert_eq!(fitted.covariance().dim(), (2, 2));
         assert!(fitted.shrinkage() >= 0.0);
@@ -1648,12 +1625,7 @@ mod tests {
     #[test]
     fn test_ledoit_wolf_mahalanobis() {
         let est = LedoitWolf::<f64>::new();
-        let x = array![
-            [1.0, 2.0],
-            [3.0, 4.0],
-            [5.0, 6.0],
-            [7.0, 8.0],
-        ];
+        let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0],];
         let fitted = est.fit(&x, &()).unwrap();
         let dists = fitted.mahalanobis(&x).unwrap();
         assert_eq!(dists.len(), 4);
@@ -1682,13 +1654,7 @@ mod tests {
     #[test]
     fn test_oas_basic() {
         let est = OAS::<f64>::new();
-        let x = array![
-            [1.0, 2.0],
-            [3.0, 4.0],
-            [5.0, 6.0],
-            [7.0, 8.0],
-            [2.0, 3.0],
-        ];
+        let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [2.0, 3.0],];
         let fitted = est.fit(&x, &()).unwrap();
         assert_eq!(fitted.covariance().dim(), (2, 2));
         assert!(fitted.shrinkage() >= 0.0);
@@ -1735,12 +1701,7 @@ mod tests {
     #[test]
     fn test_oas_mahalanobis() {
         let est = OAS::<f64>::new();
-        let x = array![
-            [1.0, 2.0],
-            [3.0, 4.0],
-            [5.0, 6.0],
-            [7.0, 8.0],
-        ];
+        let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0],];
         let fitted = est.fit(&x, &()).unwrap();
         let dists = fitted.mahalanobis(&x).unwrap();
         assert_eq!(dists.len(), 4);
@@ -1834,12 +1795,7 @@ mod tests {
     #[test]
     fn test_mincovdet_invalid_support_fraction() {
         let est = MinCovDet::<f64>::new().support_fraction(0.3);
-        let x = array![
-            [1.0, 2.0],
-            [3.0, 4.0],
-            [5.0, 6.0],
-            [7.0, 8.0],
-        ];
+        let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0],];
         assert!(est.fit(&x, &()).is_err());
     }
 
@@ -1955,12 +1911,7 @@ mod tests {
     #[test]
     fn test_elliptic_envelope_invalid_contamination() {
         let est = EllipticEnvelope::<f64>::new().contamination(0.0);
-        let x = array![
-            [1.0, 2.0],
-            [3.0, 4.0],
-            [5.0, 6.0],
-            [7.0, 8.0],
-        ];
+        let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0],];
         assert!(est.fit(&x, &()).is_err());
 
         let est2 = EllipticEnvelope::<f64>::new().contamination(0.5);
@@ -2031,12 +1982,7 @@ mod tests {
     #[test]
     fn test_empirical_covariance_f32() {
         let est = EmpiricalCovariance::<f32>::new();
-        let x: Array2<f32> = array![
-            [0.0f32, 0.0],
-            [2.0, 0.0],
-            [0.0, 2.0],
-            [2.0, 2.0],
-        ];
+        let x: Array2<f32> = array![[0.0f32, 0.0], [2.0, 0.0], [0.0, 2.0], [2.0, 2.0],];
         let fitted = est.fit(&x, &()).unwrap();
         assert_eq!(fitted.covariance().dim(), (2, 2));
     }
@@ -2044,12 +1990,7 @@ mod tests {
     #[test]
     fn test_shrunk_covariance_f32() {
         let est = ShrunkCovariance::<f32>::new(0.5);
-        let x: Array2<f32> = array![
-            [0.0f32, 0.0],
-            [2.0, 0.0],
-            [0.0, 2.0],
-            [2.0, 2.0],
-        ];
+        let x: Array2<f32> = array![[0.0f32, 0.0], [2.0, 0.0], [0.0, 2.0], [2.0, 2.0],];
         let fitted = est.fit(&x, &()).unwrap();
         assert_eq!(fitted.covariance().dim(), (2, 2));
     }
@@ -2057,12 +1998,7 @@ mod tests {
     #[test]
     fn test_ledoit_wolf_f32() {
         let est = LedoitWolf::<f32>::new();
-        let x: Array2<f32> = array![
-            [0.0f32, 0.0],
-            [2.0, 0.0],
-            [0.0, 2.0],
-            [2.0, 2.0],
-        ];
+        let x: Array2<f32> = array![[0.0f32, 0.0], [2.0, 0.0], [0.0, 2.0], [2.0, 2.0],];
         let fitted = est.fit(&x, &()).unwrap();
         assert_eq!(fitted.covariance().dim(), (2, 2));
     }
@@ -2070,12 +2006,7 @@ mod tests {
     #[test]
     fn test_oas_f32() {
         let est = OAS::<f32>::new();
-        let x: Array2<f32> = array![
-            [0.0f32, 0.0],
-            [2.0, 0.0],
-            [0.0, 2.0],
-            [2.0, 2.0],
-        ];
+        let x: Array2<f32> = array![[0.0f32, 0.0], [2.0, 0.0], [0.0, 2.0], [2.0, 2.0],];
         let fitted = est.fit(&x, &()).unwrap();
         assert_eq!(fitted.covariance().dim(), (2, 2));
     }

@@ -127,17 +127,12 @@ impl<F: Float + Send + Sync + 'static> TfidfTransformer<F> {
             let mut idf_vec = Array1::zeros(n_features);
             for j in 0..n_features {
                 // df = number of documents where feature j is non-zero
-                let df = counts
-                    .column(j)
-                    .iter()
-                    .filter(|&&v| v > F::zero())
-                    .count();
+                let df = counts.column(j).iter().filter(|&&v| v > F::zero()).count();
                 let df_f = F::from(df).unwrap();
 
                 if self.smooth_idf {
                     // idf = ln((1 + n) / (1 + df)) + 1
-                    idf_vec[j] =
-                        ((F::one() + n_f) / (F::one() + df_f)).ln() + F::one();
+                    idf_vec[j] = ((F::one() + n_f) / (F::one() + df_f)).ln() + F::one();
                 } else {
                     // idf = ln(n / df) + 1
                     if df > 0 {
@@ -220,13 +215,7 @@ impl<F: Float + Send + Sync + 'static> FittedTfidfTransformer<F> {
 
         // Sublinear TF: replace tf with 1 + ln(tf) for tf > 0.
         if self.sublinear_tf {
-            result.mapv_inplace(|v| {
-                if v > F::zero() {
-                    F::one() + v.ln()
-                } else {
-                    v
-                }
-            });
+            result.mapv_inplace(|v| if v > F::zero() { F::one() + v.ln() } else { v });
         }
 
         // Multiply by IDF.
@@ -281,11 +270,7 @@ mod tests {
     #[test]
     fn test_tfidf_basic() {
         // 3 docs, 3 features
-        let counts = array![
-            [1.0_f64, 1.0, 0.0],
-            [1.0, 0.0, 1.0],
-            [1.0, 0.0, 0.0],
-        ];
+        let counts = array![[1.0_f64, 1.0, 0.0], [1.0, 0.0, 1.0], [1.0, 0.0, 0.0],];
         let transformer = TfidfTransformer::<f64>::new();
         let fitted = transformer.fit(&counts).unwrap();
         let result = fitted.transform(&counts).unwrap();

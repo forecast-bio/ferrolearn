@@ -81,7 +81,6 @@ pub use classification::{
     f1_score, log_loss, precision_recall_curve, precision_score, recall_score, roc_auc_score,
     roc_curve, top_k_accuracy_score,
 };
-pub use ranking::{dcg_score, ndcg_score};
 pub use clustering::{
     adjusted_mutual_info, adjusted_rand_score, davies_bouldin_score, silhouette_score,
 };
@@ -89,6 +88,7 @@ pub use pairwise::{
     Metric, chebyshev_distances, cosine_distances, euclidean_distances, manhattan_distances,
     pairwise_distances,
 };
+pub use ranking::{dcg_score, ndcg_score};
 pub use regression::{
     explained_variance_score, mean_absolute_error, mean_absolute_percentage_error,
     mean_squared_error, r2_score, root_mean_squared_error,

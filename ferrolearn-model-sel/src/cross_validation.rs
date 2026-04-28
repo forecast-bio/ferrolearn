@@ -809,10 +809,7 @@ pub fn permutation_test_score(
     }
 
     // p-value = fraction of permuted scores >= real score.
-    let n_ge = perm_scores
-        .iter()
-        .filter(|&&s| s >= real_score)
-        .count();
+    let n_ge = perm_scores.iter().filter(|&&s| s >= real_score).count();
     let p_value = (n_ge as f64 + 1.0) / (n_permutations as f64 + 1.0);
 
     Ok((real_score, perm_scores, p_value))

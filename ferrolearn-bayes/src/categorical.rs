@@ -139,11 +139,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Categor
     /// - [`FerroError::ShapeMismatch`] if `x` and `y` have different numbers of rows.
     /// - [`FerroError::InsufficientSamples`] if there are no samples.
     /// - [`FerroError::InvalidParameter`] if `alpha <= 0`.
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        y: &Array1<usize>,
-    ) -> Result<FittedCategoricalNB<F>, FerroError> {
+    fn fit(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<FittedCategoricalNB<F>, FerroError> {
         let (n_samples, n_features) = x.dim();
 
         if n_samples == 0 {
@@ -677,11 +673,8 @@ mod tests {
 
     #[test]
     fn test_categorical_nb_f32() {
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![0.0f32, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((4, 2), vec![0.0f32, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0])
+            .unwrap();
         let y = array![0usize, 0, 1, 1];
         let model = CategoricalNB::<f32>::new();
         let fitted = model.fit(&x, &y).unwrap();

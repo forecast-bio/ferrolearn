@@ -172,9 +172,7 @@ pub fn ndcg_score<F: Float + Send + Sync + 'static>(
 
     // Ideal DCG: sort y_true descending.
     let mut ideal_relevances: Vec<F> = y_true.iter().copied().collect();
-    ideal_relevances.sort_by(|a, b| {
-        b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal)
-    });
+    ideal_relevances.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
     let ideal_dcg = compute_dcg(&ideal_relevances, k);
 
     if ideal_dcg == F::zero() {

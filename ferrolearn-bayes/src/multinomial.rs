@@ -237,11 +237,7 @@ impl<F: Float + Send + Sync + 'static> FittedMultinomialNB<F> {
     /// - [`FerroError::ShapeMismatch`] if `x` and `y` have different row counts
     ///   or the number of features does not match the fitted model.
     /// - [`FerroError::InvalidParameter`] if any feature value is negative.
-    pub fn partial_fit(
-        &mut self,
-        x: &Array2<F>,
-        y: &Array1<usize>,
-    ) -> Result<(), FerroError> {
+    pub fn partial_fit(&mut self, x: &Array2<F>, y: &Array1<usize>) -> Result<(), FerroError> {
         let (n_samples, n_features) = x.dim();
 
         if n_samples == 0 {
@@ -604,11 +600,7 @@ mod tests {
         let model = MultinomialNB::<f64>::new();
         let mut fitted = model.fit(&x1, &y1).unwrap();
 
-        let x2 = Array2::from_shape_vec(
-            (2, 3),
-            vec![6.0, 0.0, 1.0, 0.0, 2.0, 6.0],
-        )
-        .unwrap();
+        let x2 = Array2::from_shape_vec((2, 3), vec![6.0, 0.0, 1.0, 0.0, 2.0, 6.0]).unwrap();
         let y2 = array![0usize, 1];
 
         fitted.partial_fit(&x2, &y2).unwrap();

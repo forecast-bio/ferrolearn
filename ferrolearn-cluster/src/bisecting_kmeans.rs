@@ -241,12 +241,8 @@ fn run_2means<F: Float>(
         }
     }
 
-    let mut center0: Vec<F> = (0..n_features)
-        .map(|j| x[[indices[idx0], j]])
-        .collect();
-    let mut center1: Vec<F> = (0..n_features)
-        .map(|j| x[[indices[idx1], j]])
-        .collect();
+    let mut center0: Vec<F> = (0..n_features).map(|j| x[[indices[idx0], j]]).collect();
+    let mut center1: Vec<F> = (0..n_features).map(|j| x[[indices[idx1], j]]).collect();
 
     let mut labels = vec![0usize; n];
 
@@ -308,11 +304,7 @@ fn run_2means<F: Float>(
     for (li, &sample_idx) in indices.iter().enumerate() {
         let row = x.row(sample_idx);
         let row_slice = row.as_slice().unwrap_or(&[]);
-        let center = if labels[li] == 0 {
-            &center0
-        } else {
-            &center1
-        };
+        let center = if labels[li] == 0 { &center0 } else { &center1 };
         total_sse = total_sse + squared_euclidean(row_slice, center);
     }
 
@@ -382,24 +374,22 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for BisectingKMeans<F>
         while clusters.len() < self.n_clusters {
             // Select cluster to bisect.
             let target_idx = match self.bisecting_strategy {
-                BisectingStrategy::LargestCluster => {
-                    clusters
-                        .iter()
-                        .enumerate()
-                        .filter(|(_, c)| c.indices.len() >= 2)
-                        .max_by_key(|(_, c)| c.indices.len())
-                        .map(|(i, _)| i)
-                }
-                BisectingStrategy::LargestSSE => {
-                    clusters
-                        .iter()
-                        .enumerate()
-                        .filter(|(_, c)| c.indices.len() >= 2)
-                        .max_by(|(_, a), (_, b)| {
-                            a.sse.partial_cmp(&b.sse).unwrap_or(std::cmp::Ordering::Equal)
-                        })
-                        .map(|(i, _)| i)
-                }
+                BisectingStrategy::LargestCluster => clusters
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, c)| c.indices.len() >= 2)
+                    .max_by_key(|(_, c)| c.indices.len())
+                    .map(|(i, _)| i),
+                BisectingStrategy::LargestSSE => clusters
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, c)| c.indices.len() >= 2)
+                    .max_by(|(_, a), (_, b)| {
+                        a.sse
+                            .partial_cmp(&b.sse)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    })
+                    .map(|(i, _)| i),
             };
 
             let target_idx = match target_idx {
@@ -422,8 +412,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for BisectingKMeans<F>
                     .wrapping_add(run as u64);
                 let mut rng = StdRng::seed_from_u64(seed);
 
-                let (labels, c0, c1, sse) =
-                    run_2means(x, target_indices, self.max_iter, &mut rng);
+                let (labels, c0, c1, sse) = run_2means(x, target_indices, self.max_iter, &mut rng);
 
                 if sse < best_sse {
                     best_sse = sse;
@@ -573,10 +562,8 @@ mod tests {
             (9, 2),
             vec![
                 // Cluster 0 near (0, 0)
-                0.0, 0.0, 0.1, 0.1, -0.1, 0.1,
-                // Cluster 1 near (10, 10)
-                10.0, 10.0, 10.1, 10.1, 9.9, 10.1,
-                // Cluster 2 near (0, 10)
+                0.0, 0.0, 0.1, 0.1, -0.1, 0.1, // Cluster 1 near (10, 10)
+                10.0, 10.0, 10.1, 10.1, 9.9, 10.1, // Cluster 2 near (0, 10)
                 0.0, 10.0, 0.1, 10.1, -0.1, 9.9,
             ],
         )
@@ -608,8 +595,8 @@ mod tests {
         let x = Array2::from_shape_vec(
             (8, 2),
             vec![
-                0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.5,
-                10.0, 10.0, 10.5, 10.0, 10.0, 10.5, 10.5, 10.5,
+                0.0, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.5, 10.0, 10.0, 10.5, 10.0, 10.0, 10.5, 10.5,
+                10.5,
             ],
         )
         .unwrap();
@@ -629,11 +616,8 @@ mod tests {
 
     #[test]
     fn test_single_cluster() {
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0],
-        )
-        .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 4.0, 4.0]).unwrap();
 
         let model = BisectingKMeans::<f64>::new(1).with_random_state(42);
         let fitted = model.fit(&x, &()).unwrap();
@@ -663,11 +647,8 @@ mod tests {
         let fitted = model.fit(&x, &()).unwrap();
 
         // New points near each cluster center.
-        let new_x = Array2::from_shape_vec(
-            (3, 2),
-            vec![0.05, 0.05, 10.05, 10.05, 0.05, 10.05],
-        )
-        .unwrap();
+        let new_x =
+            Array2::from_shape_vec((3, 2), vec![0.05, 0.05, 10.05, 10.05, 0.05, 10.05]).unwrap();
         let new_labels = fitted.predict(&new_x).unwrap();
 
         // Each new point should be in the same cluster as the nearby training points.
@@ -795,11 +776,8 @@ mod tests {
 
     #[test]
     fn test_identical_points() {
-        let x = Array2::from_shape_vec(
-            (4, 2),
-            vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        )
-        .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]).unwrap();
 
         // With identical points and k=1, should work fine.
         let model = BisectingKMeans::<f64>::new(1).with_random_state(42);
@@ -840,11 +818,7 @@ mod tests {
 
     #[test]
     fn test_k_equals_n_samples() {
-        let x = Array2::from_shape_vec(
-            (3, 2),
-            vec![0.0, 0.0, 5.0, 5.0, 10.0, 10.0],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((3, 2), vec![0.0, 0.0, 5.0, 5.0, 10.0, 10.0]).unwrap();
 
         let model = BisectingKMeans::<f64>::new(3).with_random_state(42);
         let fitted = model.fit(&x, &()).unwrap();

@@ -60,7 +60,7 @@ proptest! {
         let proba = fitted.predict_proba(&x).unwrap();
 
         for &val in proba.iter() {
-            prop_assert!(val >= 0.0 && val <= 1.0 + 1e-10,
+            prop_assert!((0.0..=1.0 + 1e-10).contains(&val),
                 "Probability {} outside [0, 1]", val);
         }
     }

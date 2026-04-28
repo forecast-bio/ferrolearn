@@ -300,8 +300,7 @@ fn compute_responsibilities<F: Float>(
                         let d = x[[i, j]] - means[[ki, j]];
                         sq = sq + d * d;
                     }
-                    sq / var
-                        + F::from(n_features).unwrap() * var.ln()
+                    sq / var + F::from(n_features).unwrap() * var.ln()
                 }
                 BayesianCovType::Diag => {
                     let mut sq = F::zero();
@@ -412,7 +411,11 @@ fn run_variational_em<F: Float + Send + Sync + 'static>(
         // Effective counts per component.
         let mut n_k = Array1::zeros(k);
         for ki in 0..k {
-            let sum: F = resp.column(ki).iter().copied().fold(F::zero(), |a, b| a + b);
+            let sum: F = resp
+                .column(ki)
+                .iter()
+                .copied()
+                .fold(F::zero(), |a, b| a + b);
             n_k[ki] = sum;
         }
 
@@ -442,8 +445,7 @@ fn run_variational_em<F: Float + Send + Sync + 'static>(
                         }
                         var = var + resp[[i, ki]] * sq;
                     }
-                    covariances[[ki, 0]] =
-                        var / (nk * F::from(n_features).unwrap()) + reg;
+                    covariances[[ki, 0]] = var / (nk * F::from(n_features).unwrap()) + reg;
                 }
             }
             BayesianCovType::Diag => {
@@ -473,8 +475,7 @@ fn run_variational_em<F: Float + Send + Sync + 'static>(
                             }
                             covariances[[offset + j1, j2]] = cov_val / nk;
                         }
-                        covariances[[offset + j1, j1]] =
-                            covariances[[offset + j1, j1]] + reg;
+                        covariances[[offset + j1, j1]] = covariances[[offset + j1, j1]] + reg;
                     }
                 }
 
@@ -485,8 +486,7 @@ fn run_variational_em<F: Float + Send + Sync + 'static>(
                         let offset = ki * n_features;
                         for j1 in 0..n_features {
                             for j2 in 0..n_features {
-                                avg[[j1, j2]] =
-                                    avg[[j1, j2]] + covariances[[offset + j1, j2]];
+                                avg[[j1, j2]] = avg[[j1, j2]] + covariances[[offset + j1, j2]];
                             }
                         }
                     }
@@ -515,8 +515,7 @@ fn run_variational_em<F: Float + Send + Sync + 'static>(
                 for ki in 0..k {
                     alpha[ki] = F::one() + n_k[ki];
                     // Add remaining mass for DP.
-                    let remaining: F =
-                        (ki + 1..k).fold(F::zero(), |acc, kj| acc + n_k[kj]);
+                    let remaining: F = (ki + 1..k).fold(F::zero(), |acc, kj| acc + n_k[kj]);
                     alpha[ki] = alpha[ki] + weight_concentration + remaining;
                 }
             }
@@ -590,11 +589,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for BayesianGaussianMi
     /// - [`FerroError::InvalidParameter`] if `n_components == 0`.
     /// - [`FerroError::InsufficientSamples`] if there are fewer samples
     ///   than components.
-    fn fit(
-        &self,
-        x: &Array2<F>,
-        _y: &(),
-    ) -> Result<FittedBayesianGaussianMixture<F>, FerroError> {
+    fn fit(&self, x: &Array2<F>, _y: &()) -> Result<FittedBayesianGaussianMixture<F>, FerroError> {
         let n_samples = x.nrows();
 
         if self.n_components == 0 {
@@ -734,7 +729,10 @@ mod tests {
         let fitted = model.fit(&x, &()).unwrap();
         let labels = fitted.predict(&x).unwrap();
         assert_eq!(labels.len(), 8);
-        assert_eq!(fitted.weight_prior_type(), WeightPriorType::DirichletDistribution);
+        assert_eq!(
+            fitted.weight_prior_type(),
+            WeightPriorType::DirichletDistribution
+        );
     }
 
     #[test]
@@ -842,7 +840,9 @@ mod tests {
     fn test_bayesian_gmm_f32() {
         let x = Array2::<f32>::from_shape_vec(
             (6, 2),
-            vec![0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 10.0, 10.0, 10.1, 10.0, 10.0, 10.1],
+            vec![
+                0.0, 0.0, 0.1, 0.0, 0.0, 0.1, 10.0, 10.0, 10.1, 10.0, 10.0, 10.1,
+            ],
         )
         .unwrap();
         let model = BayesianGaussianMixture::<f32>::new(2).with_random_state(0);

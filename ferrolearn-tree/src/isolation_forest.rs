@@ -304,8 +304,9 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for IsolationForest<F>
         let mut sorted_scores: Vec<f64> = train_scores.iter().copied().collect();
         sorted_scores.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
 
-        let contamination_idx =
-            ((self.contamination * n_samples as f64).ceil() as usize).max(1).min(n_samples);
+        let contamination_idx = ((self.contamination * n_samples as f64).ceil() as usize)
+            .max(1)
+            .min(n_samples);
         let threshold = if contamination_idx < sorted_scores.len() {
             sorted_scores[contamination_idx - 1]
         } else {
@@ -704,7 +705,9 @@ mod tests {
     fn test_f32() {
         let x = Array2::<f32>::from_shape_vec(
             (6, 2),
-            vec![1.0, 2.0, 2.0, 3.0, 3.0, 3.0, 5.0, 6.0, 6.0, 7.0, 100.0, 100.0],
+            vec![
+                1.0, 2.0, 2.0, 3.0, 3.0, 3.0, 5.0, 6.0, 6.0, 7.0, 100.0, 100.0,
+            ],
         )
         .unwrap();
         let model = IsolationForest::<f32>::new()
