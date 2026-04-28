@@ -1,0 +1,10 @@
+{
+  "uuid": "71b77073-40b4-4a89-a8e9-029076391aea",
+  "issue_uuid": "0afd1f3c-2a09-4ea7-95b2-4473d72bcad1",
+  "author": "doll-agent",
+  "content": "Plan: three logical commits + verify publishability.\n\n1. feat(bayes): add conjugate priors module — bumps ferrolearn-bayes to 0.2.1, adds src/conjugate.rs (Normal-Normal closed-form posterior with NormalNormalPosterior + posterior_normal_normal), proptest-regressions/conjugate.txt, exports pub mod conjugate in lib.rs, updates Cargo.toml description+keywords. Adds 0.2.1 release section to CHANGELOG. This unblocks the conjugate entry currently sitting in [Unreleased] from being shippable.\n\n2. style: cargo fmt + clippy auto-fixes — non-functional formatting collapses + lint auto-fixes across 40+ files in 8 crates (bayes, bench, cluster, decomp, linear, metrics, model-sel, neighbors, preprocess, tree). Net diff: -317 lines (762 removed, 445 added). No changelog entry — pure style.\n\n3. docs(changelog): retrofit batch 1-5 features — backfills the 17 already-shipped entries that batch 1-5 commits added without CHANGELOG updates.\n\nVerification: cargo build -p ferrolearn-bayes; cargo test -p ferrolearn-bayes; cargo publish -p ferrolearn-bayes --dry-run.\n\nSkipping config drift (.claude/, .crosslink/, .gitignore, .mcp.json) — agent infrastructure, not project code.",
+  "created_at": "2026-04-28T13:01:26.291063151Z",
+  "kind": "plan",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAPRdd6o7RQGDj4ZdwN7ML/1L51fuumt+cJwW0hNFGwxa79PHd86/Bjcyrl7Rma7OCI2H8W01GaFpVfb8Tr1enBg=="
+}
