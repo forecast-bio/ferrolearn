@@ -1,0 +1,10 @@
+{
+  "uuid": "0afd1f3c-2a09-4ea7-95b2-4473d72bcad1",
+  "display_id": 236,
+  "title": "Publish ferrolearn-bayes 0.2.1 (conjugate priors) + commit pending fmt/clippy/changelog cleanup",
+  "status": "open",
+  "priority": "high",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-28T13:01:09.820053607Z",
+  "updated_at": "2026-04-28T13:01:09.820053607Z"
+}
