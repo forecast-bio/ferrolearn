@@ -14,6 +14,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased] - 2026-03-14
 
 ### Added
+- Add RegressorChain for chained multi-target regression (#211)
+- Add r_regression Pearson correlation for regression (#101)
+- Add LassoLarsCV cross-validated LassoLars (#16)
+- Add LeaveOneGroupOut and LeavePGroupsOut splitters (#159)
+- Add AdditiveChi2Sampler for additive chi-squared kernel (#193)
+- Add GraphicalLasso and GraphicalLassoCV sparse precision matrix (#202)
+- Add StratifiedGroupKFold combined stratified+group split (#158)
+- Add GroupShuffleSplit group-aware shuffle split (#157)
+- Add PolynomialCountSketch for polynomial kernel (#195)
+- Add LassoLarsIC Lasso with AIC/BIC selection (#17)
+- Add PredefinedSplit for custom fold indices (#161)
+- Add ClassifierChain for chained multi-label classification (#210)
+- Add mutual_info_classif mutual information for classification (#99)
+- Add OutputCodeClassifier error-correcting output codes (#206)
+- Add mutual_info_regression mutual information for regression (#100)
+- Add SkewedChi2Sampler for skewed chi-squared kernel (#194)
+- Add LeavePOut exhaustive P-out cross-validation (#160)
 - Expand oracle test coverage to 59 tests across 11 crates (28 new fixtures, 28 new tests)
 - Add `brent_bounded` 1-D minimizer to ferrolearn-numerical (Brent's method with bounded interval)
 - Add oracle tests for MultinomialNB, BernoulliNB, ComplementNB
