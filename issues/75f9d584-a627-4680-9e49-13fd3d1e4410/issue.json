@@ -1,0 +1,12 @@
+{
+  "uuid": "75f9d584-a627-4680-9e49-13fd3d1e4410",
+  "display_id": 279,
+  "title": "Fix GMM bic()/aic() signatures and add to BayesianGaussianMixture",
+  "description": "Current FittedGaussianMixture::bic(n_samples) and aic(n_samples) take a sample count. sklearn signature is bic(X) / aic(X) — they consume the data so the per-sample log-likelihood can be re-computed.\n\nFix: change to take &Array2<F>, internally compute score(X) * n_samples then add the appropriate complexity penalty. Also add the same two methods to FittedBayesianGaussianMixture (current crate does not expose them at all).",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "af796161-926c-47ff-a352-377e02032a72",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T18:22:15.071637832Z",
+  "updated_at": "2026-04-29T18:22:15.071637832Z"
+}
