@@ -1,0 +1,12 @@
+{
+  "uuid": "cedef571-d386-4f7d-a2d0-3a10f99cbf34",
+  "display_id": 255,
+  "title": "Add fit_prior parameter to discrete Naive Bayes estimators (Multinomial, Bernoulli, Complement, Categorical)",
+  "description": "sklearn discrete NB classifiers have fit_prior: bool = True. When False, class priors are uniform (1/n_classes) instead of empirical class frequencies.\n\nferrolearn-bayes currently always learns priors from data unless with_class_prior() is set. Add with_fit_prior(bool) builder + Default true behavior. When fit_prior=False AND class_prior=None, use uniform priors.\n\nAffected: MultinomialNB, BernoulliNB, ComplementNB, CategoricalNB. (GaussianNB does not have fit_prior in sklearn.)",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "066c7e24-b41d-48a7-950a-ef16dd30e892",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:24:54.075651313Z",
+  "updated_at": "2026-04-29T16:24:54.075651313Z"
+}
