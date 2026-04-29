@@ -1,0 +1,10 @@
+{
+  "uuid": "057878ce-67af-4b3d-8795-fe82f04e4324",
+  "issue_uuid": "f5d86c48-0777-4c07-8178-e479ab422d37",
+  "author": "doll-agent",
+  "content": "Closing as duplicate of #1 (identical title, same date 2026-03-14, both empty descriptions). Keeping #1 as canonical.",
+  "created_at": "2026-04-29T12:26:59.966449842Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAptiUxpvWOUpRtsmMn8Jlua2dTF7ym1yR7CasIxjs7nRJwjW05KrU8eCUTLFQR4/WFt6SgC6O4zNaJ7aZYSqgDw=="
+}
