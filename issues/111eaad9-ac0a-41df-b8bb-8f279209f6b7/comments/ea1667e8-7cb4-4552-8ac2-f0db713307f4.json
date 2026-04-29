@@ -1,0 +1,10 @@
+{
+  "uuid": "ea1667e8-7cb4-4552-8ac2-f0db713307f4",
+  "issue_uuid": "111eaad9-ac0a-41df-b8bb-8f279209f6b7",
+  "author": "doll-agent",
+  "content": "Added pairwise_distances_argmin, pairwise_distances_argmin_min, pairwise_kernels (with PairwiseKernel enum: Linear, Polynomial, Rbf, Sigmoid, Laplacian) in pairwise.rs. All wired via lib.rs flat re-exports. Build clean.",
+  "created_at": "2026-04-29T20:30:47.822603089Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAWxpMcTgIP+iuGXm8a7/LeJkLJ9lgY48nVlvYet7xNy1HDYwBjLNBrSDbsqH3zhQUNDDXLPP/Whb8aKhX6li2Dw=="
+}
