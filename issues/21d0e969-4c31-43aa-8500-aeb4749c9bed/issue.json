@@ -2,12 +2,13 @@
   "uuid": "21d0e969-4c31-43aa-8500-aeb4749c9bed",
   "display_id": 327,
   "title": "neural: implement BernoulliRBM (Bernoulli-Bernoulli RBM with CD-1 training)",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "56b6b279-f4fa-45fc-9d46-ead108a3b292",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T21:08:34.328274015Z",
-  "updated_at": "2026-04-29T21:08:35.582662312Z",
+  "updated_at": "2026-04-29T21:21:33.111306713Z",
+  "closed_at": "2026-04-29T21:21:33.111306713Z",
   "labels": [
     "ferrolearn-neural"
   ]
