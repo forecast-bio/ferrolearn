@@ -3,10 +3,11 @@
   "display_id": 275,
   "title": "Add proof-of-API integration test for ferrolearn-tree",
   "description": "Final step of #243. tests/api_proof.rs exercising every public API of ferrolearn-tree end-to-end:\n- DecisionTreeClassifier / Regressor: every builder, fit, predict, predict_proba (cls), predict_log_proba (cls), score, feature_importances_\n- ExtraTreeClassifier / Regressor: same\n- RandomForestClassifier / Regressor: same plus parallel-fit smoke\n- ExtraTreesClassifier / Regressor: same\n- GradientBoostingClassifier / Regressor: same plus decision_function (cls)\n- HistGradientBoostingClassifier / Regressor: same plus decision_function (cls)\n- AdaBoostClassifier / AdaBoostRegressor: same plus decision_function (cls)\n- BaggingClassifier / Regressor (after wiring)\n- VotingClassifier / Regressor (both hard and soft voting)\n- IsolationForest: fit, predict, score_samples\n- RandomTreesEmbedding: fit, transform\n- All enum variants (ClassificationCriterion, RegressionCriterion, MaxFeatures, AdaBoostAlgorithm, AdaBoostLoss, etc.)\n\nDefer to existing issues: warm_start/oob (#53), sample_weight (#54), export_graphviz/text (#55), pruning ctor params (#48-52), Stacking (#41/#42), staged_* (filed above), apply/decision_path (filed above).",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T17:38:33.165021688Z",
-  "updated_at": "2026-04-29T17:38:33.165021688Z"
+  "updated_at": "2026-04-29T18:08:53.699628279Z",
+  "closed_at": "2026-04-29T18:08:53.699628279Z"
 }
