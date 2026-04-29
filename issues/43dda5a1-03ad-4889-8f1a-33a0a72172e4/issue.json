@@ -8,5 +8,8 @@
   "parent_uuid": "7eb7ab02-78ae-4381-bf5d-cc11173429c5",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T16:22:22.566846820Z",
-  "updated_at": "2026-04-29T16:22:22.566846820Z"
+  "updated_at": "2026-04-29T16:22:24.043269424Z",
+  "labels": [
+    "audit"
+  ]
 }
