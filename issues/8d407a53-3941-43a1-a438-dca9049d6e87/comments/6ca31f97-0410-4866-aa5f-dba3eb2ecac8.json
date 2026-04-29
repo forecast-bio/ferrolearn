@@ -1,0 +1,10 @@
+{
+  "uuid": "6ca31f97-0410-4866-aa5f-dba3eb2ecac8",
+  "issue_uuid": "8d407a53-3941-43a1-a438-dca9049d6e87",
+  "author": "doll-agent",
+  "content": "[action] Maintenance pass complete: closed dup #2, updated deps, fixed all 72 default clippy warnings, completed GPC log_marginal_likelihood feature using f_hat, removed stale dead_code allow tags, opened #239 for pedantic/nursery polish. 2930 tests passing.",
+  "created_at": "2026-04-29T12:42:20.300491845Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAiiCHEQdNEOjZzSIJF/94FUmJU54V5ia3ruwru39AgD/Pgfqj9UE/dNyScEgZhCrBLDy3+dZFCfQKpgX2s1AIAw=="
+}
