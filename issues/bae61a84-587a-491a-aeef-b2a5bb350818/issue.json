@@ -1,0 +1,12 @@
+{
+  "uuid": "bae61a84-587a-491a-aeef-b2a5bb350818",
+  "display_id": 261,
+  "title": "Add predict_proba to KNeighborsClassifier and RadiusNeighborsClassifier",
+  "description": "sklearn KNeighborsClassifier and RadiusNeighborsClassifier both expose predict_proba(X) returning class probabilities derived from the (weighted) neighbor vote. ferrolearn currently only has predict (returns argmax labels).\n\nImplementation: same neighbor-search path as predict, but normalize per-class weighted vote sums to sum to 1 per row. RadiusNeighborsClassifier needs to handle the 'no neighbors in radius' case (return uniform or NaN per sklearn's outlier_label policy).",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "43dda5a1-03ad-4889-8f1a-33a0a72172e4",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T17:10:03.832987670Z",
+  "updated_at": "2026-04-29T17:10:03.832987670Z"
+}
