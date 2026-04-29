@@ -1,0 +1,12 @@
+{
+  "uuid": "e86f0a46-908f-4428-a6ae-d777e1706688",
+  "display_id": 260,
+  "title": "Add proof-of-API integration test exercising every public ferrolearn-bayes estimator end-to-end",
+  "description": "Final step of #241 audit. Create tests/api_proof.rs that:\n\n1. For each of GaussianNB, MultinomialNB, BernoulliNB, ComplementNB, CategoricalNB:\n   - Build with new() and with all builder params (with_alpha, with_class_prior, with_fit_prior, with_force_alpha, etc.)\n   - fit() on a small synthetic dataset\n   - Call predict, predict_proba, predict_log_proba, predict_joint_log_proba, score\n   - Call partial_fit for a second mini-batch\n   - Assert shapes, class probability sums-to-one, and that score on training data is sensible\n2. For the conjugate module: exercise BetaBinomial, NormalNormal, etc. (whatever is exposed)\n\nThis file is the canonical 'every API surface compiles and runs' proof. Future PRs that change the public API must keep it green.",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "066c7e24-b41d-48a7-950a-ef16dd30e892",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:25:14.003447058Z",
+  "updated_at": "2026-04-29T16:25:14.003447058Z"
+}
