@@ -1,0 +1,10 @@
+{
+  "uuid": "503db515-65ce-4fdb-8994-e11996e50a04",
+  "issue_uuid": "81e3e592-d6c5-4870-ae6a-1b0c0afd8824",
+  "author": "doll-agent",
+  "content": "ferrolearn-metrics audit COMPLETE. Wired orphans (#302). Added 13 classification metrics (#303), 4 clustering metrics (#304), 3 pairwise items (#305). api_proof.rs (#309) covers all public API with 8 tests. Deferred: #306 (d2_* family), #307 (ranking edge cases coverage_error/label_ranking_*), #308 (scorer registry get_scorer/get_scorer_names + DistanceMetric trait). 197 metrics tests pass, full workspace builds clean, clippy clean, fmt clean.",
+  "created_at": "2026-04-29T20:30:54.177000075Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAbDVTWXDbpTwgPhSbTpMlR4sl2caVQwHHXqMi+gNtOiJZP5LJoHaQbQn4nTG6d1YeG81Ca3NrEC7vaD/A34e1BQ=="
+}
