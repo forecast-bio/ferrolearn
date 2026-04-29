@@ -1,0 +1,10 @@
+{
+  "uuid": "a7802c5c-a704-40a5-ae4f-6c112a2407ed",
+  "issue_uuid": "9df9e74d-4501-4707-b2c9-bae64eb5ad50",
+  "author": "doll-agent",
+  "content": "Utility crates audit COMPLETE. Added 7 dataset generators (#318), 4 sparse helpers (#319), api_proof tests for all 5 crates (#323). Deferred: #320 (file I/O loaders load_svmlight_file etc.), #321 (network fetch_* + cache management), #322 (scipy parity for special functions). 372+ tests pass across utility crates, workspace builds clean, clippy clean, fmt clean.",
+  "created_at": "2026-04-29T21:03:16.826407381Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABApdNejIOQkZT4yuA2qTUktzKTN+4Qu+TOam9jtwzqrOc81dBeXVeWSIoPtMk8KjVuhbEqKzkrfD88oVdJwJLZBQ=="
+}
