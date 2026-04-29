@@ -2,12 +2,13 @@
   "uuid": "823622ac-fbbb-44fa-884f-4f872f8d4127",
   "display_id": 319,
   "title": "sparse: add stack/eye/diags helpers (hstack, vstack, eye, diags, sparse_random)",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "9df9e74d-4501-4707-b2c9-bae64eb5ad50",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T20:50:29.369721367Z",
-  "updated_at": "2026-04-29T20:50:30.573824643Z",
+  "updated_at": "2026-04-29T21:03:25.767805641Z",
+  "closed_at": "2026-04-29T21:03:25.767805641Z",
   "labels": [
     "ferrolearn-sparse"
   ]
