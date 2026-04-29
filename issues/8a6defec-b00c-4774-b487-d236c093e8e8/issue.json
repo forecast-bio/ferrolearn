@@ -1,0 +1,12 @@
+{
+  "uuid": "8a6defec-b00c-4774-b487-d236c093e8e8",
+  "display_id": 271,
+  "title": "Add feature_importances_ accessor to every tree-based estimator",
+  "description": "Critical sklearn API. Returns Array1<F> of length n_features summing to 1.0, where each entry is the normalized total impurity decrease attributable to splits on that feature.\n\nFor single trees: walk every internal node, accumulate (n_samples_at_node / n_total_samples) * impurity_decrease into the splitting feature's bucket, then normalize.\n\nFor ensembles: average the feature_importances_ of all base estimators (RF, ExtraTrees, GB, HGB, Bagging) or weighted average (AdaBoost). VotingClassifier doesn't define one in sklearn — skip.\n\nAffected: every estimator except IsolationForest, RandomTreesEmbedding (no clear semantic).",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T17:38:15.312701451Z",
+  "updated_at": "2026-04-29T17:38:15.312701451Z"
+}
