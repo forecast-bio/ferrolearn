@@ -1,0 +1,11 @@
+{
+  "uuid": "2b4e4438-5773-4139-9b52-d5879f5ee287",
+  "display_id": 303,
+  "title": "metrics: add 13 missing classification metrics (hamming, zero_one, balanced_accuracy, matthews_corrcoef, cohen_kappa, jaccard, fbeta, brier_score, hinge, multilabel_confusion_matrix, precision_recall_fscore_support, classification_report, det_curve)",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "81e3e592-d6c5-4870-ae6a-1b0c0afd8824",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T20:21:39.582701278Z",
+  "updated_at": "2026-04-29T20:21:39.582701278Z"
+}
