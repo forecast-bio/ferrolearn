@@ -1,0 +1,10 @@
+{
+  "uuid": "bd817e13-33da-4099-94cd-90b5d55a9f13",
+  "issue_uuid": "78cd05d9-d25e-4e75-a009-cd2914d3d0ec",
+  "author": "doll-agent",
+  "content": "Added inverse_transform to FittedIncrementalPCA (X_reduced @ components + mean), FittedTruncatedSVD (X_reduced @ components, no mean), FittedNMF (W @ H), and FittedFactorAnalysis (Z @ components.T + mean — note ferrolearn FA stores components shape (n_features, n_components), transposed relative to sklearns layout). Skipped FittedKernelPCA (requires fit_inverse_transform=True flag with kernel ridge fit; deferred as a separate concern). All 410 tests pass.",
+  "created_at": "2026-04-29T19:44:59.490348968Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAr+80GkvGJ5fk6iNd+75pTYzwQcf2oylpEaV8ZM+I6V9yVp1XWVkkPPg+SKgVZT8Gn/gLGGe2Qyxo+H6EJM0ADA=="
+}
