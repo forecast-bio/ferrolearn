@@ -1,0 +1,10 @@
+{
+  "uuid": "fd4c6643-1e4c-484e-8166-1797e517bd38",
+  "issue_uuid": "2da1ac1f-0abe-4f47-a01c-fd966c32c10c",
+  "author": "doll-agent",
+  "content": "Added decision_function to FittedGradientBoostingClassifier (binary: cumulative log-odds, multiclass: per-class cumulative scores), FittedHistGradientBoostingClassifier (same), and FittedAdaBoostClassifier (SAMME: weighted vote sums; SAMME.R: accumulated h_k scores). Returns Array2<F> with shape (n_samples, 1) for binary and (n_samples, n_classes) for multiclass — slight divergence from sklearn (which returns (n_samples,) for binary), kept 2-D for type uniformity. Documented in each method's doc comment. All 343 tests pass.",
+  "created_at": "2026-04-29T18:03:48.864435532Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAbWyY68C5CkV/i5AGXK0WAIrbGyRSDnRcp3c65js53xefnPxOjvVKSemC2WyiQOfnhmpcJdPrF9z/rfRy5k5LCw=="
+}
