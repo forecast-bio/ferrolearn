@@ -1,0 +1,12 @@
+{
+  "uuid": "9daa00a7-2c01-48d3-9258-44776a1e8f4a",
+  "display_id": 249,
+  "title": "Audit ferrolearn-model-sel vs sklearn (model_selection + pipeline + compose + multiclass + multioutput + dummy + frozen + inspection + calibration): close gaps, add API proof tests",
+  "description": "Step 9 of 12 in sklearn parity audit (#240).\n\nCatch-all crate covering many small sklearn modules. Scope: sklearn.model_selection (CV splitters, search CV, learning_curve, validation_curve, cross_validate), sklearn.pipeline (Pipeline, FeatureUnion, make_pipeline, make_union), sklearn.compose (ColumnTransformer, TransformedTargetRegressor), sklearn.multiclass (OneVsRestClassifier, OneVsOneClassifier, OutputCodeClassifier), sklearn.multioutput (MultiOutputClassifier, MultiOutputRegressor, ClassifierChain, RegressorChain), sklearn.dummy (DummyClassifier, DummyRegressor), sklearn.frozen (FrozenEstimator), sklearn.inspection (partial_dependence, permutation_importance, PartialDependenceDisplay, DecisionBoundaryDisplay), sklearn.calibration (CalibratedClassifierCV, calibration_curve).\n\nRelated existing issues: #40-42 (Stacking), #170 (make_pipeline/union), #171 (FixedThresholdClassifier/TunedThresholdClassifierCV — overlap with linear), #216-220 (Dummy*, partial_dependence, permutation_importance), #221",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "7eb7ab02-78ae-4381-bf5d-cc11173429c5",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:23:02.222382253Z",
+  "updated_at": "2026-04-29T16:23:02.222382253Z"
+}
