@@ -1,0 +1,10 @@
+{
+  "uuid": "5c0abc94-9f2a-4119-b0f8-38d7f033456a",
+  "issue_uuid": "6f4da863-cabc-43e8-84a0-777685a22bf4",
+  "author": "doll-agent",
+  "content": "Added 5 d2_* metrics: d2_absolute_error_score (regression.rs, median baseline), d2_pinball_score (alpha-quantile baseline), d2_tweedie_score (Tweedie deviance with mean baseline), d2_brier_score (binary, prior baseline), d2_log_loss_score (multiclass, prior matrix baseline). All wired in lib.rs.",
+  "created_at": "2026-04-29T22:25:14.694475917Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAeaNTrgEffv9K2b2ZoP0586y4cAhf8WE0w8bv28hd7nbWNXW4hcwR8d+drp2Lazp+UDU8SLf00QfnVBzSmJ+PDw=="
+}
