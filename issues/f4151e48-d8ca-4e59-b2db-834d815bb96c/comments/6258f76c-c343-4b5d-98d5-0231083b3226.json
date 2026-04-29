@@ -1,0 +1,10 @@
+{
+  "uuid": "6258f76c-c343-4b5d-98d5-0231083b3226",
+  "issue_uuid": "f4151e48-d8ca-4e59-b2db-834d815bb96c",
+  "author": "doll-agent",
+  "content": "Added tests/api_proof.rs with 10 integration tests exercising every public API of ferrolearn-neighbors:\n- api_proof_kneighbors_classifier / kneighbors_regressor\n- api_proof_radius_neighbors_classifier / radius_neighbors_regressor\n- api_proof_nearest_neighbors (kneighbors, radius_neighbors, both graph methods, n_samples_fit, shape)\n- api_proof_nearest_centroid (fit, predict, score, centroids)\n- api_proof_local_outlier_factor (fit_predict, score_samples, decision_function, novelty)\n- api_proof_spatial_indices (KdTree::build/query, BallTree::build/query/within_radius)\n- api_proof_graph_free_functions (kneighbors_graph, radius_neighbors_graph, sort_graph_by_row_values)\n- api_proof_f32_compiles (smoke that all 7 estimators compile and run with f32)\nAll 10 tests pass. Final ferrolearn-neighbors test count: 160 (131 unit + 10 api_proof + 2 oracle + 3 proptest + 2 sklearn_equiv + 12 doctest).",
+  "created_at": "2026-04-29T17:29:42.357719631Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAh6zE4CjGUkD7qAbadX/xGiP1biT0NAGbc40mH7or9mDslYbZl1DtjDTd56NeL5ir1opat0voQgy+U60Ao/e5DA=="
+}
