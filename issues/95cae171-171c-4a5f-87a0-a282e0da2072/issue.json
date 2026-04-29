@@ -1,0 +1,12 @@
+{
+  "uuid": "95cae171-171c-4a5f-87a0-a282e0da2072",
+  "display_id": 273,
+  "title": "Add staged_predict / staged_predict_proba / staged_decision_function to boosting estimators",
+  "description": "sklearn's GradientBoosting, HistGradientBoosting, and AdaBoost expose staged_* methods that return an iterator over predictions after each successive estimator was added (n_estimators iterations total). Used for early-stopping diagnostics and learning-curve plots.\n\nImplementation: requires storing per-iteration model snapshots OR replaying the cumulative score build-up at predict time. The latter is cheaper memory-wise. Return Box<dyn Iterator<Item = Result<Array2<F>, FerroError>>> or Vec<Array2<F>>.\n\nLower priority — useful but not blocking.",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T17:38:22.941613414Z",
+  "updated_at": "2026-04-29T17:38:22.941613414Z"
+}
