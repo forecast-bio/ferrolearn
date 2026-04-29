@@ -1,0 +1,12 @@
+{
+  "uuid": "b01f85ab-20ba-4922-952b-15051610982d",
+  "display_id": 270,
+  "title": "Add predict_log_proba to all classifiers",
+  "description": "Trivial wrapper around predict_proba returning element-wise log. Add to every classifier with a predict_proba method. Match sklearn's API contract for ClassifierMixin.",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T17:38:10.694982252Z",
+  "updated_at": "2026-04-29T17:38:10.694982252Z"
+}
