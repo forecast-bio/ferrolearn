@@ -3,10 +3,11 @@
   "display_id": 263,
   "title": "Add kneighbors() and radius_neighbors() methods to supervised neighbors estimators",
   "description": "sklearn's NeighborsBase provides kneighbors(X, n_neighbors, return_distance) and radius_neighbors(X, radius, return_distance, sort_results) on EVERY KNN/Radius estimator (classifier, regressor, AND the unsupervised NearestNeighbors).\n\nferrolearn currently exposes them only on FittedNearestNeighbors. Mirror them onto:\n- FittedKNeighborsClassifier.kneighbors\n- FittedKNeighborsRegressor.kneighbors\n- FittedRadiusNeighborsClassifier.radius_neighbors\n- FittedRadiusNeighborsRegressor.radius_neighbors\n\nReuse the existing find_neighbors helper from knn.rs so we do not duplicate the spatial-index dispatch logic.",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "43dda5a1-03ad-4889-8f1a-33a0a72172e4",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T17:10:18.872849921Z",
-  "updated_at": "2026-04-29T17:10:18.872849921Z"
+  "updated_at": "2026-04-29T17:28:38.748713463Z",
+  "closed_at": "2026-04-29T17:28:38.748713463Z"
 }
