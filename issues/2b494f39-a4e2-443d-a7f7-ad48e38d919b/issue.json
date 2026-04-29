@@ -1,0 +1,12 @@
+{
+  "uuid": "2b494f39-a4e2-443d-a7f7-ad48e38d919b",
+  "display_id": 276,
+  "title": "IsolationForest::score_samples returns raw anomaly score (higher=outlier); sklearn convention is negated (higher=inlier)",
+  "description": "ferrolearn FittedIsolationForest::score_samples returns 2^(-mean_path/c_n), the raw anomaly score where higher = more anomalous. sklearn IsolationForest.score_samples returns the NEGATED form so higher = more inlier (matches LocalOutlierFactor convention).\n\nFix: negate the returned scores. Also expose a separate decision_function (= score_samples - offset) for full sklearn parity.\n\nPredict() is unaffected — it already returns -1 for outliers, +1 for inliers correctly. Only the score_samples sign convention is inverted.",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T18:08:02.817468239Z",
+  "updated_at": "2026-04-29T18:08:02.817468239Z"
+}
