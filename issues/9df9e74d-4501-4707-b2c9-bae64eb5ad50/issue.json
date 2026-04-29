@@ -3,12 +3,13 @@
   "display_id": 251,
   "title": "Audit utility crates (ferrolearn-core, ferrolearn-datasets, ferrolearn-sparse, ferrolearn-numerical, ferrolearn-io) vs sklearn equivalents",
   "description": "Step 11 of 12 in sklearn parity audit (#240).\n\nScope: sklearn.base + sklearn.exceptions (BaseEstimator, ClassifierMixin, etc.) → ferrolearn-core. sklearn.datasets (loaders, fetchers, samples_generator make_*) → ferrolearn-datasets. sklearn.utils sparse helpers → ferrolearn-sparse. Numerical primitives (no direct sklearn analogue) → ferrolearn-numerical. ferrolearn-io is a ferrolearn-only addition (treat as 'better than sklearn' extra).",
-  "status": "open",
+  "status": "closed",
   "priority": "low",
   "parent_uuid": "7eb7ab02-78ae-4381-bf5d-cc11173429c5",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T16:23:09.118807101Z",
-  "updated_at": "2026-04-29T16:23:10.421158705Z",
+  "updated_at": "2026-04-29T21:03:31.560881149Z",
+  "closed_at": "2026-04-29T21:03:31.560881149Z",
   "labels": [
     "audit"
   ]
