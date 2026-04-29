@@ -7,5 +7,8 @@
   "parent_uuid": "81e3e592-d6c5-4870-ae6a-1b0c0afd8824",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T20:21:34.311668970Z",
-  "updated_at": "2026-04-29T20:21:34.311668970Z"
+  "updated_at": "2026-04-29T20:21:35.734628642Z",
+  "labels": [
+    "ferrolearn-metrics"
+  ]
 }
