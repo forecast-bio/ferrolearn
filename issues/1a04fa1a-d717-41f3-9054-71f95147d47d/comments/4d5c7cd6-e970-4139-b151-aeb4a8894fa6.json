@@ -1,0 +1,10 @@
+{
+  "uuid": "4d5c7cd6-e970-4139-b151-aeb4a8894fa6",
+  "issue_uuid": "1a04fa1a-d717-41f3-9054-71f95147d47d",
+  "author": "doll-agent",
+  "content": "Resolved-by-discovery: ferrolearn-preprocess::random_projection module already exists with both GaussianRandomProjection and SparseRandomProjection. Filed under #246 by mistake — this functionality was always in ferrolearn-preprocess. johnson_lindenstrauss_min_dim helper still missing (small follow-up).",
+  "created_at": "2026-04-29T19:56:34.178310179Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAKKBih3/7CkYoLY7wipwY21rkdJHSUPqkNqO8hmRN6wRnk4ESg/s7iYlvbCPXXp7Xrl0OdbpMsROiK5NpV0ZHAQ=="
+}
