@@ -3,12 +3,13 @@
   "display_id": 245,
   "title": "Audit ferrolearn-linear vs sklearn (linear_model + svm + isotonic + discriminant_analysis): close gaps, add API proof tests",
   "description": "Step 5 of 12 in sklearn parity audit (#240).\n\nLargest single crate. Scope: sklearn.linear_model (~38 estimators including all CV variants, LARS family, GLMs, multi-task), sklearn.svm (SVC, NuSVC, LinearSVC, SVR, NuSVR, LinearSVR, OneClassSVM), sklearn.isotonic, sklearn.discriminant_analysis (LDA, QDA).\n\nRelated existing issues: #19-22 (MultiTaskLasso/ElasticNet/CV), #24 (TheilSen), #29 (LogisticRegression L1/elasticnet), #30 (SGD momentum/penalties), #171 (FixedThresholdClassifier/TunedThresholdClassifierCV)",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "7eb7ab02-78ae-4381-bf5d-cc11173429c5",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T16:22:35.693894816Z",
-  "updated_at": "2026-04-29T16:22:36.964907014Z",
+  "updated_at": "2026-04-29T19:16:05.611503109Z",
+  "closed_at": "2026-04-29T19:16:05.611503109Z",
   "labels": [
     "audit"
   ]
