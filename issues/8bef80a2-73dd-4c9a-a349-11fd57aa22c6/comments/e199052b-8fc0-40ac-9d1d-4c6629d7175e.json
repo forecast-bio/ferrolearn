@@ -1,0 +1,10 @@
+{
+  "uuid": "e199052b-8fc0-40ac-9d1d-4c6629d7175e",
+  "issue_uuid": "8bef80a2-73dd-4c9a-a349-11fd57aa22c6",
+  "author": "doll-agent",
+  "content": "Pass complete. Pedantic+nursery dropped 3230 → 2600 (~630 fixes applied via cargo clippy --fix and a regex-driven sweep). Concrete fixes: redundant_closure, manual_let_else, single_match_else, uninlined_format_args, items_after_statements, explicit_iter_loop, cast_lossless, manual_midpoint, map_unwrap_or, option_if_let_else, semicolon_if_nothing_returned, ignored_unit_patterns, redundant_else, used_underscore_binding, ~197 or_fun_call (or_insert→or_insert_with, unwrap_or→unwrap_or_else for F::zero/epsilon/nan/etc). All 2930 tests still passing. Default 'cargo clippy -- -D warnings' clean. Remaining warnings are out-of-scope per project conventions (CLAUDE.md mandates Result returns; ML usize→f64 casts are intentional and bounded; float_cmp asserts on exact integer-valued floats; missing_panics_doc would be 76 doc additions across the workspace for theoretical panics). All audited categories: suspicious_operation_groupings (false positives — flagging correct math like ‖x‖²+‖y‖²-2⟨x,y⟩ and gradient-boosting g²/(h+λ)).",
+  "created_at": "2026-04-29T12:52:56.990878003Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAbc1w6F/ArDNNcDyMe/G8iCMggSL8rlZFEMXp5iu84ygQBQLKUjdeRXwbFfdgif4v6cKMamGqlMNT84fgF3uEAA=="
+}
