@@ -1,0 +1,12 @@
+{
+  "uuid": "0f319c7c-a1b4-48e7-8c39-e791c9b3c667",
+  "display_id": 283,
+  "title": "Add SelfTrainingClassifier semi-supervised meta-estimator",
+  "description": "sklearn SelfTrainingClassifier wraps any base classifier and iteratively pseudo-labels unlabeled data (y == -1) to expand the training set. Stops when no more high-confidence predictions exist or max_iter reached.\n\nferrolearn-cluster currently has LabelPropagation and LabelSpreading but not the meta-estimator. Implementation requires a classifier trait bound + iterative re-fit loop. Defer — meta-estimator pattern needs design across the workspace.",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "af796161-926c-47ff-a352-377e02032a72",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T18:22:46.928133071Z",
+  "updated_at": "2026-04-29T18:22:46.928133071Z"
+}
