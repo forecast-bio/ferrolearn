@@ -1,0 +1,10 @@
+{
+  "uuid": "d55e218e-25a6-4d6d-a9b8-b2c8bd1daefd",
+  "issue_uuid": "9bf702c4-84ac-47ff-ae8e-025677fa2017",
+  "author": "doll-agent",
+  "content": "[action] Coordinated 0.2.2 bump: all 18 crates, CHANGELOG/BENCHMARKS updated, ferrolearn-kernel release prep exposed 3 orphaned modules (KernelRidge, Nystroem, RBFSampler), 2982 tests passing.",
+  "created_at": "2026-04-29T13:44:39.097905843Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAlWY2e8gzOZVK9HcSUQ4+LIdi9yvwtHdBKwgaxMtfMzHToHWYyK2OFfxlY89+uHvQ9xDW5FIaVGOjwW1vCoOcDA=="
+}
