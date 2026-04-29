@@ -3,12 +3,13 @@
   "display_id": 241,
   "title": "Audit ferrolearn-bayes vs sklearn (naive_bayes + gaussian_process): close gaps, add API proof tests",
   "description": "Step 1 of 12 in sklearn parity audit (#240).\n\nScope: sklearn.naive_bayes (GaussianNB, MultinomialNB, BernoulliNB, ComplementNB, CategoricalNB) and sklearn.gaussian_process (GaussianProcessRegressor, GaussianProcessClassifier, kernels). Conjugate priors module (already in ferrolearn-bayes) is a 'better-than-sklearn' extra.\n\nProcess:\n1. Diff ferrolearn-bayes public API vs sklearn HEAD (1.9.dev0)\n2. File or update sub-issues for missing items\n3. Implement gaps\n4. Add a proof-of-API integration test that exercises every public estimator end-to-end\n5. Re-verify against sklearn\n\nRelated existing issues: #71 (sample_weight for all NB)",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "7eb7ab02-78ae-4381-bf5d-cc11173429c5",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T16:22:17.806935829Z",
-  "updated_at": "2026-04-29T16:22:19.257510553Z",
+  "updated_at": "2026-04-29T16:56:35.258516300Z",
+  "closed_at": "2026-04-29T16:56:35.258516300Z",
   "labels": [
     "audit"
   ]
