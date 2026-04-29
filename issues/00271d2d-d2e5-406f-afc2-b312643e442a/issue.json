@@ -1,0 +1,10 @@
+{
+  "uuid": "00271d2d-d2e5-406f-afc2-b312643e442a",
+  "display_id": 329,
+  "title": "Bump workspace to v0.3.0 and expand sklearn parity benchmarks",
+  "status": "open",
+  "priority": "high",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T22:49:47.373263142Z",
+  "updated_at": "2026-04-29T22:49:47.373263142Z"
+}
