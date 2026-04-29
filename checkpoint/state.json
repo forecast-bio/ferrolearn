@@ -2,7 +2,12 @@
   "next_display_id": 1,
   "next_comment_id": 1,
   "display_id_map": {},
-  "locks": {},
+  "locks": {
+    "237": {
+      "agent_id": "doll-agent",
+      "claimed_at": "2026-04-29T12:13:18.182545736Z"
+    }
+  },
   "issues": {},
   "unsigned_event_warnings": [
     {
@@ -27,8 +32,8 @@
     }
   ],
   "watermark": {
-    "timestamp": "2026-04-29T12:12:20.757156134Z",
+    "timestamp": "2026-04-29T12:13:18.182545736Z",
     "agent_id": "doll-agent",
-    "agent_seq": 4
+    "agent_seq": 5
   }
 }
