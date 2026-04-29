@@ -1,0 +1,11 @@
+{
+  "uuid": "656dc12c-7374-4914-84e5-9d2c3592e733",
+  "display_id": 313,
+  "title": "model-sel: add ClassifierChain, RegressorChain, OutputCodeClassifier",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "9daa00a7-2c01-48d3-9258-44776a1e8f4a",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T20:36:51.259196941Z",
+  "updated_at": "2026-04-29T20:36:51.259196941Z"
+}
