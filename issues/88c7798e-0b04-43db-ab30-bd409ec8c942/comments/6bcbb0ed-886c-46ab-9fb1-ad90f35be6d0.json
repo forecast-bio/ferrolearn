@@ -1,0 +1,10 @@
+{
+  "uuid": "6bcbb0ed-886c-46ab-9fb1-ad90f35be6d0",
+  "issue_uuid": "88c7798e-0b04-43db-ab30-bd409ec8c942",
+  "author": "doll-agent",
+  "content": "Created ferrolearn-neural crate. Moved mlp.rs from ferrolearn-linear with helper log_proba relocated; added crate to workspace + internal deps + umbrella ferrolearn::neural. Removed MLP from linear lib.rs + linear api_proof. Build clean across workspace.",
+  "created_at": "2026-04-29T21:21:13.008042481Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAPQXZIHrJF9S6Iv8YNTrlsXQwI3ZWtISST1vLpxKJ3WdN0r6HOyemz4atO9khZqt7aU7TvfzHnz109rcZmvSwCQ=="
+}
