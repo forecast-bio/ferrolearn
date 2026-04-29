@@ -1,0 +1,10 @@
+{
+  "uuid": "0f6d7f1d-44a7-43f1-aa45-4d532bec0cfb",
+  "issue_uuid": "c93ff820-db75-4665-86d7-ed29bd1ea736",
+  "author": "doll-agent",
+  "content": "Added group_splitters.rs with 5 group-aware CV splitters: GroupKFold (greedy load-balanced), GroupShuffleSplit (deterministic seeded), LeaveOneGroupOut, LeavePGroupsOut (lexicographic combos), StratifiedGroupKFold (greedy class-balance). All take Array1<usize> group labels. 6 unit tests pass.",
+  "created_at": "2026-04-29T22:25:19.315169200Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAMHfuXzE7vRVZVMukKgeJEwSfa58qNKEtbRqv5fTD/9zkzd3kecTT7U0v8LAEsrWL6PwZzewHt1QgIpDlUnfQAA=="
+}
