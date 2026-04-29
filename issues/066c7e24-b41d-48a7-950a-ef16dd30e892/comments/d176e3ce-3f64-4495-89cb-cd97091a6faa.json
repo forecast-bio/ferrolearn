@@ -1,0 +1,10 @@
+{
+  "uuid": "d176e3ce-3f64-4495-89cb-cd97091a6faa",
+  "issue_uuid": "066c7e24-b41d-48a7-950a-ef16dd30e892",
+  "author": "doll-agent",
+  "content": "Scope correction: GaussianProcess{Classifier,Regressor} actually lives in ferrolearn-kernel (per recent commit 8fde2b4), not ferrolearn-bayes. Removing GP from this audit's scope and moving to #246 (ferrolearn-kernel). \n\nThis issue now covers ONLY: sklearn.naive_bayes (5 estimators) + conjugate priors (ferrolearn extra). All 5 NB variants present in source files: bernoulli, categorical, complement, gaussian, multinomial.",
+  "created_at": "2026-04-29T16:23:48.428990564Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAaITZCoYt9fppRC1f7ZbXxgkx2pmKsh4BVRsHm/1jcRw1CrpdJYKNFOuI7qWelvonyrEOuHAbisMHNubNYETZAg=="
+}
