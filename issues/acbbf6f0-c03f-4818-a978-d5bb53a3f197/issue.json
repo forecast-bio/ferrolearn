@@ -2,12 +2,13 @@
   "uuid": "acbbf6f0-c03f-4818-a978-d5bb53a3f197",
   "display_id": 311,
   "title": "model-sel: add basic CV splitters (LeaveOneOut, LeavePOut, ShuffleSplit, StratifiedShuffleSplit, RepeatedKFold, RepeatedStratifiedKFold, PredefinedSplit)",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "9daa00a7-2c01-48d3-9258-44776a1e8f4a",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T20:36:41.679178571Z",
-  "updated_at": "2026-04-29T20:36:42.970314801Z",
+  "updated_at": "2026-04-29T20:46:54.564505969Z",
+  "closed_at": "2026-04-29T20:46:54.564505969Z",
   "labels": [
     "ferrolearn-model-sel"
   ]
