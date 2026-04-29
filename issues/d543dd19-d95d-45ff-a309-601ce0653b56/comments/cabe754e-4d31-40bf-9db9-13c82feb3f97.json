@@ -1,0 +1,10 @@
+{
+  "uuid": "cabe754e-4d31-40bf-9db9-13c82feb3f97",
+  "issue_uuid": "d543dd19-d95d-45ff-a309-601ce0653b56",
+  "author": "doll-agent",
+  "content": "Added predict_log_proba to FittedGaussianProcessClassifier as a thin wrapper around predict_proba via the shared crate::log_proba helper. All tests pass.",
+  "created_at": "2026-04-29T19:24:51.002329422Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA87K4GFN5yXPENWKPQlUHWBk0Rsf7lYD15DqhxM2Tg/9CWsjyWzHvwsGJweiSsw7/a3I9eJEfu+us9wdA0QFgCQ=="
+}
