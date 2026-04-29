@@ -1,0 +1,10 @@
+{
+  "uuid": "28b5dadb-e5c8-430a-8cb8-c7e9374d8a85",
+  "issue_uuid": "d7511e82-7f0f-4cb7-a98c-f54fea2e1c73",
+  "author": "doll-agent",
+  "content": "Added 3 multilabel ranking metrics in ranking.rs: coverage_error, label_ranking_average_precision_score (LRAP), label_ranking_loss. Wired in lib.rs.",
+  "created_at": "2026-04-29T22:25:16.465696813Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA1zN9iqhNupVACkZ5uwQO9gMsBWPduoRRxRpxfW10NlLWQnzz7E1MQkMnlaZskO2w+AUlATwkDqL/z+dIg1D5BA=="
+}
