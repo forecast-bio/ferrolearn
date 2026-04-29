@@ -1,0 +1,11 @@
+{
+  "uuid": "8bef80a2-73dd-4c9a-a349-11fd57aa22c6",
+  "display_id": 239,
+  "title": "Pedantic+nursery clippy warnings (~3230 across workspace)",
+  "description": "After the clippy 1.95 + maintenance pass (issues #237, #238), running 'cargo clippy --workspace --all-targets -- -W clippy::pedantic -W clippy::nursery' surfaces ~3230 warnings. Top categories: const_fn suggestions (~803), cast_precision_loss usize→f64 (~347, mostly intentional for ML), missing_backticks_in_doc (~228), needless_iter_methods (~207), or_fun_call (~162), unreadable_literal (~140), suboptimal_flops mul_add (~134), unnecessary_wraps (35 — kept by design per CLAUDE.md 'all public functions return Result'), float_cmp (30 — most are intentional exact-equality tests on integer-valued floats). No correctness bugs identified. Filed as low-priority polish; suggested approach is per-category gating with cargo clippy --fix where safe and skipping subjective lints.",
+  "status": "open",
+  "priority": "low",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T12:41:44.041543523Z",
+  "updated_at": "2026-04-29T12:41:44.041543523Z"
+}
