@@ -1,0 +1,10 @@
+{
+  "uuid": "024b5cc8-78cf-402a-aa3c-4ab984ffa8e5",
+  "issue_uuid": "e95da643-c0b3-43dc-bbb6-314b74e53120",
+  "author": "doll-agent",
+  "content": "Added MinCategories enum (Scalar | PerFeature) plus with_min_categories(usize) and with_min_categories_per_feature(Vec<usize>) builders to CategoricalNB. fit() pre-pads categories[j] so count tables have slots for unseen values that may appear at predict / partial_fit time. Validated by api_proof_categorical_nb.",
+  "created_at": "2026-04-29T16:55:47.269972317Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAAlpVDfi9pgNIQsF/QsjMjoOjaePSeKk8cwWGcWZriGyM+DOtEiHt9XQtTUrAftTqZ/lovpUL23OhkQyXp/zvCg=="
+}
