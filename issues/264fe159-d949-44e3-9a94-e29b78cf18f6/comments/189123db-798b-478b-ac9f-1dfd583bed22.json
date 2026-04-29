@@ -1,0 +1,10 @@
+{
+  "uuid": "189123db-798b-478b-ac9f-1dfd583bed22",
+  "issue_uuid": "264fe159-d949-44e3-9a94-e29b78cf18f6",
+  "author": "doll-agent",
+  "content": "Added norm bool field (default false) and with_norm() builder to ComplementNB. apply_norm_inplace() per-row divides logged weights by row sum then negates to preserve ferrolearn's argmin-picks-class semantics that match sklearn's argmax(X @ feature_log_prob.T). Carried into partial_fit. Validated by api_proof_complement_nb.",
+  "created_at": "2026-04-29T16:55:34.681519033Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA1/LH/ZorASGcL4ByC8IqgdptxjiZF0140soFMw7Y7amwnSd9mw+DvQbbEoDYpQ3utXLPK+rpCKh5fIXQhdT+AA=="
+}
