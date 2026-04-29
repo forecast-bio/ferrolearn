@@ -1,0 +1,12 @@
+{
+  "uuid": "4b2313cc-d57f-451f-bf7e-71554a5768fb",
+  "display_id": 247,
+  "title": "Audit ferrolearn-preprocess vs sklearn (preprocessing + impute + feature_extraction + feature_selection): close gaps, add API proof tests",
+  "description": "Step 7 of 12 in sklearn parity audit (#240).\n\nLargest API surface. Scope: sklearn.preprocessing (~25 transformers + stateless functions), sklearn.impute (SimpleImputer, IterativeImputer, KNNImputer, MissingIndicator), sklearn.feature_extraction (DictVectorizer, FeatureHasher, text vectorizers, image patches), sklearn.feature_selection (~13 selectors).\n\nRelated existing issues: #103 (GenericUnivariateSelect), #110 (HashingVectorizer), #111 (DictVectorizer), #112 (FeatureHasher), #113 (MissingIndicator), #114 (KernelCenterer — may belong in kernel crate), #115 (stateless preprocessing functions)",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "7eb7ab02-78ae-4381-bf5d-cc11173429c5",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:22:52.321918310Z",
+  "updated_at": "2026-04-29T16:22:52.321918310Z"
+}
