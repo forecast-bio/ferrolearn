@@ -1,0 +1,12 @@
+{
+  "uuid": "d543dd19-d95d-45ff-a309-601ce0653b56",
+  "display_id": 290,
+  "title": "Add predict_log_proba to GaussianProcessClassifier",
+  "description": "sklearn GaussianProcessClassifier.predict_log_proba returns elementwise log of predict_proba. ferrolearn FittedGaussianProcessClassifier currently has predict_proba but not the log variant. Trivial wrapper using a shared log_proba helper (mirror the linear/tree pattern).",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "5dec6bab-74a3-4b77-a389-7f78ddf2361b",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T19:21:12.557496279Z",
+  "updated_at": "2026-04-29T19:21:12.557496279Z"
+}
