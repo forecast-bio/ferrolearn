@@ -1,0 +1,10 @@
+{
+  "uuid": "3e693585-494a-4fd1-8cef-2484d2cfae15",
+  "issue_uuid": "e7f26398-e780-4cb9-98d5-632177bff900",
+  "author": "doll-agent",
+  "content": "Added new graph.rs module with:\n- GraphMode enum (Connectivity | Distance) mirroring sklearn's mode parameter.\n- Free fns kneighbors_graph(x, n_neighbors, mode) and radius_neighbors_graph(x, radius, mode) that build a transient NearestNeighbors / RadiusNeighborsClassifier index over x and return a CsrMatrix<F> from ferrolearn-sparse.\n- sort_graph_by_row_values(graph) — round-trips through dense and emits a per-row column-sorted CSR.\n- kneighbors_graph methods on FittedNearestNeighbors / FittedKNeighborsClassifier / FittedKNeighborsRegressor.\n- radius_neighbors_graph methods on FittedNearestNeighbors / FittedRadiusNeighborsClassifier / FittedRadiusNeighborsRegressor.\nAdded ferrolearn-sparse as a workspace dependency of ferrolearn-neighbors. Public types re-exported at the crate root. Validated by api_proof_graph_free_functions and per-estimator api_proof tests.",
+  "created_at": "2026-04-29T17:28:56.840782356Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAX4JVkvqH3IQM8M6VHD8V23weXQu/Qnh5ClrVop6rXKt8wcOGjO78IBbXyegkpFhZTXHLMBGv2Eb4HvOnUlLjDA=="
+}
