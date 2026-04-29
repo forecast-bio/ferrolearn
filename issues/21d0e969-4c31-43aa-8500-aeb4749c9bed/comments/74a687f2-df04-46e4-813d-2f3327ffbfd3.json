@@ -1,0 +1,10 @@
+{
+  "uuid": "74a687f2-df04-46e4-813d-2f3327ffbfd3",
+  "issue_uuid": "21d0e969-4c31-43aa-8500-aeb4749c9bed",
+  "author": "doll-agent",
+  "content": "Implemented BernoulliRBM with one-step Contrastive Divergence (CD-1). Builders: learning_rate, n_iter, batch_size, random_state. Fitted struct exposes components_, intercept_hidden_, intercept_visible_, n_iter_ (sklearn-compatible field names). Methods: transform (P(h=1|v) hidden activations), gibbs (one-step visible reconstruction). Implements ferrolearn-core Fit + Transform traits. Uses Xoshiro256PlusPlus for deterministic seeded RNG. 5 unit tests pass.",
+  "created_at": "2026-04-29T21:21:17.113827891Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAzbj6cVKAEslfXZpqRgDp76965l4kqwZkLflzdpFtim0yEj9021uY/xx1l4ohtw0mXZV40gPHnvNzzpZefJ0bDw=="
+}
