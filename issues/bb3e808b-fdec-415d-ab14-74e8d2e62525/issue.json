@@ -1,0 +1,10 @@
+{
+  "uuid": "bb3e808b-fdec-415d-ab14-74e8d2e62525",
+  "display_id": 330,
+  "title": "Sklearn parity audit + ferrolearn-python head-to-head bench",
+  "status": "open",
+  "priority": "high",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T23:33:24.669887884Z",
+  "updated_at": "2026-04-29T23:33:24.669887884Z"
+}
