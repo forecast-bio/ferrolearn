@@ -1,0 +1,10 @@
+{
+  "uuid": "d0a4dfad-cea8-45aa-b519-7c630f23beb2",
+  "issue_uuid": "b01f85ab-20ba-4922-952b-15051610982d",
+  "author": "doll-agent",
+  "content": "Added predict_log_proba to all 9 classifiers via shared crate::log_proba helper that clamps probabilities below 1e-300 to avoid -inf/NaN. Affected: FittedDecisionTreeClassifier, FittedExtraTreeClassifier, FittedRandomForestClassifier, FittedExtraTreesClassifier, FittedGradientBoostingClassifier, FittedHistGradientBoostingClassifier, FittedAdaBoostClassifier, FittedBaggingClassifier, FittedVotingClassifier. All 343 tests pass.",
+  "created_at": "2026-04-29T18:02:11.091284577Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAQ/6fSUuHJignOcw2lmk+cWrnCFEhxg43hjTJfrsLVQCaCsMWYeDntHqbvYPScG80S219znJPJMrI+m28RVZHBA=="
+}
