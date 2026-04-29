@@ -1,0 +1,10 @@
+{
+  "uuid": "4ee8d557-867f-40bf-8a32-c17b6ca9f286",
+  "issue_uuid": "7a8c1fed-5eb7-4aaa-a3c3-db5acebf3cda",
+  "author": "doll-agent",
+  "content": "Added kneighbors() to FittedKNeighborsClassifier and FittedKNeighborsRegressor; added radius_neighbors() to FittedRadiusNeighborsClassifier and FittedRadiusNeighborsRegressor. Both share new pub(crate) helpers (kneighbors_impl in knn.rs, radius_neighbors_impl in radius_neighbors.rs) that validate feature counts and delegate to the existing find_neighbors / find_radius_neighbors infrastructure. Promoted the crate-private SpatialIndex enums to pub(crate) so the helpers compose. Also added n_samples_fit() accessors to all four supervised estimators. Returns (Array2<F>, Array2<usize>) for kneighbors and a jagged RadiusNeighborsResult<F> = (Vec<Vec<F>>, Vec<Vec<usize>>) type alias for radius_neighbors. Validated by api_proof tests.",
+  "created_at": "2026-04-29T17:28:32.050919499Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAe7cJ94c7MMLkO3J+vuG6FGTf2TSqcbnEAqI1YiqYTbe5N+he1EHl3h0umEqh/+2xaIz9a65TcQqr+GHPUAezCA=="
+}
