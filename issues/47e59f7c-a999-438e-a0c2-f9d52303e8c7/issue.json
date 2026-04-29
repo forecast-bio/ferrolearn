@@ -1,0 +1,12 @@
+{
+  "uuid": "47e59f7c-a999-438e-a0c2-f9d52303e8c7",
+  "display_id": 293,
+  "title": "Add AdditiveChi2Sampler / PolynomialCountSketch / SkewedChi2Sampler kernel approximations",
+  "description": "sklearn.kernel_approximation has 5 estimators; ferrolearn-kernel currently has Nystroem and RBFSampler. Missing:\n- AdditiveChi2Sampler — additive chi-squared kernel sampling\n- PolynomialCountSketch — polynomial kernel approximation via count sketch\n- SkewedChi2Sampler — skewed chi-squared kernel sampling\n\nLower priority. Each is a feature-mapping transformer with fit/transform; relatively small additions but no urgent caller.",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "5dec6bab-74a3-4b77-a389-7f78ddf2361b",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T19:21:26.149548505Z",
+  "updated_at": "2026-04-29T19:21:26.149548505Z"
+}
