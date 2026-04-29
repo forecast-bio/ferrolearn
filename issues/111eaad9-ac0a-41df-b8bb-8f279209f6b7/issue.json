@@ -1,0 +1,11 @@
+{
+  "uuid": "111eaad9-ac0a-41df-b8bb-8f279209f6b7",
+  "display_id": 305,
+  "title": "metrics: add missing pairwise (pairwise_distances_argmin, argmin_min, pairwise_kernels)",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "81e3e592-d6c5-4870-ae6a-1b0c0afd8824",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T20:21:49.066615346Z",
+  "updated_at": "2026-04-29T20:21:49.066615346Z"
+}
