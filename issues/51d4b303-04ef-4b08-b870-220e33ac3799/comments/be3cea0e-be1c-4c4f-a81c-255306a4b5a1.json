@@ -1,0 +1,10 @@
+{
+  "uuid": "be3cea0e-be1c-4c4f-a81c-255306a4b5a1",
+  "issue_uuid": "51d4b303-04ef-4b08-b870-220e33ac3799",
+  "author": "doll-agent",
+  "content": "Wired scorer module + 18 re-exports: median_absolute_error, max_error, msle, rmsle, pinball, poisson_dev, gamma_dev, tweedie_dev, silhouette_samples, calinski_harabasz, homogeneity, completeness, v_measure, rand_score, NmiMethod, normalized_mutual_info, fowlkes_mallows, nan_euclidean_distances. Build clean, all 189 lib tests pass.",
+  "created_at": "2026-04-29T20:30:41.561908314Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAycUsWmzOyyepbJ26SIUuUlMfqo2++oCwpq98ItxM3pURB2lIUAW8TMkly0/tK0jeClI6ELKl3kWu5RKFvFVFCw=="
+}
