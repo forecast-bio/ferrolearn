@@ -1,0 +1,10 @@
+{
+  "uuid": "20dcb5c3-50c2-469e-965b-b0e68fd06a06",
+  "issue_uuid": "75f9d584-a627-4680-9e49-13fd3d1e4410",
+  "author": "doll-agent",
+  "content": "Changed FittedGaussianMixture::bic / aic signatures from bic(n_samples: usize) to sklearn-faithful bic(x: andArray2<F>) -> Result<F> (and same for aic). Both now compute per-sample log-likelihood from X via score_samples then add the appropriate complexity penalty. Removed the old lower_bound * n shortcut (which assumed X was the training data) so the new signature also works on held-out data. Added the same two methods to FittedBayesianGaussianMixture using its own n_free_params() helper.",
+  "created_at": "2026-04-29T18:34:57.497078843Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAoQZbPe/TFLww0Q5UxhagC1F4He7+eavmK+pIpid6avCQzUMnldNbWqP3jqWFRWvvUeh8cRZYcO9VK69FPDGWCg=="
+}
