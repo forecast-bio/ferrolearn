@@ -1,0 +1,12 @@
+{
+  "uuid": "af796161-926c-47ff-a352-377e02032a72",
+  "display_id": 244,
+  "title": "Audit ferrolearn-cluster vs sklearn (cluster + mixture + semi_supervised): close gaps, add API proof tests",
+  "description": "Step 4 of 12 in sklearn parity audit (#240).\n\nScope: sklearn.cluster (KMeans, MiniBatchKMeans, BisectingKMeans, AffinityPropagation, MeanShift, SpectralClustering, AgglomerativeClustering, FeatureAgglomeration, DBSCAN, HDBSCAN, OPTICS, Birch, SpectralBiclustering, SpectralCoclustering), sklearn.mixture (GaussianMixture, BayesianGaussianMixture), sklearn.semi_supervised (LabelPropagation, LabelSpreading, SelfTrainingClassifier).\n\nRelated existing issues: #76-80 (SpectralBiclustering, SpectralCoclustering, estimate_bandwidth, OPTICS post-processing), #3 (oracle test failures: OPTICS, Birch)",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "7eb7ab02-78ae-4381-bf5d-cc11173429c5",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:22:30.909005661Z",
+  "updated_at": "2026-04-29T16:22:30.909005661Z"
+}
