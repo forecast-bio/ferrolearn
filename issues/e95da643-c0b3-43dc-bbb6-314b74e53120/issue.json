@@ -3,10 +3,11 @@
   "display_id": 258,
   "title": "Add min_categories parameter to CategoricalNB",
   "description": "sklearn CategoricalNB has min_categories: int | array-like = None. Sets a floor on the number of categories per feature (in case the training data does not include all possible categories).\n\nferrolearn CategoricalNB infers categories purely from observed values in fit(). Add with_min_categories(impl Into<Option<Vec<usize>>>) builder accepting either a scalar (broadcast to all features) or per-feature array. When set, allocate count tables sized max(observed_unique, min_categories[j]).\n\nThis is required to handle categories at predict time that were not present at fit time.",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "066c7e24-b41d-48a7-950a-ef16dd30e892",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T16:25:04.467861869Z",
-  "updated_at": "2026-04-29T16:25:04.467861869Z"
+  "updated_at": "2026-04-29T16:55:51.637966269Z",
+  "closed_at": "2026-04-29T16:55:51.637966269Z"
 }
