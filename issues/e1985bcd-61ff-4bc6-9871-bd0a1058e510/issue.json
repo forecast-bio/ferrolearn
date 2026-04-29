@@ -2,12 +2,13 @@
   "uuid": "e1985bcd-61ff-4bc6-9871-bd0a1058e510",
   "display_id": 318,
   "title": "datasets: add 7 missing generators (make_friedman1/2/3, make_low_rank_matrix, make_spd_matrix, make_sparse_spd_matrix, make_gaussian_quantiles, make_hastie_10_2, make_multilabel_classification)",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "9df9e74d-4501-4707-b2c9-bae64eb5ad50",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T20:50:24.324830942Z",
-  "updated_at": "2026-04-29T20:50:25.661908830Z",
+  "updated_at": "2026-04-29T21:03:22.864219592Z",
+  "closed_at": "2026-04-29T21:03:22.864219592Z",
   "labels": [
     "ferrolearn-datasets"
   ]
