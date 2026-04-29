@@ -2,12 +2,13 @@
   "uuid": "f1779fe1-4044-4a1d-b222-1aabb9d69273",
   "display_id": 317,
   "title": "model-sel: write tests/api_proof.rs covering every public API",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "9daa00a7-2c01-48d3-9258-44776a1e8f4a",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T20:37:10.336161450Z",
-  "updated_at": "2026-04-29T20:37:11.548197630Z",
+  "updated_at": "2026-04-29T20:47:00.437569078Z",
+  "closed_at": "2026-04-29T20:47:00.437569078Z",
   "labels": [
     "ferrolearn-model-sel"
   ]
