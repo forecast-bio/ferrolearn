@@ -3,10 +3,11 @@
   "display_id": 269,
   "title": "Add predict_proba to remaining classifiers (RF, GB, HGB, AdaBoost, Bagging, Voting)",
   "description": "predict_proba is present on FittedDecisionTreeClassifier, FittedExtraTreeClassifier, FittedExtraTreesClassifier — but MISSING on FittedRandomForestClassifier, FittedGradientBoostingClassifier, FittedHistGradientBoostingClassifier, FittedAdaBoostClassifier, FittedBaggingClassifier, FittedVotingClassifier (the latter only when voting='soft').\n\nImplementation per estimator:\n- RF / Extra (already done) / Bagging: average per-tree predict_proba\n- GB / HGB: softmax of raw scores\n- AdaBoost: weighted sum of base predict_proba (SAMME.R) or one-hot of predictions (SAMME)\n- Voting: weighted average of base predict_proba",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T17:38:08.842710670Z",
-  "updated_at": "2026-04-29T17:38:08.842710670Z"
+  "updated_at": "2026-04-29T17:58:53.547564829Z",
+  "closed_at": "2026-04-29T17:58:53.547564829Z"
 }
