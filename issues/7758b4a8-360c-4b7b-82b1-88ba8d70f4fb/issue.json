@@ -2,12 +2,13 @@
   "uuid": "7758b4a8-360c-4b7b-82b1-88ba8d70f4fb",
   "display_id": 314,
   "title": "model-sel: add dummy.rs (DummyClassifier, DummyRegressor)",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "9daa00a7-2c01-48d3-9258-44776a1e8f4a",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T20:36:56.230947814Z",
-  "updated_at": "2026-04-29T20:36:57.498680805Z",
+  "updated_at": "2026-04-29T20:46:57.382612875Z",
+  "closed_at": "2026-04-29T20:46:57.382612875Z",
   "labels": [
     "ferrolearn-model-sel"
   ]
