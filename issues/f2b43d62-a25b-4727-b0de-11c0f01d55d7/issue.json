@@ -1,0 +1,12 @@
+{
+  "uuid": "f2b43d62-a25b-4727-b0de-11c0f01d55d7",
+  "display_id": 291,
+  "title": "Add sample_y() to GaussianProcessRegressor for posterior sampling",
+  "description": "sklearn GaussianProcessRegressor.sample_y(X, n_samples, random_state) draws samples from the posterior at each query point. Each draw is sampled from N(mean, K_post) where mean and K_post come from the GP posterior. Used for visualization and Bayesian decision-making.\n\nImplementation: compute predictive mean + posterior covariance (already partially done in predict_with_std for variances), then Cholesky-decompose the covariance and draw n_samples standard-normal vectors. Returns shape (n_samples_query, n_samples).",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "5dec6bab-74a3-4b77-a389-7f78ddf2361b",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T19:21:16.420113762Z",
+  "updated_at": "2026-04-29T19:21:16.420113762Z"
+}
