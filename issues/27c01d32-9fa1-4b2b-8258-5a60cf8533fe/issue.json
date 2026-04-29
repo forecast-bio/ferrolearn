@@ -1,0 +1,12 @@
+{
+  "uuid": "27c01d32-9fa1-4b2b-8258-5a60cf8533fe",
+  "display_id": 274,
+  "title": "Add apply() and decision_path() methods to tree-based estimators",
+  "description": "sklearn DecisionTree and ensemble estimators expose:\n- apply(X) → Array1<usize> of leaf indices that each sample falls into\n- decision_path(X) → CSR sparse matrix of shape (n_samples, n_nodes) marking the path each sample traversed\n\nFor ensembles, returns shape (n_samples, n_estimators) for apply and a stacked CSR for decision_path. Used for path-based interpretation tools.\n\nLower priority — neither blocks normal classification/regression workflows.",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T17:38:26.049540810Z",
+  "updated_at": "2026-04-29T17:38:26.049540810Z"
+}
