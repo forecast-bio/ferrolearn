@@ -1,0 +1,10 @@
+{
+  "uuid": "dcd96350-f357-48e8-b08a-6548c580959e",
+  "issue_uuid": "9bf702c4-84ac-47ff-ae8e-025677fa2017",
+  "author": "doll-agent",
+  "content": "Coordinated workspace bump 0.2.0 → 0.2.2 complete. All 18 crates bumped (including ferrolearn-bayes from 0.2.1). CHANGELOG.md restructured: previously-orphaned [Unreleased] entries from 2026-03-14 plus the GP classifier feature work (#237) and clippy maintenance (#238/#239) consolidated under [0.2.2] - 2026-04-29. BENCHMARKS.md version reference updated 0.1.x → 0.2.2. **Release prep for ferrolearn-kernel**: discovered three feature modules (kernel_ridge.rs, nystroem.rs, rbf_sampler.rs) with full implementations that were never declared as 'pub mod' in lib.rs — completely unreachable from outside the crate even though their own doc examples showed 'use ferrolearn_kernel::KernelRidge' etc. Added pub mod declarations + pub use re-exports (KernelRidge, FittedKernelRidge, Nystroem, FittedNystroem, KernelType, RBFSampler, FittedRBFSampler), updated lib.rs module-doc, README, and Cargo.toml description/keywords to reflect the actual scope (kernel methods, not just regression). Promoted rand_xoshiro from dev-dep to runtime dep since the now-exposed modules use it. Verification: workspace build clean, cargo clippy -- -D warnings clean, cargo fmt clean, **2982/2982 tests passing (+52 from previously-dormant tests in the three exposed modules)**.",
+  "created_at": "2026-04-29T13:44:37.366302936Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAl9EQA/GIinmJMOCopGzEw02Q5plxls/zgYUmGoKBFgAEme2Qa+ek8eojn91phv1dlEuCTcfcGr6VyOnJN8Y+Dw=="
+}
