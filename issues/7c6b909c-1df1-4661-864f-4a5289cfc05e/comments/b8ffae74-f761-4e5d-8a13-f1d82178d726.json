@@ -1,0 +1,10 @@
+{
+  "uuid": "b8ffae74-f761-4e5d-8a13-f1d82178d726",
+  "issue_uuid": "7c6b909c-1df1-4661-864f-4a5289cfc05e",
+  "author": "doll-agent",
+  "content": "Added tests/api_proof.rs with 12 integration tests exercising every public API: api_proof_decision_tree, extra_tree, random_forest, extra_trees_ensemble, gradient_boosting, hist_gradient_boosting, adaboost (SAMME + SAMME.R + AdaBoostRegressor with all 3 AdaBoostLoss variants), bagging, voting, isolation_forest, random_trees_embedding, f32_compiles. Per-estimator coverage includes builder chains, fit, predict, predict_proba (cls), predict_log_proba (cls), score, decision_function (boosting cls), feature_importances_, classes/n_classes. All 12 pass. Final ferrolearn-tree test count: 355 (310 unit + 12 api_proof + 7 oracle + 5 proptest + 7 sklearn_equiv + 14 doctest).",
+  "created_at": "2026-04-29T18:08:47.948488393Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAxx1ZwZNf7QH+2w6SzskZxuKzByHHR0hXumLMY/tX4m8yvrSGeDDpdaeLis5OqYeJZ/8bRMpREQJIpB8BT5BdBA=="
+}
