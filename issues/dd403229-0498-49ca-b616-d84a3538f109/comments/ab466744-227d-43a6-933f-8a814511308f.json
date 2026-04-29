@@ -1,0 +1,10 @@
+{
+  "uuid": "ab466744-227d-43a6-933f-8a814511308f",
+  "issue_uuid": "dd403229-0498-49ca-b616-d84a3538f109",
+  "author": "doll-agent",
+  "content": "Two parts: (1) helpers.rs with make_pipeline + make_union (auto-naming step0/step1.../fu0/fu1...). (2) threshold.rs with FixedThresholdClassifier (fixed decision threshold) + TunedThresholdClassifierCV (k-fold OOF threshold tuning, default 21-point [0.0, 1.0] grid, custom user scoring). Type aliases ScoreFn + FitScoreFn + ThresholdScoring. 7 unit tests pass.",
+  "created_at": "2026-04-29T22:25:36.631144986Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAhXv7Wx4jLlR5LCT7syJR7wstu7WT+I6qmWjEdTuaK5mVRmdoWoR3uxw5D2+CUoO34c4F1GgbOlzMDlydwD46Aw=="
+}
