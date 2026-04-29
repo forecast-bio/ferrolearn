@@ -3,10 +3,11 @@
   "display_id": 266,
   "title": "Add proof-of-API integration test for ferrolearn-neighbors",
   "description": "Final step of #242. tests/api_proof.rs exercising every public API of ferrolearn-neighbors end-to-end:\n- KNeighborsClassifier / FittedKNeighborsClassifier: fit, predict, predict_proba, score, kneighbors, kneighbors_graph, classes/n_classes\n- KNeighborsRegressor: fit, predict, score, kneighbors, kneighbors_graph\n- RadiusNeighborsClassifier: fit, predict, predict_proba, score, radius_neighbors, radius_neighbors_graph\n- RadiusNeighborsRegressor: fit, predict, score, radius_neighbors, radius_neighbors_graph\n- NearestNeighbors: fit, kneighbors, radius_neighbors, kneighbors_graph, radius_neighbors_graph, n_samples_fit, shape\n- NearestCentroid: fit, predict, score, centroids\n- LocalOutlierFactor: fit, fit_predict, predict (novelty), decision_function, score_samples, lof_scores, threshold\n- KdTree, BallTree: smoke construction + nearest-neighbor query\n- Free functions: kneighbors_graph, radius_neighbors_graph, sort_graph_by_row_values\n- All Algorithm and Weights enum variants",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "43dda5a1-03ad-4889-8f1a-33a0a72172e4",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T17:10:48.176580475Z",
-  "updated_at": "2026-04-29T17:10:48.176580475Z"
+  "updated_at": "2026-04-29T17:29:47.965713912Z",
+  "closed_at": "2026-04-29T17:29:47.965713912Z"
 }
