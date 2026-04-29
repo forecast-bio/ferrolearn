@@ -1,0 +1,25 @@
+{
+  "uuid": "f5d86c48-0777-4c07-8178-e479ab422d37",
+  "display_id": 2,
+  "title": "Expand oracle test coverage across all crates",
+  "status": "closed",
+  "priority": "high",
+  "created_by": "anon-ea101af7",
+  "created_at": "2026-03-14T17:18:29.126398967Z",
+  "updated_at": "2026-04-29T12:27:01.335325443Z",
+  "closed_at": "2026-04-29T12:27:01.335325443Z",
+  "labels": [
+    "enhancement"
+  ],
+  "comments": [
+    {
+      "id": 3,
+      "author": "anon-ea101af7",
+      "content": "59 oracle tests passing across 11 crates (28 new). 28 new JSON fixtures. Script, Rust tests, and fixture schema all aligned.",
+      "created_at": "2026-03-14T17:18:35.804831869Z",
+      "kind": "result",
+      "signed_by": "SHA256:6GbEO9gckWEeR3l6YB3LUaTe1Oc9qqn0WLtMVuu7a8A",
+      "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgqj5+UR1olg7w0+zZwuWbsWpzM2FlVsxso1l+rn8dSfAAAAASY3Jvc3NsaW5rLWJhY2tmaWxsAAAAAAAAAAZzaGE1MTIAAABTAAAAC3NzaC1lZDI1NTE5AAAAQOo8dJ+4cJHlj3vqpxmLHG7oWjgTX4ASL7VJLfrFE7eW09izsHI455HhqDDTv1DVZTppbBaESLW4TucR5wIhYwA="
+    }
+  ]
+}
