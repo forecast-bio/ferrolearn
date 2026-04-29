@@ -1,0 +1,10 @@
+{
+  "uuid": "66f98f48-c271-43a0-bcaa-57882a38702d",
+  "issue_uuid": "f393912c-9765-4bf8-afe4-0c0d507f5474",
+  "author": "doll-agent",
+  "content": "Wired 4 orphan modules in lib.rs: feature_union (FeatureUnion + FittedFeatureUnion), multiclass (OneVsRest/OneVsOne + Fitted variants), multioutput (MultiOutputClassifier/Regressor + Fitted variants), transformed_target (TransformedTargetRegressor + Fitted). Build clean.",
+  "created_at": "2026-04-29T20:46:30.874763408Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAX9quxiTbIxB9ISyyAYnVVF71Do4BK3Sn3pueJNB3LLpUpf08oR0snRU7dxYj1vV/QVYvpuOdIY/bViHVxkNLDQ=="
+}
