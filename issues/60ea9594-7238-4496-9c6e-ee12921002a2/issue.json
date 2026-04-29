@@ -1,0 +1,12 @@
+{
+  "uuid": "60ea9594-7238-4496-9c6e-ee12921002a2",
+  "display_id": 262,
+  "title": "Add score() method to all neighbors estimators",
+  "description": "sklearn ClassifierMixin.score returns mean accuracy; RegressorMixin.score returns R^2. Add to:\n- FittedKNeighborsClassifier (mean accuracy)\n- FittedRadiusNeighborsClassifier (mean accuracy)\n- FittedNearestCentroid (mean accuracy)\n- FittedKNeighborsRegressor (R^2)\n- FittedRadiusNeighborsRegressor (R^2)",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "43dda5a1-03ad-4889-8f1a-33a0a72172e4",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T17:10:10.393906294Z",
+  "updated_at": "2026-04-29T17:10:10.393906294Z"
+}
