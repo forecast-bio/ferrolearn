@@ -1,0 +1,10 @@
+{
+  "uuid": "33295e37-c659-4caf-94a6-5e3c0dc1ae3e",
+  "issue_uuid": "67019f45-8cbc-44d0-a414-a21f047eafc3",
+  "author": "doll-agent",
+  "content": "Wired BaggingClassifier, BaggingRegressor, AdaBoostRegressor, AdaBoostLoss, FittedBaggingClassifier, FittedBaggingRegressor, and FittedAdaBoostRegressor into the public API via pub mod + pub use in lib.rs. These were fully implemented in src/ but never declared, so the types existed in the codebase but were unreachable from outside the crate. All 343 existing tests still pass.",
+  "created_at": "2026-04-29T17:39:40.018534623Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAJNOuKPV9P95fEXLSFt1355e6xdrOakSZaCN9uuAzvltIMV8MYvLwYU57ZsWdPtSZpU79teyDMe6LDk4nTpMhDw=="
+}
