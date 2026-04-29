@@ -1,0 +1,10 @@
+{
+  "uuid": "31573907-12df-42fa-8216-13559525bdf4",
+  "issue_uuid": "f31b1f19-a63f-46c0-b79c-bdf214ba8207",
+  "author": "doll-agent",
+  "content": "Added predict_proba and score to FittedLabelPropagation and FittedLabelSpreading. predict_proba returns each query's nearest training point's full label_distribution row. score returns mean accuracy with -1 (unlabeled sentinel) test labels skipped from the denominator. All 332 tests pass.",
+  "created_at": "2026-04-29T18:39:22.586539293Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAO+eo+4QTRTVJpq9ecFbUsORsHo8iYUNU/wK0gZ7lG9Jb0MC3ZLUUbh0H3y4WuECjtHthVvX6Hkw6I/avB7iCAQ=="
+}
