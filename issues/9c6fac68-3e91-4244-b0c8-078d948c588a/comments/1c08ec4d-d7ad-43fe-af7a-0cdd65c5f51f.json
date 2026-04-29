@@ -1,0 +1,10 @@
+{
+  "uuid": "1c08ec4d-d7ad-43fe-af7a-0cdd65c5f51f",
+  "issue_uuid": "9c6fac68-3e91-4244-b0c8-078d948c588a",
+  "author": "doll-agent",
+  "content": "Added predict_proba to FittedLDA (softmax over -½ ‖z - μ_c‖² in projected space; uniform-prior approximation since FittedLDA does not store class priors), FittedQDA (softmax over the per-class quadratic discriminants δ_c(x)), and FittedLogisticRegressionCV (delegates to inner LogisticRegression). Added predict_log_proba via the shared crate::log_proba helper to LDA, QDA, LogRegCV, LogisticRegression, MLPClassifier (the latter two already had predict_proba). Skipped predict_proba on FittedRidgeClassifier (sklearn's RidgeClassifier does not expose it), FittedLinearSVC (no probabilistic interp without calibration), and FittedSGDClassifier (would need conditional logic on the loss enum). All 498 tests pass.",
+  "created_at": "2026-04-29T19:06:16.032671982Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAG3VAPwerEcr9QEzTcn3qqFAFiWGo0pVdxEgLrMwV8sNt9mYpPOCLviHsNrBg0idFpRVtH2aoFgVUnJO1YJtlAg=="
+}
