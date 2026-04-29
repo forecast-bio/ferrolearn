@@ -1,0 +1,12 @@
+{
+  "uuid": "264fe159-d949-44e3-9a94-e29b78cf18f6",
+  "display_id": 257,
+  "title": "Add norm parameter to ComplementNB",
+  "description": "sklearn ComplementNB has norm: bool = False. When True, applies a second L1 normalization step on the weights (per-class weights divided by their L1 norm) — the 'normalized weights' variant from Rennie et al. 2003 §4.4.\n\nferrolearn ComplementNB currently only implements the unnormalized variant. Add with_norm(bool) builder; apply second normalization in fit() when enabled. Reference: scikit-learn/sklearn/naive_bayes.py ComplementNB._update_feature_log_prob.",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "066c7e24-b41d-48a7-950a-ef16dd30e892",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:25:00.620977942Z",
+  "updated_at": "2026-04-29T16:25:00.620977942Z"
+}
