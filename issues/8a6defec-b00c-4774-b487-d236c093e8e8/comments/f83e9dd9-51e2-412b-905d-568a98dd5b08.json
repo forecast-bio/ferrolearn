@@ -1,0 +1,10 @@
+{
+  "uuid": "f83e9dd9-51e2-412b-905d-568a98dd5b08",
+  "issue_uuid": "8a6defec-b00c-4774-b487-d236c093e8e8",
+  "author": "doll-agent",
+  "content": "Added HasFeatureImportances impl + cached feature_importances field to all 4 missing fitted estimators: FittedAdaBoostClassifier, FittedAdaBoostRegressor, FittedBaggingClassifier, FittedBaggingRegressor. Shared aggregator decision_tree::aggregate_tree_importances() handles per-tree feature-index remapping (Bagging) and per-tree weighting (AdaBoost). Returns normalized importances summing to 1.0. Skipped IsolationForest, RandomTreesEmbedding, VotingClassifier/Regressor — sklearn does not define feature_importances_ for any of these. All 343 tests pass.",
+  "created_at": "2026-04-29T17:53:31.962240646Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAvSp0DSfdUfYaY7tmqxaK4lbaahI0Z5RabGMm3sd+iYn2zbmO7EfbUSHn4NE7iJe7TGNVuxbW2gFPdeEuOvu0Bg=="
+}
