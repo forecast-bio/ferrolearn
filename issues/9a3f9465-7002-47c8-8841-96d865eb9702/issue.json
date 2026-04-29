@@ -3,10 +3,11 @@
   "display_id": 265,
   "title": "Complete LocalOutlierFactor sklearn API: decision_function, fit_predict, score_samples, novelty mode",
   "description": "sklearn LocalOutlierFactor exposes:\n- fit(X) — fit on inliers (training mode)\n- fit_predict(X) — fit + predict in outlier-detection mode (-1 outlier, +1 inlier)\n- predict(X) — only in novelty mode (novelty=True at construction)\n- decision_function(X) — opposite of LOF, higher = more inlier\n- score_samples(X) — negative LOF; higher = more inlier\n- contamination param (default 'auto') controls offset_\n\nferrolearn FittedLocalOutlierFactor already has lof_scores and threshold accessors but lacks the standard sklearn predict / decision_function / score_samples surface. Add them, plus a 'novelty' constructor flag.",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "43dda5a1-03ad-4889-8f1a-33a0a72172e4",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T17:10:37.668272910Z",
-  "updated_at": "2026-04-29T17:10:37.668272910Z"
+  "updated_at": "2026-04-29T17:29:23.934101836Z",
+  "closed_at": "2026-04-29T17:29:23.934101836Z"
 }
