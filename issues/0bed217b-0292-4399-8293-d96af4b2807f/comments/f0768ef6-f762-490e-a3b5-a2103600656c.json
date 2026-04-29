@@ -1,0 +1,10 @@
+{
+  "uuid": "f0768ef6-f762-490e-a3b5-a2103600656c",
+  "issue_uuid": "0bed217b-0292-4399-8293-d96af4b2807f",
+  "author": "doll-agent",
+  "content": "Added predict_proba, score_samples, and score to FittedGaussianMixture and FittedBayesianGaussianMixture. GMM reuses log_responsibilities + log_sum_exp_rows; BGMM gets a new unnormalized_log_prob helper that mirrors compute_responsibilities but returns per-row log-sum-exp instead of normalized posteriors. predict_proba returns soft responsibilities (rows sum to 1); score_samples returns per-sample log-likelihood; score returns mean per-sample log-likelihood. All 332 tests still pass after the additions.",
+  "created_at": "2026-04-29T18:34:17.850430064Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA6cmg4/LDwwk2GcEm2cToiqd4fbqBYw1xahfum3DOp/i1I3q2zV8QbTohEGIjbDnQy0r6j2D8ASl33TxTTTrZBQ=="
+}
