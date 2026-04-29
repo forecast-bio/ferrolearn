@@ -1,0 +1,12 @@
+{
+  "uuid": "67019f45-8cbc-44d0-a414-a21f047eafc3",
+  "display_id": 267,
+  "title": "Wire orphaned modules into lib.rs: BaggingClassifier, BaggingRegressor, AdaBoostRegressor",
+  "description": "ferrolearn-tree/src/bagging.rs and ferrolearn-tree/src/adaboost_regressor.rs are fully implemented but NEVER declared via pub mod or pub use in lib.rs. The types compile but are unreachable from outside the crate. Functional bug — these estimators are silently missing from the public API.\n\nFix: add pub mod adaboost_regressor; pub mod bagging; and re-export their public types at the crate root. Ensure module docs in lib.rs reference all three new estimators.",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T17:37:59.669275917Z",
+  "updated_at": "2026-04-29T17:37:59.669275917Z"
+}
