@@ -19,9 +19,18 @@
 //! - **[`GaussianProcessRegressor`]** — Bayesian nonparametric regression with
 //!   predictive mean and variance via Cholesky decomposition.
 //! - **[`GaussianProcessClassifier`]** — Probabilistic classification via Laplace
-//!   approximation (binary and multi-class one-vs-rest).
+//!   approximation (binary and multi-class one-vs-rest), with Rasmussen &
+//!   Williams Algorithm 3.2 predictions and `log_marginal_likelihood()` for
+//!   hyperparameter selection.
 //! - **GP Kernels** — RBF, Matern (0.5/1.5/2.5), Constant, White, DotProduct,
 //!   plus Sum and Product kernel composition via the [`GPKernel`](gp_kernels::GPKernel) trait.
+//! - **[`KernelRidge`]** — Kernel ridge regression in dual form
+//!   `(K + αI) c = y` with RBF / Polynomial / Linear / Sigmoid / Laplacian
+//!   / Cosine kernels.
+//! - **[`Nystroem`]** — Low-rank kernel approximation via the Nyström method,
+//!   producing a dense feature embedding usable with linear models.
+//! - **[`RBFSampler`]** — Random Fourier features (Rahimi & Recht 2007) for
+//!   approximating the RBF kernel with a randomized cosine feature map.
 //!
 //! # Design
 //!
@@ -40,9 +49,12 @@ pub mod gaussian_process;
 pub mod gp_classifier;
 pub mod gp_kernels;
 pub mod hat_matrix;
+pub mod kernel_ridge;
 pub mod kernels;
 pub mod local_polynomial;
 pub mod nadaraya_watson;
+pub mod nystroem;
+pub mod rbf_sampler;
 pub mod weights;
 
 pub use bandwidth::{CrossValidatedBandwidth, CvStrategy, scott_bandwidth, silverman_bandwidth};
@@ -60,9 +72,12 @@ pub use gp_kernels::{
     ConstantKernel, DotProductKernel, GPKernel, MaternKernel, ProductKernel, RBFKernel, SumKernel,
     WhiteKernel,
 };
+pub use kernel_ridge::{FittedKernelRidge, KernelRidge};
 pub use kernels::{
     BiweightKernel, CosineKernel, DynKernel, EpanechnikovKernel, GaussianKernel, Kernel,
     TricubeKernel, TriweightKernel, UniformKernel,
 };
 pub use local_polynomial::{FittedLocalPolynomialRegression, LocalPolynomialRegression};
 pub use nadaraya_watson::{FittedNadarayaWatson, NadarayaWatson};
+pub use nystroem::{FittedNystroem, KernelType, Nystroem};
+pub use rbf_sampler::{FittedRBFSampler, RBFSampler};

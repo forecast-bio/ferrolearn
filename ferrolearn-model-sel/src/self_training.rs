@@ -175,7 +175,7 @@ impl SelfTrainingClassifier {
             let unlabeled_idx: Vec<usize> = labeled_mask
                 .iter()
                 .enumerate()
-                .filter_map(|(i, &m)| if !m { Some(i) } else { None })
+                .filter_map(|(i, &m)| if m { None } else { Some(i) })
                 .collect();
 
             if unlabeled_idx.is_empty() {
@@ -227,18 +227,17 @@ impl SelfTrainingClassifier {
         }
 
         // If we exhausted iterations without breaking, do a final fit.
-        let final_predict = match predict_fn {
-            Some(pf) => pf,
-            None => {
-                let labeled_idx: Vec<usize> = labeled_mask
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, &m)| if m { Some(i) } else { None })
-                    .collect();
-                let x_final = select_rows(x, &labeled_idx);
-                let y_final = Array1::from_vec(labeled_idx.iter().map(|&i| labels[i]).collect());
-                (self.fit_fn)(&x_final, &y_final)?
-            }
+        let final_predict = if let Some(pf) = predict_fn {
+            pf
+        } else {
+            let labeled_idx: Vec<usize> = labeled_mask
+                .iter()
+                .enumerate()
+                .filter_map(|(i, &m)| if m { Some(i) } else { None })
+                .collect();
+            let x_final = select_rows(x, &labeled_idx);
+            let y_final = Array1::from_vec(labeled_idx.iter().map(|&i| labels[i]).collect());
+            (self.fit_fn)(&x_final, &y_final)?
         };
 
         let final_labels = Array1::from_vec(labels);

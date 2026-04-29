@@ -20,7 +20,7 @@ fn bench_accuracy(c: &mut Criterion) {
     let mut group = c.benchmark_group("accuracy_score");
     for &(label, n) in METRIC_SIZES {
         let (y_true, y_pred) = make_classification_predictions(n);
-        group.bench_with_input(BenchmarkId::from_parameter(label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::from_parameter(label), &(), |b, ()| {
             b.iter(|| classification::accuracy_score(&y_true, &y_pred).unwrap());
         });
     }
@@ -31,7 +31,7 @@ fn bench_f1(c: &mut Criterion) {
     let mut group = c.benchmark_group("f1_score");
     for &(label, n) in METRIC_SIZES {
         let (y_true, y_pred) = make_classification_predictions(n);
-        group.bench_with_input(BenchmarkId::from_parameter(label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::from_parameter(label), &(), |b, ()| {
             b.iter(|| {
                 classification::f1_score(&y_true, &y_pred, classification::Average::Macro).unwrap()
             });
@@ -44,7 +44,7 @@ fn bench_mse(c: &mut Criterion) {
     let mut group = c.benchmark_group("mean_squared_error");
     for &(label, n) in METRIC_SIZES {
         let (y_true, y_pred) = make_regression_predictions(n);
-        group.bench_with_input(BenchmarkId::from_parameter(label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::from_parameter(label), &(), |b, ()| {
             b.iter(|| regression::mean_squared_error(&y_true, &y_pred).unwrap());
         });
     }
@@ -55,7 +55,7 @@ fn bench_r2(c: &mut Criterion) {
     let mut group = c.benchmark_group("r2_score");
     for &(label, n) in METRIC_SIZES {
         let (y_true, y_pred) = make_regression_predictions(n);
-        group.bench_with_input(BenchmarkId::from_parameter(label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::from_parameter(label), &(), |b, ()| {
             b.iter(|| regression::r2_score(&y_true, &y_pred).unwrap());
         });
     }

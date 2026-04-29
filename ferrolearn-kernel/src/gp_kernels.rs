@@ -93,7 +93,7 @@ fn squared_distances<F: Float>(x1: &Array2<F>, x2: &Array2<F>) -> Array2<F> {
 
 /// Compute the Euclidean distance matrix between rows of `x1` and `x2`.
 fn euclidean_distances<F: Float>(x1: &Array2<F>, x2: &Array2<F>) -> Array2<F> {
-    squared_distances(x1, x2).mapv(|v| v.sqrt())
+    squared_distances(x1, x2).mapv(num_traits::Float::sqrt)
 }
 
 // ---------------------------------------------------------------------------
@@ -596,7 +596,7 @@ mod tests {
         let x = make_x1();
         let diag = k.diagonal(&x);
         assert_eq!(diag.len(), 3);
-        for &d in diag.iter() {
+        for &d in &diag {
             assert_abs_diff_eq!(d, 1.0, epsilon = 1e-12);
         }
     }
@@ -682,7 +682,7 @@ mod tests {
         let k = MaternKernel::new(1.0, 2.5);
         let x = make_x1();
         let diag = k.diagonal(&x);
-        for &d in diag.iter() {
+        for &d in &diag {
             assert_abs_diff_eq!(d, 1.0, epsilon = 1e-12);
         }
     }
@@ -706,7 +706,7 @@ mod tests {
         let x1 = make_x1();
         let x2 = make_x2();
         let km = k.compute(&x1, &x2);
-        for &v in km.iter() {
+        for &v in &km {
             assert_abs_diff_eq!(v, 3.0, epsilon = 1e-12);
         }
     }
@@ -716,7 +716,7 @@ mod tests {
         let k = ConstantKernel::new(2.5);
         let x = make_x1();
         let diag = k.diagonal(&x);
-        for &d in diag.iter() {
+        for &d in &diag {
             assert_abs_diff_eq!(d, 2.5, epsilon = 1e-12);
         }
     }
@@ -747,7 +747,7 @@ mod tests {
         // Cross-covariance: different sizes, so all zeros
         let km = k.compute(&x1, &x2);
         assert_eq!(km.dim(), (3, 2));
-        for &v in km.iter() {
+        for &v in &km {
             assert_abs_diff_eq!(v, 0.0, epsilon = 1e-12);
         }
     }
@@ -768,7 +768,7 @@ mod tests {
         let k = WhiteKernel::new(0.5);
         let x = make_x1();
         let diag = k.diagonal(&x);
-        for &d in diag.iter() {
+        for &d in &diag {
             assert_abs_diff_eq!(d, 0.5, epsilon = 1e-12);
         }
     }
@@ -813,7 +813,7 @@ mod tests {
         );
         let x = make_x1();
         let km = k.compute(&x, &x);
-        for &v in km.iter() {
+        for &v in &km {
             assert_abs_diff_eq!(v, 3.0, epsilon = 1e-12);
         }
     }
@@ -837,7 +837,7 @@ mod tests {
         );
         let x = make_x1();
         let diag = k.diagonal(&x);
-        for &d in diag.iter() {
+        for &d in &diag {
             assert_abs_diff_eq!(d, 1.5, epsilon = 1e-12);
         }
     }
@@ -852,7 +852,7 @@ mod tests {
         );
         let x = make_x1();
         let km = k.compute(&x, &x);
-        for &v in km.iter() {
+        for &v in &km {
             assert_abs_diff_eq!(v, 6.0, epsilon = 1e-12);
         }
     }

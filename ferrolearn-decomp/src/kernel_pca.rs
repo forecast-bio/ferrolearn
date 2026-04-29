@@ -343,7 +343,7 @@ fn jacobi_eigen_symmetric<F: Float + Send + Sync + 'static>(
         v[[i, i]] = F::one();
     }
 
-    let tol = F::from(1e-12).unwrap_or(F::epsilon());
+    let tol = F::from(1e-12).unwrap_or_else(F::epsilon);
 
     for _iteration in 0..max_iter {
         let mut max_off = F::zero();
@@ -370,7 +370,7 @@ fn jacobi_eigen_symmetric<F: Float + Send + Sync + 'static>(
         let apq = mat[[p, q]];
 
         let theta = if (app - aqq).abs() < tol {
-            F::from(std::f64::consts::FRAC_PI_4).unwrap_or(F::one())
+            F::from(std::f64::consts::FRAC_PI_4).unwrap_or_else(F::one)
         } else {
             let tau = (aqq - app) / (F::from(2.0).unwrap() * apq);
             let t = if tau >= F::zero() {
@@ -509,7 +509,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for KernelPCA<F> {
             top_eigenvalues[k_idx] = eigval_clamped;
 
             // Scale eigenvector by 1/sqrt(eigenvalue).
-            let scale = if eigval_clamped > F::from(1e-12).unwrap_or(F::epsilon()) {
+            let scale = if eigval_clamped > F::from(1e-12).unwrap_or_else(F::epsilon) {
                 F::one() / eigval_clamped.sqrt()
             } else {
                 F::zero()
@@ -717,7 +717,7 @@ mod tests {
             .with_gamma(0.1);
         let x = circle_dataset();
         let fitted = kpca.fit(&x, &()).unwrap();
-        for &ev in fitted.eigenvalues().iter() {
+        for &ev in fitted.eigenvalues() {
             assert!(ev >= 0.0, "eigenvalue should be non-negative, got {ev}");
         }
     }

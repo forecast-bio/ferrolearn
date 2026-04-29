@@ -200,7 +200,7 @@ impl<F: Float + Send + Sync + ScalarOperand + FromPrimitive + 'static> Fit<Array
 
         // Initialize coefficients to zero.
         let mut w = Array1::<F>::zeros(n_features);
-        let mut residual = y_work.clone();
+        let mut residual = y_work;
 
         for _iter in 0..self.max_iter {
             let mut max_change = F::zero();

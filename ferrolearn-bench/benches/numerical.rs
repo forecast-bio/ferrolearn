@@ -125,7 +125,7 @@ fn distribution_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("distributions");
     let n = 100_000;
     let xs: Vec<f64> = (0..n)
-        .map(|i| -3.0 + 6.0 * (i as f64) / (n as f64 - 1.0))
+        .map(|i| -3.0 + 6.0 * f64::from(i) / (f64::from(n) - 1.0))
         .collect();
 
     let normal = Normal::new(0.0, 1.0).unwrap();
@@ -152,7 +152,7 @@ fn distribution_benchmarks(c: &mut Criterion) {
     let chi2 = ChiSquared::new(5.0).unwrap();
     // Chi-squared CDF only meaningful for x >= 0; use linspace 0..20
     let chi2_xs: Vec<f64> = (0..n)
-        .map(|i| 20.0 * (i as f64) / (n as f64 - 1.0))
+        .map(|i| 20.0 * f64::from(i) / (f64::from(n) - 1.0))
         .collect();
     group.bench_function("chi2_cdf_100k", |b| {
         b.iter(|| {
@@ -234,7 +234,7 @@ fn interpolation_benchmarks(c: &mut Criterion) {
     // 1000 sin(x) data points on [0, 2*pi]
     let n_build = 1000;
     let x_build: Vec<f64> = (0..n_build)
-        .map(|i| 2.0 * std::f64::consts::PI * (i as f64) / (n_build as f64 - 1.0))
+        .map(|i| 2.0 * std::f64::consts::PI * f64::from(i) / (f64::from(n_build) - 1.0))
         .collect();
     let y_build: Vec<f64> = x_build.iter().map(|&x| x.sin()).collect();
 
@@ -255,7 +255,7 @@ fn interpolation_benchmarks(c: &mut Criterion) {
     let spline_1000 = CubicSpline::new(&x_build, &y_build, BoundaryCondition::Natural).unwrap();
     let n_eval = 10_000;
     let x_eval: Vec<f64> = (0..n_eval)
-        .map(|i| 2.0 * std::f64::consts::PI * (i as f64) / (n_eval as f64 - 1.0))
+        .map(|i| 2.0 * std::f64::consts::PI * f64::from(i) / (f64::from(n_eval) - 1.0))
         .collect();
 
     group.bench_function("spline_eval_10000", |b| {
@@ -265,7 +265,7 @@ fn interpolation_benchmarks(c: &mut Criterion) {
     // Build from 10000 points
     let n_build_large = 10_000;
     let x_build_large: Vec<f64> = (0..n_build_large)
-        .map(|i| 2.0 * std::f64::consts::PI * (i as f64) / (n_build_large as f64 - 1.0))
+        .map(|i| 2.0 * std::f64::consts::PI * f64::from(i) / (f64::from(n_build_large) - 1.0))
         .collect();
     let y_build_large: Vec<f64> = x_build_large.iter().map(|&x| x.sin()).collect();
 
@@ -294,7 +294,7 @@ fn quadrature_benchmarks(c: &mut Criterion) {
 
     // Adaptive Simpson: integral of sin(x) from 0 to pi = 2
     group.bench_function("quad_sin", |b| {
-        b.iter(|| black_box(quad(|x| x.sin(), 0.0, std::f64::consts::PI, 1e-10)));
+        b.iter(|| black_box(quad(f64::sin, 0.0, std::f64::consts::PI, 1e-10)));
     });
 
     // Adaptive Simpson: integral of exp(-x^2) from -5 to 5 ~ sqrt(pi)
@@ -304,7 +304,7 @@ fn quadrature_benchmarks(c: &mut Criterion) {
 
     // Gauss-Legendre 10-point on sin integral
     group.bench_function("gauss_legendre_10_sin", |b| {
-        b.iter(|| black_box(gauss_legendre(|x| x.sin(), 0.0, std::f64::consts::PI, 10).unwrap()));
+        b.iter(|| black_box(gauss_legendre(f64::sin, 0.0, std::f64::consts::PI, 10).unwrap()));
     });
 
     group.finish();

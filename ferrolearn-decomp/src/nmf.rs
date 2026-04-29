@@ -236,7 +236,7 @@ fn reconstruction_error<F: Float + 'static>(x: &Array2<F>, w: &Array2<F>, h: &Ar
 
 /// Small epsilon to prevent division by zero.
 fn eps<F: Float>() -> F {
-    F::from(1e-12).unwrap_or(F::epsilon())
+    F::from(1e-12).unwrap_or_else(F::epsilon)
 }
 
 /// Initialize W and H with random non-negative values.
@@ -250,13 +250,13 @@ fn init_random<F: Float>(
     let uniform = Uniform::new(0.0f64, 1.0f64).unwrap();
 
     let mut w = Array2::<F>::zeros((n_samples, n_components));
-    for elem in w.iter_mut() {
-        *elem = F::from(uniform.sample(&mut rng)).unwrap_or(F::zero()) + eps::<F>();
+    for elem in &mut w {
+        *elem = F::from(uniform.sample(&mut rng)).unwrap_or_else(F::zero) + eps::<F>();
     }
 
     let mut h = Array2::<F>::zeros((n_components, n_features));
-    for elem in h.iter_mut() {
-        *elem = F::from(uniform.sample(&mut rng)).unwrap_or(F::zero()) + eps::<F>();
+    for elem in &mut h {
+        *elem = F::from(uniform.sample(&mut rng)).unwrap_or_else(F::zero) + eps::<F>();
     }
 
     (w, h)
@@ -275,7 +275,7 @@ fn init_nndsvd<F: Float + Send + Sync + 'static>(
 
     // Compute mean of X for scale.
     let mut total = F::zero();
-    for &v in x.iter() {
+    for &v in x {
         total = total + v;
     }
     let avg = (total / F::from(n_samples * n_features).unwrap())
@@ -313,7 +313,7 @@ fn init_nndsvd<F: Float + Send + Sync + 'static>(
                 SeedableRng::seed_from_u64(seed.wrapping_add(k as u64));
             let uniform = Uniform::new(0.0f64, 1.0f64).unwrap();
             for j in 0..n_features {
-                h[[k, j]] = F::from(uniform.sample(&mut rng)).unwrap_or(F::zero()) * avg;
+                h[[k, j]] = F::from(uniform.sample(&mut rng)).unwrap_or_else(F::zero) * avg;
             }
         }
     }
@@ -359,7 +359,7 @@ fn jacobi_eigen_symmetric<F: Float + Send + Sync + 'static>(
         v[[i, i]] = F::one();
     }
 
-    let tol = F::from(1e-12).unwrap_or(F::epsilon());
+    let tol = F::from(1e-12).unwrap_or_else(F::epsilon);
 
     for _iteration in 0..max_iter {
         let mut max_off = F::zero();
@@ -386,7 +386,7 @@ fn jacobi_eigen_symmetric<F: Float + Send + Sync + 'static>(
         let apq = mat[[p, q]];
 
         let theta = if (app - aqq).abs() < tol {
-            F::from(std::f64::consts::FRAC_PI_4).unwrap_or(F::one())
+            F::from(std::f64::consts::FRAC_PI_4).unwrap_or_else(F::one)
         } else {
             let tau = (aqq - app) / (F::from(2.0).unwrap() * apq);
             let t = if tau >= F::zero() {
@@ -445,7 +445,7 @@ fn solve_multiplicative_update<F: Float + 'static>(
     max_iter: usize,
     tol: f64,
 ) -> usize {
-    let tol_f = F::from(tol).unwrap_or(F::epsilon());
+    let tol_f = F::from(tol).unwrap_or_else(F::epsilon);
     let epsilon = eps::<F>();
     let mut prev_err = reconstruction_error(x, w, h);
 
@@ -497,7 +497,7 @@ fn solve_coordinate_descent<F: Float + 'static>(
 ) -> usize {
     let (n_samples, n_features) = x.dim();
     let n_components = h.nrows();
-    let tol_f = F::from(tol).unwrap_or(F::epsilon());
+    let tol_f = F::from(tol).unwrap_or_else(F::epsilon);
     let epsilon = eps::<F>();
     let mut prev_err = reconstruction_error(x, w, h);
 
@@ -622,7 +622,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for NMF<F> {
         }
 
         // Check non-negativity.
-        for &val in x.iter() {
+        for &val in x {
             if val < F::zero() {
                 return Err(FerroError::InvalidParameter {
                     name: "X".into(),
@@ -684,7 +684,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedNMF<F> {
         }
 
         // Check non-negativity.
-        for &val in x.iter() {
+        for &val in x {
             if val < F::zero() {
                 return Err(FerroError::InvalidParameter {
                     name: "X".into(),
@@ -699,10 +699,8 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedNMF<F> {
 
         // Initialize W with uniform small values.
         let mut w = Array2::<F>::zeros((n_samples, n_components));
-        let init_val = F::from(0.1).unwrap_or(F::one());
-        for elem in w.iter_mut() {
-            *elem = init_val;
-        }
+        let init_val = F::from(0.1).unwrap_or_else(F::one);
+        w.fill(init_val);
 
         // Run multiplicative updates with H fixed.
         let h = &self.components_;
@@ -797,7 +795,7 @@ mod tests {
         let nmf = NMF::<f64>::new(2).with_random_state(42);
         let x = small_dataset();
         let fitted = nmf.fit(&x, &()).unwrap();
-        for &val in fitted.components().iter() {
+        for &val in fitted.components() {
             assert!(
                 val >= 0.0,
                 "component value should be non-negative, got {val}"
@@ -820,7 +818,7 @@ mod tests {
         let x = small_dataset();
         let fitted = nmf.fit(&x, &()).unwrap();
         let projected = fitted.transform(&x).unwrap();
-        for &val in projected.iter() {
+        for &val in &projected {
             assert!(val >= 0.0, "W value should be non-negative, got {val}");
         }
     }
@@ -856,7 +854,7 @@ mod tests {
         let x = medium_dataset();
         let fitted = nmf.fit(&x, &()).unwrap();
         assert_eq!(fitted.components().dim(), (2, 4));
-        for &val in fitted.components().iter() {
+        for &val in fitted.components() {
             assert!(val >= 0.0, "CD component should be non-negative, got {val}");
         }
     }
@@ -869,7 +867,7 @@ mod tests {
         let x = medium_dataset();
         let fitted = nmf.fit(&x, &()).unwrap();
         assert_eq!(fitted.components().dim(), (2, 4));
-        for &val in fitted.components().iter() {
+        for &val in fitted.components() {
             assert!(
                 val >= 0.0,
                 "NNDSVD component should be non-negative, got {val}"

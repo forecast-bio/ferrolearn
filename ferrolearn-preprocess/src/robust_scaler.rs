@@ -29,7 +29,7 @@ fn quantile_sorted<F: Float>(sorted: &[F], q: f64) -> F {
     if lo == hi {
         return sorted[lo];
     }
-    let frac = F::from(idx - lo as f64).unwrap_or(F::zero());
+    let frac = F::from(idx - lo as f64).unwrap_or_else(F::zero);
     sorted[lo] + (sorted[hi] - sorted[lo]) * frac
 }
 
@@ -183,7 +183,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedRobustScal
                 // Zero-IQR column: leave unchanged.
                 continue;
             }
-            for v in col.iter_mut() {
+            for v in &mut col {
                 *v = (*v - med) / iqr;
             }
         }

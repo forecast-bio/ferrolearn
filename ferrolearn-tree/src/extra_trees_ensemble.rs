@@ -506,7 +506,7 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedExtraTreesCl
             for tree_nodes in &self.trees {
                 let leaf_idx = traverse(tree_nodes, &row);
                 if let Node::Leaf { value, .. } = tree_nodes[leaf_idx] {
-                    let class_idx = value.to_f64().map(|f| f.round() as usize).unwrap_or(0);
+                    let class_idx = value.to_f64().map_or(0, |f| f.round() as usize);
                     if class_idx < n_classes {
                         votes[class_idx] += 1;
                     }
@@ -517,8 +517,7 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedExtraTreesCl
                 .iter()
                 .enumerate()
                 .max_by_key(|&(_, &count)| count)
-                .map(|(idx, _)| idx)
-                .unwrap_or(0);
+                .map_or(0, |(idx, _)| idx);
             predictions[i] = self.classes[winner];
         }
 
@@ -567,7 +566,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 
@@ -1196,7 +1195,7 @@ mod tests {
         let fitted = model.fit(&x, &y).unwrap();
         let preds = fitted.predict(&x).unwrap();
 
-        for &p in preds.iter() {
+        for &p in &preds {
             assert_relative_eq!(p, 5.0, epsilon = 1e-10);
         }
     }

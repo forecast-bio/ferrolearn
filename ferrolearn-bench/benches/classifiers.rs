@@ -11,11 +11,11 @@ fn bench_logistic_regression(c: &mut Criterion) {
     group.sample_size(10);
     for &(label, n, p) in SIZES {
         let (x, y) = classification_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| LogisticRegression::<f64>::new().fit(&x, &y).unwrap());
         });
         let fitted = LogisticRegression::<f64>::new().fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }
@@ -26,11 +26,11 @@ fn bench_decision_tree(c: &mut Criterion) {
     let mut group = c.benchmark_group("DecisionTreeClassifier");
     for &(label, n, p) in SIZES {
         let (x, y) = classification_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| DecisionTreeClassifier::<f64>::new().fit(&x, &y).unwrap());
         });
         let fitted = DecisionTreeClassifier::<f64>::new().fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }
@@ -42,7 +42,7 @@ fn bench_random_forest(c: &mut Criterion) {
     group.sample_size(10);
     for &(label, n, p) in SIZES {
         let (x, y) = classification_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| {
                 RandomForestClassifier::<f64>::new()
                     .with_random_state(42)
@@ -54,7 +54,7 @@ fn bench_random_forest(c: &mut Criterion) {
             .with_random_state(42)
             .fit(&x, &y)
             .unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }
@@ -65,11 +65,11 @@ fn bench_knn(c: &mut Criterion) {
     let mut group = c.benchmark_group("KNeighborsClassifier");
     for &(label, n, p) in SIZES {
         let (x, y) = classification_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| KNeighborsClassifier::<f64>::new().fit(&x, &y).unwrap());
         });
         let fitted = KNeighborsClassifier::<f64>::new().fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }
@@ -80,11 +80,11 @@ fn bench_gaussian_nb(c: &mut Criterion) {
     let mut group = c.benchmark_group("GaussianNB");
     for &(label, n, p) in SIZES {
         let (x, y) = classification_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| GaussianNB::<f64>::new().fit(&x, &y).unwrap());
         });
         let fitted = GaussianNB::<f64>::new().fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }

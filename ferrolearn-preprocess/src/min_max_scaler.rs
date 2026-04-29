@@ -151,12 +151,12 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for MinMaxScaler<F> {
                 .iter()
                 .copied()
                 .reduce(|a, b| if a < b { a } else { b })
-                .unwrap_or(F::zero());
+                .unwrap_or_else(F::zero);
             let max = col
                 .iter()
                 .copied()
                 .reduce(|a, b| if a > b { a } else { b })
-                .unwrap_or(F::zero());
+                .unwrap_or_else(F::zero);
             data_min[j] = min;
             data_max[j] = max;
         }
@@ -203,7 +203,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedMinMaxScal
                 // Zero-range column: leave unchanged.
                 continue;
             }
-            for v in col.iter_mut() {
+            for v in &mut col {
                 *v = (*v - min) / span * range_width + range_min;
             }
         }

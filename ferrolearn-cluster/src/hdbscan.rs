@@ -552,7 +552,7 @@ fn extract_clusters<F: Float>(
 
     // Compute stability for each condensed cluster.
     // Stability = sum over points p in cluster: (lambda_p - birth_lambda)
-    for cluster in condensed_clusters.iter_mut() {
+    for cluster in &mut condensed_clusters {
         let birth = cluster.birth_lambda;
         let mut stab = 0.0;
         for &child_lambda in &cluster.child_lambdas {
@@ -648,7 +648,7 @@ fn extract_clusters<F: Float>(
                     1.0
                 };
                 if labels[child] == cluster_label_map[cond_id] {
-                    probabilities[child] = F::from(prob).unwrap_or(F::zero());
+                    probabilities[child] = F::from(prob).unwrap_or_else(F::zero);
                 }
             }
         }
@@ -921,7 +921,7 @@ mod tests {
         // With very large min_cluster_size, everything becomes noise.
         let model_large = Hdbscan::<f64>::new().with_min_cluster_size(100);
         let fitted_large = model_large.fit(&x, &()).unwrap();
-        for &label in fitted_large.labels().iter() {
+        for &label in fitted_large.labels() {
             assert_eq!(
                 label, -1,
                 "all points should be noise with large min_cluster_size"
@@ -937,7 +937,7 @@ mod tests {
 
         for (i, &prob) in fitted.probabilities().iter().enumerate() {
             assert!(
-                prob >= 0.0 && prob <= 1.0,
+                (0.0..=1.0).contains(&prob),
                 "probability at index {i} is {prob}, expected [0, 1]"
             );
         }
@@ -1022,7 +1022,7 @@ mod tests {
         let fitted = model.fit(&x, &()).unwrap();
 
         // With min_cluster_size=5 and only 3 points, all should be noise.
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert_eq!(label, -1);
         }
     }
@@ -1083,7 +1083,7 @@ mod tests {
         // All identical points should be in the same cluster or all noise.
         let labels = fitted.labels();
         let first = labels[0];
-        for &l in labels.iter() {
+        for &l in labels {
             assert_eq!(l, first, "identical points should have the same label");
         }
     }

@@ -246,7 +246,7 @@ impl<F: Float + Send + Sync + ScalarOperand + FromPrimitive + 'static> Fit<Array
         let denominators: Vec<F> = col_norms.iter().map(|&cn| cn + alpha_l2).collect();
 
         let mut w = Array1::<F>::zeros(n_features);
-        let mut residual = y_work.clone();
+        let mut residual = y_work;
 
         for _iter in 0..self.max_iter {
             let mut max_change = F::zero();

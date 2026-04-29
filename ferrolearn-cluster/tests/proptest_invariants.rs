@@ -50,7 +50,7 @@ proptest! {
         let fitted = result.unwrap();
         let labels = fitted.labels();
 
-        for &label in labels.iter() {
+        for &label in labels {
             prop_assert!(label < n_clusters,
                 "Label {} >= n_clusters {}", label, n_clusters);
         }
@@ -104,7 +104,7 @@ proptest! {
         let fitted = result.unwrap();
         let preds = fitted.predict(&x).unwrap();
 
-        for &label in preds.iter() {
+        for &label in &preds {
             prop_assert!(label < n_clusters,
                 "Predicted label {} >= n_clusters {}", label, n_clusters);
         }

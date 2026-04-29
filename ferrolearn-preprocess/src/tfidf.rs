@@ -233,7 +233,7 @@ impl<F: Float + Send + Sync + 'static> FittedTfidfTransformer<F> {
                 for mut row in result.rows_mut() {
                     let norm: F = row.iter().map(|v| v.abs()).fold(F::zero(), |a, b| a + b);
                     if norm > F::zero() {
-                        for v in row.iter_mut() {
+                        for v in &mut row {
                             *v = *v / norm;
                         }
                     }
@@ -244,7 +244,7 @@ impl<F: Float + Send + Sync + 'static> FittedTfidfTransformer<F> {
                     let norm_sq: F = row.iter().map(|v| *v * *v).fold(F::zero(), |a, b| a + b);
                     let norm = norm_sq.sqrt();
                     if norm > F::zero() {
-                        for v in row.iter_mut() {
+                        for v in &mut row {
                             *v = *v / norm;
                         }
                     }

@@ -621,7 +621,7 @@ mod tests {
 
         let fitted = BayesianRidge::<f64>::new().fit(&x, &y).unwrap();
 
-        for &v in fitted.sigma().iter() {
+        for &v in fitted.sigma() {
             assert!(v > 0.0, "sigma diagonal must be positive, got {v}");
         }
     }

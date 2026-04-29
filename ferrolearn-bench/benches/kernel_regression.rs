@@ -6,7 +6,6 @@ use ferrolearn_kernel::kernels::{EpanechnikovKernel, GaussianKernel};
 use ferrolearn_kernel::local_polynomial::LocalPolynomialRegression;
 use ferrolearn_kernel::nadaraya_watson::NadarayaWatson;
 use ferrolearn_kernel::weights;
-use ndarray::Array1;
 
 const KERNEL_SIZES: &[(&str, usize)] = &[
     ("100x1", 100),
@@ -22,18 +21,18 @@ fn bench_nw_fit_predict(c: &mut Criterion) {
     for &(label, n) in KERNEL_SIZES {
         let (x, y) = regression_data(n, 1);
 
-        group.bench_with_input(BenchmarkId::new("fit_gaussian", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit_gaussian", label), &(), |b, ()| {
             let nw = NadarayaWatson::with_kernel(GaussianKernel, BandwidthStrategy::Silverman);
             b.iter(|| nw.fit(&x, &y).unwrap());
         });
 
         let nw = NadarayaWatson::with_kernel(GaussianKernel, BandwidthStrategy::Silverman);
         let fitted = nw.fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict_gaussian", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict_gaussian", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
 
-        group.bench_with_input(BenchmarkId::new("fit_epanechnikov", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit_epanechnikov", label), &(), |b, ()| {
             let nw = NadarayaWatson::with_kernel(EpanechnikovKernel, BandwidthStrategy::Silverman);
             b.iter(|| nw.fit(&x, &y).unwrap());
         });
@@ -48,7 +47,7 @@ fn bench_lpr_fit_predict(c: &mut Criterion) {
     for &(label, n) in &KERNEL_SIZES[..3] {
         let (x, y) = regression_data(n, 1);
 
-        group.bench_with_input(BenchmarkId::new("fit_order1", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit_order1", label), &(), |b, ()| {
             let lpr = LocalPolynomialRegression::with_kernel(
                 GaussianKernel,
                 BandwidthStrategy::Silverman,
@@ -60,7 +59,7 @@ fn bench_lpr_fit_predict(c: &mut Criterion) {
         let lpr =
             LocalPolynomialRegression::with_kernel(GaussianKernel, BandwidthStrategy::Silverman, 1);
         let fitted = lpr.fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict_order1", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict_order1", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }
@@ -75,11 +74,11 @@ fn bench_kernel_weights(c: &mut Criterion) {
         let (x, _) = regression_data(n, 1);
         let bw = ndarray::array![0.5f64];
 
-        group.bench_with_input(BenchmarkId::new("gaussian", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("gaussian", label), &(), |b, ()| {
             b.iter(|| weights::compute_kernel_weights(&x, &x, &bw, &GaussianKernel));
         });
 
-        group.bench_with_input(BenchmarkId::new("epanechnikov", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("epanechnikov", label), &(), |b, ()| {
             b.iter(|| weights::compute_kernel_weights(&x, &x, &bw, &EpanechnikovKernel));
         });
     }
@@ -94,7 +93,7 @@ fn bench_hat_matrix(c: &mut Criterion) {
         let (x, y) = regression_data(n, 1);
         let bw = ndarray::array![0.5f64];
 
-        group.bench_with_input(BenchmarkId::new("loocv_shortcut", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("loocv_shortcut", label), &(), |b, ()| {
             b.iter(|| {
                 ferrolearn_kernel::hat_matrix::loocv_hat_matrix_shortcut(
                     &x,
@@ -105,7 +104,7 @@ fn bench_hat_matrix(c: &mut Criterion) {
             });
         });
 
-        group.bench_with_input(BenchmarkId::new("effective_df", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("effective_df", label), &(), |b, ()| {
             b.iter(|| ferrolearn_kernel::hat_matrix::effective_df(&x, &bw, &GaussianKernel));
         });
     }

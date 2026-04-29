@@ -7,11 +7,11 @@ fn bench_linear_regression(c: &mut Criterion) {
     let mut group = c.benchmark_group("LinearRegression");
     for &(label, n, p) in SIZES {
         let (x, y) = regression_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| LinearRegression::<f64>::new().fit(&x, &y).unwrap());
         });
         let fitted = LinearRegression::<f64>::new().fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }
@@ -22,11 +22,11 @@ fn bench_ridge(c: &mut Criterion) {
     let mut group = c.benchmark_group("Ridge");
     for &(label, n, p) in SIZES {
         let (x, y) = regression_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| Ridge::<f64>::new().fit(&x, &y).unwrap());
         });
         let fitted = Ridge::<f64>::new().fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }
@@ -38,11 +38,11 @@ fn bench_lasso(c: &mut Criterion) {
     group.sample_size(10);
     for &(label, n, p) in SIZES {
         let (x, y) = regression_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| Lasso::<f64>::new().fit(&x, &y).unwrap());
         });
         let fitted = Lasso::<f64>::new().fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }
@@ -54,11 +54,11 @@ fn bench_elastic_net(c: &mut Criterion) {
     group.sample_size(10);
     for &(label, n, p) in SIZES {
         let (x, y) = regression_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| ElasticNet::<f64>::new().fit(&x, &y).unwrap());
         });
         let fitted = ElasticNet::<f64>::new().fit(&x, &y).unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }

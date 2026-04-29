@@ -188,7 +188,7 @@ proptest! {
         train_labels.sort_unstable();
         train_labels.dedup();
 
-        for &p in preds.iter() {
+        for &p in &preds {
             prop_assert!(train_labels.contains(&p),
                 "Predicted label {} not in training labels {:?}", p, train_labels);
         }
@@ -221,8 +221,8 @@ proptest! {
         let fitted = result.unwrap();
         let proba = fitted.predict_proba(&x).unwrap();
 
-        for &val in proba.iter() {
-            prop_assert!(val >= 0.0 && val <= 1.0,
+        for &val in &proba {
+            prop_assert!((0.0..=1.0).contains(&val),
                 "Probability {} outside [0, 1]", val);
         }
     }
@@ -281,8 +281,8 @@ proptest! {
         let fitted = result.unwrap();
         let proba = fitted.predict_proba(&x).unwrap();
 
-        for &val in proba.iter() {
-            prop_assert!(val >= 0.0 && val <= 1.0,
+        for &val in &proba {
+            prop_assert!((0.0..=1.0).contains(&val),
                 "Probability {} outside [0, 1]", val);
         }
     }
@@ -305,7 +305,7 @@ proptest! {
 
         let classes = fitted.classes();
 
-        for &p in preds.iter() {
+        for &p in &preds {
             prop_assert!(classes.contains(&p),
                 "Predicted label {} not in training classes {:?}", p, classes);
         }

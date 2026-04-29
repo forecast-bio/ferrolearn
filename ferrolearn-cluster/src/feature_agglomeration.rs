@@ -289,7 +289,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedFeatureAgg
             PoolingFunc::Mean => {
                 // Count features per cluster.
                 let mut counts = vec![0usize; self.n_clusters_];
-                for &label in self.feature_labels_.iter() {
+                for &label in &self.feature_labels_ {
                     counts[label] += 1;
                 }
 
@@ -372,7 +372,7 @@ mod tests {
         let x = make_correlated_features();
         let fa = FeatureAgglomeration::<f64>::new(3);
         let fitted = fa.fit(&x, &()).unwrap();
-        for &l in fitted.feature_labels().iter() {
+        for &l in fitted.feature_labels() {
             assert!(l < 3, "label {l} out of range");
         }
     }

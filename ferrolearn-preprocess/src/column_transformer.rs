@@ -135,7 +135,7 @@ fn hstack(matrices: &[Array2<f64>]) -> Result<Array2<f64>, FerroError> {
         return Ok(Array2::zeros((0, 0)));
     }
     let nrows = matrices[0].nrows();
-    let total_cols: usize = matrices.iter().map(|m| m.ncols()).sum();
+    let total_cols: usize = matrices.iter().map(ndarray::ArrayBase::ncols).sum();
 
     // Handle the case where the first matrix establishes nrows = 0 separately.
     if total_cols == 0 {
@@ -280,9 +280,7 @@ impl Fit<Array2<f64>, ()> for ColumnTransformer {
         let mut fitted_transformers: Vec<FittedSubTransformer> =
             Vec::with_capacity(self.transformers.len());
 
-        for ((name, transformer, _), indices) in
-            self.transformers.iter().zip(resolved_selectors.into_iter())
-        {
+        for ((name, transformer, _), indices) in self.transformers.iter().zip(resolved_selectors) {
             let sub_x = select_columns(x, &indices);
             let fitted = transformer.fit_pipeline(&sub_x, &dummy_y)?;
             fitted_transformers.push((name.clone(), fitted, indices));
@@ -819,8 +817,7 @@ mod tests {
     #[test]
     fn test_output_shape_partial_passthrough() {
         // 5-column input, transform 2 cols, passthrough 3
-        let x =
-            Array2::<f64>::from_shape_vec((3, 5), (1..=15).map(|v| v as f64).collect()).unwrap();
+        let x = Array2::<f64>::from_shape_vec((3, 5), (1..=15).map(f64::from).collect()).unwrap();
         let ct = ColumnTransformer::new(
             vec![(
                 "std".into(),

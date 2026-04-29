@@ -174,22 +174,28 @@ fn kmeans_1d<F: Float>(values: &[F], n_bins: usize, max_iter: usize) -> Vec<F> {
     let n = values.len();
     if n <= n_bins || n_bins == 0 {
         // Fallback to uniform
-        let min_v = values.iter().copied().fold(F::infinity(), |a, b| a.min(b));
+        let min_v = values
+            .iter()
+            .copied()
+            .fold(F::infinity(), num_traits::Float::min);
         let max_v = values
             .iter()
             .copied()
-            .fold(F::neg_infinity(), |a, b| a.max(b));
+            .fold(F::neg_infinity(), num_traits::Float::max);
         return (0..=n_bins)
             .map(|i| min_v + (max_v - min_v) * F::from(i).unwrap() / F::from(n_bins).unwrap())
             .collect();
     }
 
     // Initialize centroids using uniform spacing
-    let min_v = values.iter().copied().fold(F::infinity(), |a, b| a.min(b));
+    let min_v = values
+        .iter()
+        .copied()
+        .fold(F::infinity(), num_traits::Float::min);
     let max_v = values
         .iter()
         .copied()
-        .fold(F::neg_infinity(), |a, b| a.max(b));
+        .fold(F::neg_infinity(), num_traits::Float::max);
 
     let mut centroids: Vec<F> = (0..n_bins)
         .map(|i| {
@@ -223,7 +229,7 @@ fn kmeans_1d<F: Float>(values: &[F], n_bins: usize, max_iter: usize) -> Vec<F> {
         for c in 0..n_bins {
             if counts[c] > 0 {
                 let new_centroid = sums[c] / F::from(counts[c]).unwrap();
-                if (new_centroid - centroids[c]).abs() > F::from(1e-10).unwrap_or(F::epsilon()) {
+                if (new_centroid - centroids[c]).abs() > F::from(1e-10).unwrap_or_else(F::epsilon) {
                     converged = false;
                 }
                 centroids[c] = new_centroid;
@@ -352,7 +358,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedKBinsDiscr
                     let edges = &self.bin_edges[j];
                     for i in 0..n_samples {
                         let bin = assign_bin(x[[i, j]], edges);
-                        out[[i, j]] = F::from(bin).unwrap_or(F::zero());
+                        out[[i, j]] = F::from(bin).unwrap_or_else(F::zero);
                     }
                 }
                 Ok(out)
@@ -446,7 +452,7 @@ mod tests {
         let fitted = disc.fit(&x, &()).unwrap();
         let out = fitted.transform(&x).unwrap();
         // All values should be valid bin indices
-        for v in out.iter() {
+        for v in &out {
             assert!(*v >= 0.0 && *v < 4.0);
         }
     }
@@ -468,7 +474,7 @@ mod tests {
         let fitted = disc.fit(&x, &()).unwrap();
         let out = fitted.transform(&x).unwrap();
         // Values should be valid bin indices
-        for v in out.iter() {
+        for v in &out {
             assert!(*v >= 0.0 && *v < 3.0);
         }
     }
@@ -546,8 +552,8 @@ mod tests {
         let x = array![[0.0], [2.5], [5.0], [7.5], [10.0]];
         let fitted = disc.fit(&x, &()).unwrap();
         let out = fitted.transform(&x).unwrap();
-        for v in out.iter() {
-            assert!(*v >= 0.0 && *v < 5.0, "Bin index {} out of range", v);
+        for v in &out {
+            assert!(*v >= 0.0 && *v < 5.0, "Bin index {v} out of range");
         }
     }
 }

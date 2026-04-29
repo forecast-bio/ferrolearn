@@ -843,7 +843,7 @@ mod tests {
         let d = Array1::from_vec(vec![1.0, 1.0, 1.0, 1.0, 1.0]);
         let e = Array1::from_vec(vec![0.0, 0.0, 0.0, 0.0]);
         let (evals, _evecs) = super::tridiag_qr_eigen(&d, &e);
-        for &ev in evals.iter() {
+        for &ev in &evals {
             assert_abs_diff_eq!(ev, 1.0, epsilon = 1e-10);
         }
     }
@@ -882,7 +882,7 @@ mod tests {
         let mat = sparse_diag(&vec![1.0; n]);
         let result = eigsh(&mat, n, WhichEigenvalues::LargestAlgebraic).unwrap();
         assert_eq!(result.eigenvalues.len(), n);
-        for &ev in result.eigenvalues.iter() {
+        for &ev in &result.eigenvalues {
             assert_abs_diff_eq!(ev, 1.0, epsilon = 1e-8);
         }
     }
@@ -890,7 +890,7 @@ mod tests {
     #[test]
     fn diagonal_matrix_top_k() {
         // Diagonal matrix with eigenvalues 1..=10, verify top-3.
-        let values: Vec<f64> = (1..=10).map(|i| i as f64).collect();
+        let values: Vec<f64> = (1..=10).map(f64::from).collect();
         let mat = sparse_diag(&values);
         let result = eigsh(&mat, 3, WhichEigenvalues::LargestAlgebraic).unwrap();
         let mut evals: Vec<f64> = result.eigenvalues.to_vec();
@@ -903,7 +903,7 @@ mod tests {
     #[test]
     fn diagonal_matrix_bottom_k() {
         // Same diagonal matrix, verify bottom-3.
-        let values: Vec<f64> = (1..=10).map(|i| i as f64).collect();
+        let values: Vec<f64> = (1..=10).map(f64::from).collect();
         let mat = sparse_diag(&values);
         let result = eigsh(&mat, 3, WhichEigenvalues::SmallestAlgebraic).unwrap();
         let mut evals: Vec<f64> = result.eigenvalues.to_vec();
@@ -990,7 +990,7 @@ mod tests {
     #[test]
     fn eigenvector_orthogonality() {
         // Verify that returned eigenvectors are orthonormal.
-        let values: Vec<f64> = (1..=10).map(|i| i as f64).collect();
+        let values: Vec<f64> = (1..=10).map(f64::from).collect();
         let mat = sparse_diag(&values);
         let result = eigsh(&mat, 5, WhichEigenvalues::LargestAlgebraic).unwrap();
 
@@ -1012,7 +1012,7 @@ mod tests {
     #[test]
     fn matvec_closure_api() {
         // Verify the closure-based API works with a 6×6 diagonal matrix.
-        let diag_values = vec![10.0, 20.0, 30.0, 40.0, 50.0, 60.0];
+        let diag_values = [10.0, 20.0, 30.0, 40.0, 50.0, 60.0];
         let n = diag_values.len();
 
         let solver = LanczosSolver::new(3).with_which(WhichEigenvalues::LargestAlgebraic);

@@ -177,7 +177,7 @@ impl<F: Float> FittedIsotonicRegression<F> {
         let mut lo = 0;
         let mut hi = n - 1;
         while lo < hi - 1 {
-            let mid = (lo + hi) / 2;
+            let mid = usize::midpoint(lo, hi);
             if self.x_thresholds[mid] <= x {
                 lo = mid;
             } else {

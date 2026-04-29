@@ -105,7 +105,7 @@ impl<F: Float + Send + Sync + 'static> FittedStandardScaler<F> {
             .into_iter()
             .zip(self.mean.iter().zip(self.std.iter()))
         {
-            for v in col.iter_mut() {
+            for v in &mut col {
                 *v = *v * s + m;
             }
         }
@@ -136,7 +136,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for StandardScaler<F> 
             });
         }
 
-        let n = F::from(n_samples).unwrap_or(F::one());
+        let n = F::from(n_samples).unwrap_or_else(F::one);
         let n_features = x.ncols();
         let mut mean = Array1::zeros(n_features);
         let mut std_arr = Array1::zeros(n_features);
@@ -189,7 +189,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedStandardSc
                 // Zero-variance column: leave unchanged.
                 continue;
             }
-            for v in col.iter_mut() {
+            for v in &mut col {
                 *v = (*v - m) / s;
             }
         }

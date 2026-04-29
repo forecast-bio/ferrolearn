@@ -242,16 +242,15 @@ where
         }
 
         // Compute residual threshold if not provided.
-        let threshold = match self.residual_threshold {
-            Some(t) => t,
-            None => {
-                let y_mad = mad(&y.to_vec());
-                if y_mad <= F::epsilon() {
-                    // If MAD is zero (constant target), use a small default.
-                    F::from(1e-6).unwrap()
-                } else {
-                    y_mad
-                }
+        let threshold = if let Some(t) = self.residual_threshold {
+            t
+        } else {
+            let y_mad = mad(&y.to_vec());
+            if y_mad <= F::epsilon() {
+                // If MAD is zero (constant target), use a small default.
+                F::from(1e-6).unwrap()
+            } else {
+                y_mad
             }
         };
 
@@ -309,34 +308,31 @@ where
                     .collect();
                 let (x_inlier, y_inlier) = subset(x, y, &inlier_indices);
 
-                match self.estimator.fit(&x_inlier, &y_inlier) {
-                    Ok(refit) => {
-                        // Recompute inlier mask with the refitted model.
-                        if let Ok(new_preds) = refit.predict(x) {
-                            let mut new_mask = vec![false; n_samples];
-                            let mut new_n_inliers = 0;
-                            let mut new_residual_sum = F::zero();
-                            for i in 0..n_samples {
-                                let r = (new_preds[i] - y[i]).abs();
-                                if r <= threshold {
-                                    new_mask[i] = true;
-                                    new_n_inliers += 1;
-                                    new_residual_sum = new_residual_sum + r;
-                                }
+                if let Ok(refit) = self.estimator.fit(&x_inlier, &y_inlier) {
+                    // Recompute inlier mask with the refitted model.
+                    if let Ok(new_preds) = refit.predict(x) {
+                        let mut new_mask = vec![false; n_samples];
+                        let mut new_n_inliers = 0;
+                        let mut new_residual_sum = F::zero();
+                        for i in 0..n_samples {
+                            let r = (new_preds[i] - y[i]).abs();
+                            if r <= threshold {
+                                new_mask[i] = true;
+                                new_n_inliers += 1;
+                                new_residual_sum = new_residual_sum + r;
                             }
-                            best_fitted = Some(refit);
-                            best_inlier_mask = Some(new_mask);
-                            best_n_inliers = new_n_inliers;
-                            best_residual_sum = new_residual_sum;
                         }
+                        best_fitted = Some(refit);
+                        best_inlier_mask = Some(new_mask);
+                        best_n_inliers = new_n_inliers;
+                        best_residual_sum = new_residual_sum;
                     }
-                    Err(_) => {
-                        // Keep the original fit if refit fails.
-                        best_fitted = Some(fitted);
-                        best_inlier_mask = Some(inlier_mask);
-                        best_n_inliers = n_inliers;
-                        best_residual_sum = residual_sum;
-                    }
+                } else {
+                    // Keep the original fit if refit fails.
+                    best_fitted = Some(fitted);
+                    best_inlier_mask = Some(inlier_mask);
+                    best_n_inliers = n_inliers;
+                    best_residual_sum = residual_sum;
                 }
             }
         }

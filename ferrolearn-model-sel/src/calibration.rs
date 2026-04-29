@@ -398,7 +398,7 @@ fn fit_isotonic(
     for &(sum, cnt, lo, hi) in &blocks {
         let prob = sum / cnt as f64;
         // Use the midpoint of the score range for this block.
-        let score = (lo + hi) / 2.0;
+        let score = f64::midpoint(lo, hi);
         mapping.push((score, prob));
     }
 
@@ -436,7 +436,7 @@ fn isotonic_lookup(mapping: &[(f64, f64)], score: f64) -> f64 {
     let (s1, p1) = mapping[pos];
     let denom = s1 - s0;
     if denom.abs() < 1e-15 {
-        return (p0 + p1) / 2.0;
+        return f64::midpoint(p0, p1);
     }
 
     // Linear interpolation.
@@ -578,8 +578,7 @@ mod tests {
         for i in 1..mapping.len() {
             assert!(
                 mapping[i].1 >= mapping[i - 1].1 - 1e-10,
-                "Isotonic mapping should be non-decreasing at index {}",
-                i
+                "Isotonic mapping should be non-decreasing at index {i}"
             );
         }
     }
@@ -648,7 +647,7 @@ mod tests {
         let probs = fitted.predict(&x).unwrap();
 
         // All probabilities should be in [0, 1].
-        for &p in probs.iter() {
+        for &p in &probs {
             assert!(
                 (0.0..=1.0).contains(&p),
                 "Probability {p} out of [0, 1] range"
@@ -680,7 +679,7 @@ mod tests {
         let probs = fitted.predict(&x).unwrap();
 
         // All probabilities should be in [0, 1].
-        for &p in probs.iter() {
+        for &p in &probs {
             assert!(
                 (0.0..=1.0).contains(&p),
                 "Probability {p} out of [0, 1] range"
@@ -702,7 +701,7 @@ mod tests {
         let fitted = cal.fit(&x, &y).unwrap();
         let probs = fitted.predict(&x).unwrap();
 
-        for &p in probs.iter() {
+        for &p in &probs {
             assert!(
                 (0.0..=1.0).contains(&p),
                 "Probability {p} out of [0, 1] range"

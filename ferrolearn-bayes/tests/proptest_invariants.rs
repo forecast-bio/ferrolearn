@@ -59,7 +59,7 @@ proptest! {
         let fitted = result.unwrap();
         let proba = fitted.predict_proba(&x).unwrap();
 
-        for &val in proba.iter() {
+        for &val in &proba {
             prop_assert!((0.0..=1.0 + 1e-10).contains(&val),
                 "Probability {} outside [0, 1]", val);
         }
@@ -77,7 +77,7 @@ proptest! {
 
         let classes = fitted.classes();
 
-        for &p in preds.iter() {
+        for &p in &preds {
             prop_assert!(classes.contains(&p),
                 "Predicted label {} not in training classes {:?}", p, classes);
         }

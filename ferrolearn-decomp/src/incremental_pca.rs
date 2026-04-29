@@ -200,14 +200,14 @@ impl<F: Float + Send + Sync + 'static> FittedIncrementalPCA<F> {
         let batch_mean = column_mean(x_batch);
 
         let new_n = self.n_samples_seen_ + batch_n;
-        let new_n_f = F::from(new_n).unwrap_or(F::one());
+        let new_n_f = F::from(new_n).unwrap_or_else(F::one);
 
         // Incremental mean update: new_mean = (old_n * old_mean + batch_n * batch_mean) / new_n
         let updated_mean = if self.n_samples_seen_ == 0 {
-            batch_mean.clone()
+            batch_mean
         } else {
-            let old_n_f = F::from(self.n_samples_seen_).unwrap_or(F::zero());
-            let batch_n_f = F::from(batch_n).unwrap_or(F::one());
+            let old_n_f = F::from(self.n_samples_seen_).unwrap_or_else(F::zero);
+            let batch_n_f = F::from(batch_n).unwrap_or_else(F::one);
             let mut m = Array1::zeros(n_features);
             for j in 0..n_features {
                 m[j] = (old_n_f * self.mean_[j] + batch_n_f * batch_mean[j]) / new_n_f;
@@ -277,7 +277,7 @@ impl<F: Float + Send + Sync + 'static> FittedIncrementalPCA<F> {
 
         // Recompute explained variance.
         // explained_variance[k] = sigma[k]^2 / (n_samples_seen - 1)
-        let denom = F::from(new_n.saturating_sub(1).max(1)).unwrap_or(F::one());
+        let denom = F::from(new_n.saturating_sub(1).max(1)).unwrap_or_else(F::one);
         let mut total_var = F::zero();
         for k in 0..n_components {
             let sv = self.singular_values_[k];
@@ -490,7 +490,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedIncrementa
 /// Compute the per-column mean of a matrix.
 fn column_mean<F: Float>(x: &Array2<F>) -> Array1<F> {
     let (n, p) = x.dim();
-    let n_f = F::from(n).unwrap_or(F::one());
+    let n_f = F::from(n).unwrap_or_else(F::one);
     let mut mean = Array1::zeros(p);
     for j in 0..p {
         let s = x.column(j).iter().copied().fold(F::zero(), |a, b| a + b);
@@ -570,7 +570,7 @@ fn thin_svd<F: Float + Send + Sync + 'static>(
             }
 
             // V = M^T U / sigma
-            if sv > F::from(1e-30).unwrap_or(F::epsilon()) {
+            if sv > F::from(1e-30).unwrap_or_else(F::epsilon) {
                 for j in 0..nc {
                     let mut val = F::zero();
                     for i in 0..nr {
@@ -609,7 +609,7 @@ fn thin_svd<F: Float + Send + Sync + 'static>(
             }
 
             // U = M V / sigma
-            if sv > F::from(1e-30).unwrap_or(F::epsilon()) {
+            if sv > F::from(1e-30).unwrap_or_else(F::epsilon) {
                 for i in 0..nr {
                     let mut val = F::zero();
                     for j in 0..nc {
@@ -649,7 +649,7 @@ fn jacobi_eigen_symmetric<F: Float + Send + Sync + 'static>(
         v[[i, i]] = F::one();
     }
 
-    let tol = F::from(1e-12).unwrap_or(F::epsilon());
+    let tol = F::from(1e-12).unwrap_or_else(F::epsilon);
 
     for _iteration in 0..max_iter {
         // Find the off-diagonal element with the largest absolute value.
@@ -677,7 +677,7 @@ fn jacobi_eigen_symmetric<F: Float + Send + Sync + 'static>(
         let apq = mat[[p, q]];
 
         let theta = if (app - aqq).abs() < tol {
-            F::from(std::f64::consts::FRAC_PI_4).unwrap_or(F::one())
+            F::from(std::f64::consts::FRAC_PI_4).unwrap_or_else(F::one)
         } else {
             let tau = (aqq - app) / (F::from(2.0).unwrap() * apq);
             let t = if tau >= F::zero() {
@@ -789,7 +789,7 @@ mod tests {
         let ipca = IncrementalPCA::<f64>::new(1);
         let x = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
         let fitted = ipca.fit(&x, &()).unwrap();
-        for &v in fitted.explained_variance().iter() {
+        for &v in fitted.explained_variance() {
             assert!(v >= 0.0, "explained variance should be non-negative: {v}");
         }
     }
@@ -801,7 +801,7 @@ mod tests {
         let fitted = ipca.fit(&x, &()).unwrap();
         let ratio_sum: f64 = fitted.explained_variance_ratio().iter().sum();
         assert!(
-            ratio_sum >= 0.0 && ratio_sum <= 1.0 + 1e-10,
+            (0.0..=1.0 + 1e-10).contains(&ratio_sum),
             "ratio sum {ratio_sum} not in [0,1]"
         );
     }

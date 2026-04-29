@@ -1104,7 +1104,7 @@ mod tests {
             .fit(&x, &())
             .unwrap();
         // All finite reachability values must be <= max_eps.
-        for &r in fitted.reachability().iter() {
+        for &r in fitted.reachability() {
             if r.is_finite() {
                 assert!(r <= max_eps + 1e-10);
             }
@@ -1148,7 +1148,7 @@ mod tests {
             .unwrap();
 
         // The small clusters (size 2) should be filtered out as noise.
-        for &l in fitted.labels().iter() {
+        for &l in fitted.labels() {
             if l >= 0 {
                 // Count how many points share this label.
                 let count = fitted.labels().iter().filter(|&&c| c == l).count();

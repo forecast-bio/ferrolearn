@@ -114,7 +114,7 @@ where
         let centre = &centres[class];
         for &c in centre {
             let val = c + noise_dist.sample(&mut rng);
-            x_data.push(F::from(val).unwrap_or(F::zero()));
+            x_data.push(F::from(val).unwrap_or_else(F::zero));
         }
         y_data.push(class);
     }
@@ -241,9 +241,9 @@ where
         }
 
         for &v in &row {
-            x_data.push(F::from(v).unwrap_or(F::zero()));
+            x_data.push(F::from(v).unwrap_or_else(F::zero));
         }
-        y_data.push(F::from(target).unwrap_or(F::zero()));
+        y_data.push(F::from(target).unwrap_or_else(F::zero));
     }
 
     let x = Array2::from_shape_vec((n_samples, n_features), x_data).map_err(|e| {
@@ -354,7 +354,7 @@ where
         let centre = &blob_centres[cluster];
         for &c in centre {
             let val = c + noise_dist.sample(&mut rng);
-            x_data.push(F::from(val).unwrap_or(F::zero()));
+            x_data.push(F::from(val).unwrap_or_else(F::zero));
         }
         y_data.push(cluster);
     }
@@ -448,8 +448,8 @@ where
             px += nd.sample(&mut rng);
             py += nd.sample(&mut rng);
         }
-        x_data.push(F::from(px).unwrap_or(F::zero()));
-        x_data.push(F::from(py).unwrap_or(F::zero()));
+        x_data.push(F::from(px).unwrap_or_else(F::zero));
+        x_data.push(F::from(py).unwrap_or_else(F::zero));
         y_data.push(0);
     }
 
@@ -462,8 +462,8 @@ where
             px += nd.sample(&mut rng);
             py += nd.sample(&mut rng);
         }
-        x_data.push(F::from(px).unwrap_or(F::zero()));
-        x_data.push(F::from(py).unwrap_or(F::zero()));
+        x_data.push(F::from(px).unwrap_or_else(F::zero));
+        x_data.push(F::from(py).unwrap_or_else(F::zero));
         y_data.push(1);
     }
 
@@ -564,8 +564,8 @@ where
             px += nd.sample(&mut rng);
             py += nd.sample(&mut rng);
         }
-        x_data.push(F::from(px).unwrap_or(F::zero()));
-        x_data.push(F::from(py).unwrap_or(F::zero()));
+        x_data.push(F::from(px).unwrap_or_else(F::zero));
+        x_data.push(F::from(py).unwrap_or_else(F::zero));
         y_data.push(0);
     }
 
@@ -578,8 +578,8 @@ where
             px += nd.sample(&mut rng);
             py += nd.sample(&mut rng);
         }
-        x_data.push(F::from(px).unwrap_or(F::zero()));
-        x_data.push(F::from(py).unwrap_or(F::zero()));
+        x_data.push(F::from(px).unwrap_or_else(F::zero));
+        x_data.push(F::from(py).unwrap_or_else(F::zero));
         y_data.push(1);
     }
 
@@ -691,10 +691,10 @@ where
             pz += nd.sample(&mut rng);
         }
 
-        x_data.push(F::from(px).unwrap_or(F::zero()));
-        x_data.push(F::from(py).unwrap_or(F::zero()));
-        x_data.push(F::from(pz).unwrap_or(F::zero()));
-        t_data.push(F::from(t_val).unwrap_or(F::zero()));
+        x_data.push(F::from(px).unwrap_or_else(F::zero));
+        x_data.push(F::from(py).unwrap_or_else(F::zero));
+        x_data.push(F::from(pz).unwrap_or_else(F::zero));
+        t_data.push(F::from(t_val).unwrap_or_else(F::zero));
     }
 
     let x = Array2::from_shape_vec((n_samples, 3), x_data).map_err(|e| FerroError::SerdeError {
@@ -808,10 +808,10 @@ where
             pz += nd.sample(&mut rng);
         }
 
-        x_data.push(F::from(px).unwrap_or(F::zero()));
-        x_data.push(F::from(py).unwrap_or(F::zero()));
-        x_data.push(F::from(pz).unwrap_or(F::zero()));
-        t_data.push(F::from(t_val).unwrap_or(F::zero()));
+        x_data.push(F::from(px).unwrap_or_else(F::zero));
+        x_data.push(F::from(py).unwrap_or_else(F::zero));
+        x_data.push(F::from(pz).unwrap_or_else(F::zero));
+        t_data.push(F::from(t_val).unwrap_or_else(F::zero));
     }
 
     let x = Array2::from_shape_vec((n_samples, 3), x_data).map_err(|e| FerroError::SerdeError {
@@ -906,9 +906,9 @@ where
         let target: f64 = weights.iter().enumerate().map(|(i, &w)| w * row[i]).sum();
 
         for &v in &row {
-            x_data.push(F::from(v).unwrap_or(F::zero()));
+            x_data.push(F::from(v).unwrap_or_else(F::zero));
         }
-        y_data.push(F::from(target).unwrap_or(F::zero()));
+        y_data.push(F::from(target).unwrap_or_else(F::zero));
     }
 
     let x = Array2::from_shape_vec((n_samples, n_features), x_data).map_err(|e| {
@@ -943,12 +943,7 @@ mod tests {
     fn test_make_classification_classes() {
         let (_, y) = make_classification::<f64>(90, 4, 3, Some(1)).unwrap();
         let unique: HashSet<usize> = y.iter().copied().collect();
-        assert_eq!(
-            unique.len(),
-            3,
-            "expected 3 unique classes, got {:?}",
-            unique
-        );
+        assert_eq!(unique.len(), 3, "expected 3 unique classes, got {unique:?}");
     }
 
     #[test]
@@ -1046,7 +1041,7 @@ mod tests {
         // substantially from each other.
         let (x, y) = make_blobs::<f64>(300, 2, 3, 0.1, Some(5)).unwrap();
         let mut means: Vec<[f64; 2]> = vec![[0.0; 2]; 3];
-        let mut counts = vec![0_usize; 3];
+        let mut counts = [0_usize; 3];
         for (i, &cls) in y.iter().enumerate() {
             means[cls][0] += x[[i, 0]];
             means[cls][1] += x[[i, 1]];
@@ -1238,7 +1233,7 @@ mod tests {
         let (_, t) = make_swiss_roll::<f64>(300, 0.0, Some(0)).unwrap();
         let low = 1.5 * PI;
         let high = 4.5 * PI;
-        for &ti in t.iter() {
+        for &ti in &t {
             assert!(ti >= low && ti <= high, "t={ti} outside [{low}, {high}]");
         }
     }
@@ -1259,7 +1254,10 @@ mod tests {
                 (actual_r - expected_r).abs() < 1e-10,
                 "point {i}: radius {actual_r} != t={expected_r}"
             );
-            assert!(yi >= 0.0 && yi < 21.0, "point {i}: y={yi} outside [0,21)");
+            assert!(
+                (0.0..21.0).contains(&yi),
+                "point {i}: y={yi} outside [0,21)"
+            );
         }
     }
 
@@ -1328,7 +1326,7 @@ mod tests {
         let (_, t) = make_s_curve::<f64>(300, 0.0, Some(0)).unwrap();
         let low = -1.5 * PI;
         let high = 1.5 * PI;
-        for &ti in t.iter() {
+        for &ti in &t {
             assert!(ti >= low && ti <= high, "t={ti} outside [{low}, {high}]");
         }
     }
@@ -1354,7 +1352,7 @@ mod tests {
         let (x, _) = make_s_curve::<f64>(200, 0.0, Some(0)).unwrap();
         for i in 0..x.nrows() {
             let yi = x[[i, 1]];
-            assert!(yi >= 0.0 && yi < 2.0, "point {i}: y={yi} outside [0,2)");
+            assert!((0.0..2.0).contains(&yi), "point {i}: y={yi} outside [0,2)");
         }
     }
 

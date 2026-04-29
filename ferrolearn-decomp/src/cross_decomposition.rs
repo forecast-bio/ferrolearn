@@ -251,7 +251,7 @@ fn jacobi_eigen_symmetric<F: Float + Send + Sync + 'static>(
         v[[i, i]] = F::one();
     }
 
-    let tol = F::from(1e-12).unwrap_or(F::epsilon());
+    let tol = F::from(1e-12).unwrap_or_else(F::epsilon);
 
     for _iteration in 0..max_iter {
         let mut max_off = F::zero();
@@ -278,7 +278,7 @@ fn jacobi_eigen_symmetric<F: Float + Send + Sync + 'static>(
         let apq = mat[[p, q]];
 
         let theta = if (app - aqq).abs() < tol {
-            F::from(std::f64::consts::FRAC_PI_4).unwrap_or(F::one())
+            F::from(std::f64::consts::FRAC_PI_4).unwrap_or_else(F::one)
         } else {
             let tau = (aqq - app) / (F::from(2.0).unwrap() * apq);
             let t = if tau >= F::zero() {
@@ -377,8 +377,8 @@ fn invert_square<F: Float + Send + Sync + 'static>(a: &Array2<F>) -> Result<Arra
         let abs = v.abs();
         if abs > m { abs } else { m }
     });
-    let regularise_tol =
-        max_abs * F::from(1e-12).unwrap_or(F::epsilon()) + F::from(1e-15).unwrap_or(F::epsilon());
+    let regularise_tol = max_abs * F::from(1e-12).unwrap_or_else(F::epsilon)
+        + F::from(1e-15).unwrap_or_else(F::epsilon);
 
     // Forward elimination with partial pivoting.
     for col in 0..n {
@@ -1025,7 +1025,7 @@ impl<F: Float + Send + Sync + 'static> PLSRegression<F> {
         Self {
             n_components,
             max_iter: 500,
-            tol: F::from(1e-6).unwrap_or(F::epsilon()),
+            tol: F::from(1e-6).unwrap_or_else(F::epsilon),
             scale: true,
             _marker: std::marker::PhantomData,
         }
@@ -1352,7 +1352,7 @@ impl<F: Float + Send + Sync + 'static> PLSCanonical<F> {
         Self {
             n_components,
             max_iter: 500,
-            tol: F::from(1e-6).unwrap_or(F::epsilon()),
+            tol: F::from(1e-6).unwrap_or_else(F::epsilon),
             scale: true,
             _marker: std::marker::PhantomData,
         }
@@ -1412,7 +1412,6 @@ pub struct FittedPLSCanonical<F> {
     /// Per-feature std of X (None if not scaled).
     x_std_: Option<Array1<F>>,
     /// Per-feature std of Y (None if not scaled).
-    #[allow(dead_code)]
     y_std_: Option<Array1<F>>,
 }
 
@@ -1622,7 +1621,7 @@ impl<F: Float + Send + Sync + 'static> CCA<F> {
         Self {
             n_components,
             max_iter: 500,
-            tol: F::from(1e-6).unwrap_or(F::epsilon()),
+            tol: F::from(1e-6).unwrap_or_else(F::epsilon),
             scale: true,
             _marker: std::marker::PhantomData,
         }
@@ -1681,7 +1680,6 @@ pub struct FittedCCA<F> {
     /// Per-feature std of X (None if not scaled).
     x_std_: Option<Array1<F>>,
     /// Per-feature std of Y (None if not scaled).
-    #[allow(dead_code)]
     y_std_: Option<Array1<F>>,
 }
 

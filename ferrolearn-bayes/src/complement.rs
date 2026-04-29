@@ -471,7 +471,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 

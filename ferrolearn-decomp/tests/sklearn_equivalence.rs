@@ -160,7 +160,7 @@ fn sklearn_equiv_nmf() {
     assert_eq!(h.ncols(), x.ncols());
 
     // H should be non-negative.
-    for &val in h.iter() {
+    for &val in h {
         assert!(val >= 0.0, "NMF H matrix contains negative value: {val}");
     }
 
@@ -191,7 +191,7 @@ fn sklearn_equiv_nmf() {
     let w = fitted.transform(&x).unwrap();
     assert_eq!(w.nrows(), x.nrows());
     assert_eq!(w.ncols(), 3);
-    for &val in w.iter() {
+    for &val in &w {
         assert!(val >= 0.0, "NMF W matrix contains negative value: {val}");
     }
 

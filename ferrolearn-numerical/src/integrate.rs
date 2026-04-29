@@ -104,7 +104,7 @@ where
 
     let fa = ctx.eval(a);
     let fb = ctx.eval(b);
-    let m = (a + b) / 2.0;
+    let m = f64::midpoint(a, b);
     let fm = ctx.eval(m);
 
     let s_whole = simpson_from_values(a, b, fa, fm, fb);
@@ -174,10 +174,10 @@ impl<F: Fn(f64) -> f64> SimpsonContext<F> {
     ///
     /// Returns `(value, error_estimate)`.
     fn adaptive_recurse(&mut self, iv: SimpsonInterval, tol: f64, depth: usize) -> (f64, f64) {
-        let m = (iv.a + iv.b) / 2.0;
+        let m = f64::midpoint(iv.a, iv.b);
 
-        let f_m_left = self.eval((iv.a + m) / 2.0);
-        let f_m_right = self.eval((m + iv.b) / 2.0);
+        let f_m_left = self.eval(f64::midpoint(iv.a, m));
+        let f_m_right = self.eval(f64::midpoint(m, iv.b));
 
         let s_left = simpson_from_values(iv.a, m, iv.fa, f_m_left, iv.fm);
         let s_right = simpson_from_values(m, iv.b, iv.fm, f_m_right, iv.fb);
@@ -308,7 +308,7 @@ where
     F: Fn(f64) -> f64,
 {
     let half_len = (b - a) / 2.0;
-    let mid = (a + b) / 2.0;
+    let mid = f64::midpoint(a, b);
 
     let mut value = 0.0;
     for (t, w) in nodes.iter().zip(weights.iter()) {
@@ -718,7 +718,7 @@ mod tests {
 
     #[test]
     fn quad_sin() {
-        let result = quad(|x| x.sin(), 0.0, std::f64::consts::PI, 1e-10);
+        let result = quad(f64::sin, 0.0, std::f64::consts::PI, 1e-10);
         assert_abs_diff_eq!(result.value, 2.0, epsilon = 1e-10);
     }
 
@@ -748,7 +748,7 @@ mod tests {
 
     #[test]
     fn gauss_legendre_sin() {
-        let result = gauss_legendre(|x| x.sin(), 0.0, std::f64::consts::PI, 10).unwrap();
+        let result = gauss_legendre(f64::sin, 0.0, std::f64::consts::PI, 10).unwrap();
         assert_abs_diff_eq!(result.value, 2.0, epsilon = 1e-10);
     }
 
@@ -757,16 +757,15 @@ mod tests {
         // Composite GL with 10 panels of 5-point GL should be very accurate
         // for smooth functions. We integrate sin(x) from 0 to pi (exact = 2)
         // which avoids the truncation issue of infinite-domain integrands.
-        let result =
-            gauss_legendre_composite(|x| x.sin(), 0.0, std::f64::consts::PI, 5, 10).unwrap();
+        let result = gauss_legendre_composite(f64::sin, 0.0, std::f64::consts::PI, 5, 10).unwrap();
         assert_abs_diff_eq!(result.value, 2.0, epsilon = 1e-14);
     }
 
     #[test]
     fn quad_tight_tolerance() {
         // Tighter tolerance should give a more accurate result.
-        let loose = quad(|x| x.sin(), 0.0, std::f64::consts::PI, 1e-4);
-        let tight = quad(|x| x.sin(), 0.0, std::f64::consts::PI, 1e-12);
+        let loose = quad(f64::sin, 0.0, std::f64::consts::PI, 1e-4);
+        let tight = quad(f64::sin, 0.0, std::f64::consts::PI, 1e-12);
 
         let exact = 2.0;
         let err_loose = (loose.value - exact).abs();

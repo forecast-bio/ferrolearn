@@ -367,7 +367,7 @@ pub fn adjusted_rand_score(
 
     let prod_ab = sum_comb_a as f64 * sum_comb_b as f64;
     let expected = prod_ab / comb_n as f64;
-    let max_val = (sum_comb_a as f64 + sum_comb_b as f64) / 2.0;
+    let max_val = f64::midpoint(sum_comb_a as f64, sum_comb_b as f64);
     let numerator = sum_comb_c as f64 - expected;
     let denominator = max_val - expected;
 
@@ -956,7 +956,7 @@ where
         .collect();
 
     // Total non-noise samples.
-    let n: usize = cluster_indices.iter().map(|v| v.len()).sum();
+    let n: usize = cluster_indices.iter().map(std::vec::Vec::len).sum();
 
     if n < 2 {
         return Err(FerroError::InsufficientSamples {
@@ -1482,7 +1482,7 @@ pub fn normalized_mutual_info_score(
 
     let normalizer = match method {
         NmiMethod::Geometric => (h_true * h_pred).sqrt(),
-        NmiMethod::Arithmetic => (h_true + h_pred) / 2.0,
+        NmiMethod::Arithmetic => f64::midpoint(h_true, h_pred),
         NmiMethod::Min => h_true.min(h_pred),
         NmiMethod::Max => h_true.max(h_pred),
     };
@@ -1851,7 +1851,7 @@ mod tests {
         let labels = array![0isize, 0, 1, 1];
         let samples = silhouette_samples(&x, &labels).unwrap();
         assert_eq!(samples.len(), 4);
-        for &s in samples.iter() {
+        for &s in &samples {
             assert!(s > 0.9, "expected > 0.9, got {s}");
         }
     }

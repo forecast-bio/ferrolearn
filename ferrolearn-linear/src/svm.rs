@@ -101,7 +101,7 @@ impl<F: Float> Default for RbfKernel<F> {
 
 impl<F: Float + Send + Sync> Kernel<F> for RbfKernel<F> {
     fn compute(&self, x: &[F], y: &[F]) -> F {
-        let gamma = self.gamma.unwrap_or(F::one());
+        let gamma = self.gamma.unwrap_or_else(F::one);
         let sq_dist = x.iter().zip(y.iter()).fold(F::zero(), |acc, (&a, &b)| {
             let d = a - b;
             acc + d * d
@@ -141,7 +141,7 @@ impl<F: Float> Default for PolynomialKernel<F> {
 
 impl<F: Float + Send + Sync> Kernel<F> for PolynomialKernel<F> {
     fn compute(&self, x: &[F], y: &[F]) -> F {
-        let gamma = self.gamma.unwrap_or(F::one());
+        let gamma = self.gamma.unwrap_or_else(F::one);
         let dot: F = x
             .iter()
             .zip(y.iter())
@@ -183,7 +183,7 @@ impl<F: Float> Default for SigmoidKernel<F> {
 
 impl<F: Float + Send + Sync> Kernel<F> for SigmoidKernel<F> {
     fn compute(&self, x: &[F], y: &[F]) -> F {
-        let gamma = self.gamma.unwrap_or(F::one());
+        let gamma = self.gamma.unwrap_or_else(F::one);
         let dot: F = x
             .iter()
             .zip(y.iter())
@@ -270,7 +270,7 @@ fn smo_binary<F: Float, K: Kernel<F>>(
     let mut grad: Vec<F> = vec![-F::one(); n];
 
     let two = F::one() + F::one();
-    let eps = F::from(1e-12).unwrap_or(F::epsilon());
+    let eps = F::from(1e-12).unwrap_or_else(F::epsilon);
 
     for _iter in 0..max_iter {
         // Working set selection (Fan-Chen-Lin 2005):
@@ -329,12 +329,12 @@ fn smo_binary<F: Float, K: Kernel<F>>(
         let old_ai = alphas[i];
         let old_aj = alphas[j];
 
-        let (lo, hi) = if labels[i] != labels[j] {
-            let diff = old_aj - old_ai;
-            (diff.max(F::zero()), (c + diff).min(c))
-        } else {
+        let (lo, hi) = if labels[i] == labels[j] {
             let sum = old_ai + old_aj;
             ((sum - c).max(F::zero()), sum.min(c))
+        } else {
+            let diff = old_aj - old_ai;
+            (diff.max(F::zero()), (c + diff).min(c))
         };
 
         if (hi - lo).abs() < eps {
@@ -650,7 +650,7 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static, K: Kernel<F> + 'static>
                 )?;
 
                 // Extract support vectors (non-zero alphas).
-                let eps = F::from(1e-8).unwrap_or(F::epsilon());
+                let eps = F::from(1e-8).unwrap_or_else(F::epsilon);
                 let mut sv_data = Vec::new();
                 let mut sv_coefs = Vec::new();
 
@@ -719,8 +719,7 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static, K: Kernel<F> + 'static> P
                 .iter()
                 .enumerate()
                 .max_by_key(|&(_, &v)| v)
-                .map(|(i, _)| i)
-                .unwrap_or(0);
+                .map_or(0, |(i, _)| i);
 
             predictions[s] = self.classes[best_class_idx];
         }
@@ -903,7 +902,7 @@ fn smo_svr<F: Float, K: Kernel<F>>(
         .collect();
 
     let two = F::one() + F::one();
-    let eps_num = F::from(1e-12).unwrap_or(F::epsilon());
+    let eps_num = F::from(1e-12).unwrap_or_else(F::epsilon);
 
     for _iter in 0..max_iter {
         // WSS: same as SVC but with the extended variables.
@@ -968,12 +967,12 @@ fn smo_svr<F: Float, K: Kernel<F>>(
         let old_bi = beta[i];
         let old_bj = beta[j];
 
-        let (lo, hi) = if si != sj {
-            let diff = old_bj - old_bi;
-            (diff.max(F::zero()), (c + diff).min(c))
-        } else {
+        let (lo, hi) = if si == sj {
             let sum = old_bi + old_bj;
             ((sum - c).max(F::zero()), sum.min(c))
+        } else {
+            let diff = old_bj - old_bi;
+            (diff.max(F::zero()), (c + diff).min(c))
         };
 
         if (hi - lo).abs() < eps_num {
@@ -1122,7 +1121,7 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static, K: Kernel<F> + 'static>
         )?;
 
         // Extract support vectors (non-zero coefficients).
-        let eps = F::from(1e-8).unwrap_or(F::epsilon());
+        let eps = F::from(1e-8).unwrap_or_else(F::epsilon);
         let mut sv_data = Vec::new();
         let mut sv_coefs = Vec::new();
 

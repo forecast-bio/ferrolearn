@@ -421,7 +421,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 
@@ -697,7 +697,7 @@ pub(crate) fn traverse<F: Float>(nodes: &[Node<F>], sample: &ndarray::ArrayView1
 
 /// Convert a `Float` value to `usize` (for class labels stored as floats).
 fn float_to_usize<F: Float>(v: F) -> usize {
-    v.to_f64().map(|f| f.round() as usize).unwrap_or(0)
+    v.to_f64().map_or(0, |f| f.round() as usize)
 }
 
 /// Compute the Gini impurity for a set of class counts.
@@ -777,8 +777,7 @@ fn make_classification_leaf<F: Float>(
         .iter()
         .enumerate()
         .max_by_key(|&(_, &count)| count)
-        .map(|(i, _)| i)
-        .unwrap_or(0);
+        .map_or(0, |(i, _)| i);
 
     let total_f = if n_samples > 0 {
         F::from(n_samples).unwrap()
@@ -1239,7 +1238,7 @@ mod tests {
         let preds = fitted.predict(&x).unwrap();
 
         let majority = preds[0];
-        for &p in preds.iter() {
+        for &p in &preds {
             assert_eq!(p, majority);
         }
     }
@@ -1254,7 +1253,7 @@ mod tests {
         let preds = fitted.predict(&x).unwrap();
 
         let majority = preds[0];
-        for &p in preds.iter() {
+        for &p in &preds {
             assert_eq!(p, majority);
         }
     }
@@ -1450,7 +1449,7 @@ mod tests {
         let fitted = model.fit(&x, &y).unwrap();
         let preds = fitted.predict(&x).unwrap();
 
-        for &p in preds.iter() {
+        for &p in &preds {
             assert_relative_eq!(p, 3.0, epsilon = 1e-10);
         }
     }
@@ -1517,7 +1516,7 @@ mod tests {
         let preds = fitted.predict(&x).unwrap();
 
         let mean = 2.5;
-        for &p in preds.iter() {
+        for &p in &preds {
             assert_relative_eq!(p, mean, epsilon = 1e-10);
         }
     }

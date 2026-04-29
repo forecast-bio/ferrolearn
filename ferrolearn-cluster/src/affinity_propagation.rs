@@ -273,19 +273,18 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for AffinityPropagatio
         }
 
         // Step 2: Set diagonal preferences.
-        let pref = match self.preference {
-            Some(p) => p,
-            None => {
-                // Compute median of off-diagonal similarities.
-                let mut off_diag: Vec<F> = Vec::with_capacity(n * (n - 1) / 2);
-                for i in 0..n {
-                    for k in (i + 1)..n {
-                        off_diag.push(s[[i, k]]);
-                    }
+        let pref = if let Some(p) = self.preference {
+            p
+        } else {
+            // Compute median of off-diagonal similarities.
+            let mut off_diag: Vec<F> = Vec::with_capacity(n * (n - 1) / 2);
+            for i in 0..n {
+                for k in (i + 1)..n {
+                    off_diag.push(s[[i, k]]);
                 }
-                off_diag.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-                median_of_sorted(&off_diag)
             }
+            off_diag.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            median_of_sorted(&off_diag)
         };
 
         for i in 0..n {
@@ -530,7 +529,7 @@ mod tests {
         for (ci, &ex) in fitted.exemplar_indices().iter().enumerate() {
             for j in 0..2 {
                 assert!(
-                    (centers[[ci, j]] - x[[ex, j]]).abs() < f64::from(1e-10),
+                    (centers[[ci, j]] - x[[ex, j]]).abs() < 1e-10,
                     "center mismatch at cluster {ci}, feature {j}"
                 );
             }
@@ -684,7 +683,7 @@ mod tests {
         let fitted = model.fit(&x, &()).unwrap();
 
         let n_clusters = fitted.n_clusters() as isize;
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert!(label >= 0);
             assert!(label < n_clusters);
         }
@@ -701,7 +700,7 @@ mod tests {
 
         // All should be in the same cluster.
         let labels = fitted.labels();
-        for &label in labels.iter() {
+        for &label in labels {
             assert_eq!(label, labels[0]);
         }
     }

@@ -532,11 +532,9 @@ mod tests {
         for (a, b) in emb3.iter().zip(emb6.iter()) {
             diff_sum += (a - b).abs();
         }
-        // They should differ (not guaranteed for all inputs, but for this grid they do).
-        // Just check that at least one element differs.
         assert!(
-            diff_sum > 1e-10 || true, // fallback: always pass since different k may give same embedding
-            "different n_neighbors should usually produce different embeddings"
+            diff_sum > 1e-10,
+            "different n_neighbors should produce different embeddings (got diff_sum={diff_sum})"
         );
     }
 }

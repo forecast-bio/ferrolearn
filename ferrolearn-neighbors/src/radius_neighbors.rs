@@ -422,8 +422,7 @@ impl<F: Float + Send + Sync + 'static> FittedRadiusNeighborsClassifier<F> {
             .max_by(|(label_a, w_a), (label_b, w_b)| {
                 w_a.partial_cmp(w_b).unwrap().then(label_b.cmp(label_a))
             })
-            .map(|(label, _)| label)
-            .unwrap_or(0)
+            .map_or(0, |(label, _)| label)
     }
 
     /// Return the unique class labels found during fitting.
@@ -467,7 +466,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 

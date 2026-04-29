@@ -138,7 +138,7 @@ mod tests {
         let x = Array2::from_shape_vec((5, 1), vec![0.0, 1.0, 2.0, 3.0, 4.0]).unwrap();
         let bw = array![1.0f64];
         let diag = hat_matrix_diagonal(&x, &bw, &GaussianKernel);
-        for &h_ii in diag.iter() {
+        for &h_ii in &diag {
             assert!(h_ii >= 0.0, "H_ii should be non-negative");
             assert!(h_ii <= 1.0, "H_ii should be <= 1");
         }
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn effective_df_bounded() {
-        let x = Array2::from_shape_vec((10, 1), (0..10).map(|i| i as f64).collect()).unwrap();
+        let x = Array2::from_shape_vec((10, 1), (0..10).map(f64::from).collect()).unwrap();
         let bw = array![1.0f64];
         let df = effective_df(&x, &bw, &GaussianKernel);
         assert!(df >= 1.0, "Effective DF should be >= 1");
@@ -158,7 +158,7 @@ mod tests {
         let n = 20;
         let x_data: Vec<f64> = (0..n).map(|i| i as f64 * 0.5).collect();
         let x = Array2::from_shape_vec((n, 1), x_data.clone()).unwrap();
-        let y: Array1<f64> = x.column(0).mapv(|xi| xi.sin());
+        let y: Array1<f64> = x.column(0).mapv(f64::sin);
         let bw = array![1.0f64];
 
         // Shortcut LOOCV
@@ -192,8 +192,8 @@ mod tests {
     #[test]
     fn loocv_small_bandwidth_high_error() {
         // Very small bandwidth => overfitting => high LOOCV error
-        let x = Array2::from_shape_vec((10, 1), (0..10).map(|i| i as f64).collect()).unwrap();
-        let y: Array1<f64> = x.column(0).mapv(|xi| xi.sin());
+        let x = Array2::from_shape_vec((10, 1), (0..10).map(f64::from).collect()).unwrap();
+        let y: Array1<f64> = x.column(0).mapv(f64::sin);
         let bw_small = array![0.01f64];
         let bw_good = array![1.5f64];
 
@@ -209,7 +209,8 @@ mod tests {
 
     #[test]
     fn df_increases_with_smaller_bandwidth() {
-        let x = Array2::from_shape_vec((20, 1), (0..20).map(|i| i as f64 * 0.5).collect()).unwrap();
+        let x =
+            Array2::from_shape_vec((20, 1), (0..20).map(|i| f64::from(i) * 0.5).collect()).unwrap();
         let df_small_bw = effective_df(&x, &array![0.5f64], &GaussianKernel);
         let df_large_bw = effective_df(&x, &array![5.0f64], &GaussianKernel);
 

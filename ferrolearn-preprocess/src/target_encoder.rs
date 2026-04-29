@@ -146,7 +146,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<usize>, Array1<F>> for TargetE
 
         let n_features = x.ncols();
         let global_mean = y.iter().copied().fold(F::zero(), |a, v| a + v)
-            / F::from(n_samples).unwrap_or(F::one());
+            / F::from(n_samples).unwrap_or_else(F::one);
 
         let mut category_maps = Vec::with_capacity(n_features);
 
@@ -155,7 +155,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<usize>, Array1<F>> for TargetE
             let mut cat_stats: HashMap<usize, (F, usize)> = HashMap::new();
             for i in 0..n_samples {
                 let cat = x[[i, j]];
-                let entry = cat_stats.entry(cat).or_insert((F::zero(), 0));
+                let entry = cat_stats.entry(cat).or_insert_with(|| (F::zero(), 0));
                 entry.0 = entry.0 + y[i];
                 entry.1 += 1;
             }
@@ -163,7 +163,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<usize>, Array1<F>> for TargetE
             // Compute smoothed mean per category
             let mut cat_map: HashMap<usize, F> = HashMap::new();
             for (&cat, &(sum, count)) in &cat_stats {
-                let count_f = F::from(count).unwrap_or(F::one());
+                let count_f = F::from(count).unwrap_or_else(F::one);
                 let cat_mean = sum / count_f;
                 let encoded =
                     (count_f * cat_mean + self.smooth * global_mean) / (count_f + self.smooth);

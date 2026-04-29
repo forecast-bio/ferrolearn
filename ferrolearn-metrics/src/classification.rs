@@ -356,7 +356,7 @@ pub fn roc_auc_score(y_true: &Array1<usize>, y_score: &Array1<f64>) -> Result<f6
     }
 
     // Validate that all labels are 0 or 1.
-    for &label in y_true.iter() {
+    for &label in y_true {
         if label > 1 {
             return Err(FerroError::InvalidParameter {
                 name: "y_true".into(),
@@ -573,7 +573,7 @@ fn validate_binary_scores<F: Float + Send + Sync + 'static>(
         });
     }
 
-    for &label in y_true.iter() {
+    for &label in y_true {
         if label > 1 {
             return Err(FerroError::InvalidParameter {
                 name: "y_true".into(),
@@ -1226,7 +1226,7 @@ where
     }
 
     // Validate binary labels.
-    for &label in y_true.iter() {
+    for &label in y_true {
         if label > 1 {
             return Err(FerroError::InvalidParameter {
                 name: "y_true".into(),
@@ -1739,12 +1739,12 @@ mod tests {
         assert_abs_diff_eq!(recall[last], 0.0, epsilon = 1e-10);
 
         // All precisions should be in [0, 1].
-        for &p in precision.iter() {
-            assert!(p >= 0.0 && p <= 1.0 + 1e-10);
+        for &p in &precision {
+            assert!((0.0..=1.0 + 1e-10).contains(&p));
         }
         // All recalls should be in [0, 1].
-        for &r in recall.iter() {
-            assert!(r >= -1e-10 && r <= 1.0 + 1e-10);
+        for &r in &recall {
+            assert!((-1e-10..=1.0 + 1e-10).contains(&r));
         }
     }
 

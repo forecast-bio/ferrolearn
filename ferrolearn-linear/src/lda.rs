@@ -160,7 +160,7 @@ fn jacobi_eigen_f<F: Float + Send + Sync + 'static>(
     for i in 0..n {
         v[[i, i]] = F::one();
     }
-    let tol = F::from(1e-12).unwrap_or(F::epsilon());
+    let tol = F::from(1e-12).unwrap_or_else(F::epsilon);
 
     for _ in 0..max_iter {
         // Find the largest off-diagonal entry.
@@ -186,7 +186,7 @@ fn jacobi_eigen_f<F: Float + Send + Sync + 'static>(
         let apq = mat[[p, q]];
         let two = F::from(2.0).unwrap();
         let theta = if (app - aqq).abs() < tol {
-            F::from(std::f64::consts::FRAC_PI_4).unwrap_or(F::one())
+            F::from(std::f64::consts::FRAC_PI_4).unwrap_or_else(F::one)
         } else {
             let tau = (aqq - app) / (two * apq);
             let t = if tau >= F::zero() {
@@ -250,7 +250,7 @@ fn gaussian_solve_f<F: Float>(
                 max_row = row;
             }
         }
-        if max_val < F::from(1e-12).unwrap_or(F::epsilon()) {
+        if max_val < F::from(1e-12).unwrap_or_else(F::epsilon) {
             return Err(FerroError::NumericalInstability {
                 message: "singular matrix during LDA inversion".into(),
             });
@@ -277,7 +277,7 @@ fn gaussian_solve_f<F: Float>(
         for j in (i + 1)..n {
             sum = sum - aug[[i, j]] * x[j];
         }
-        if aug[[i, i]].abs() < F::from(1e-12).unwrap_or(F::epsilon()) {
+        if aug[[i, i]].abs() < F::from(1e-12).unwrap_or_else(F::epsilon) {
             return Err(FerroError::NumericalInstability {
                 message: "near-zero pivot during LDA back substitution".into(),
             });
@@ -605,7 +605,7 @@ impl<F: Float + Send + Sync + 'static> FittedPipelineEstimator<F> for FittedLDAP
     /// Predict via the pipeline interface, returning float class labels.
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| NumCast::from(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| NumCast::from(v).unwrap_or_else(F::nan)))
     }
 }
 
@@ -705,7 +705,7 @@ mod tests {
         let (x, y) = linearly_separable_2d();
         let lda = LDA::<f64>::new(Some(1));
         let fitted = lda.fit(&x, &y).unwrap();
-        for &v in fitted.explained_variance_ratio().iter() {
+        for &v in fitted.explained_variance_ratio() {
             assert!(v >= 0.0);
         }
     }
@@ -910,6 +910,6 @@ mod tests {
         let m1 = fitted.means()[[1, 0]];
         // For well-separated data the projected means should differ by > 1.0.
         assert!((m0 - m1).abs() > 0.5, "m0={m0}, m1={m1}");
-        let _ = assert_abs_diff_eq!(0.0_f64, 0.0_f64); // use the import
+        assert_abs_diff_eq!(0.0_f64, 0.0_f64); // use the import
     }
 }

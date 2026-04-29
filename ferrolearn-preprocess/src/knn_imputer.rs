@@ -277,17 +277,17 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedKNNImputer
                             .iter()
                             .map(|&(v, _)| v)
                             .fold(F::zero(), |acc, v| acc + v);
-                        sum / F::from(neighbor_vals.len()).unwrap_or(F::one())
+                        sum / F::from(neighbor_vals.len()).unwrap_or_else(F::one)
                     }
                     KNNWeights::Distance => {
                         // Inverse distance weighting
                         let mut weight_sum = F::zero();
                         let mut val_sum = F::zero();
-                        let epsilon = F::from(1e-12).unwrap_or(F::min_positive_value());
+                        let epsilon = F::from(1e-12).unwrap_or_else(F::min_positive_value);
                         for &(val, dist) in &neighbor_vals {
                             let w = if dist <= epsilon {
                                 // Exact match — give very high weight
-                                F::from(1e12).unwrap_or(F::max_value())
+                                F::from(1e12).unwrap_or_else(F::max_value)
                             } else {
                                 F::one() / dist
                             };

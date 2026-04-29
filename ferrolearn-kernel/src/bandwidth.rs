@@ -430,14 +430,16 @@ mod tests {
 
     #[test]
     fn silverman_positive() {
-        let x = Array2::from_shape_vec((20, 1), (0..20).map(|i| i as f64 * 0.5).collect()).unwrap();
+        let x =
+            Array2::from_shape_vec((20, 1), (0..20).map(|i| f64::from(i) * 0.5).collect()).unwrap();
         let bw = silverman_bandwidth(&x);
         assert!(bw[0] > 0.0);
     }
 
     #[test]
     fn scott_positive() {
-        let x = Array2::from_shape_vec((20, 1), (0..20).map(|i| i as f64 * 0.5).collect()).unwrap();
+        let x =
+            Array2::from_shape_vec((20, 1), (0..20).map(|i| f64::from(i) * 0.5).collect()).unwrap();
         let bw = scott_bandwidth(&x);
         assert!(bw[0] > 0.0);
     }
@@ -449,9 +451,9 @@ mod tests {
             (0..100)
                 .map(|i| {
                     if i % 2 == 0 {
-                        i as f64
+                        f64::from(i)
                     } else {
-                        i as f64 * 10.0
+                        f64::from(i) * 10.0
                     }
                 })
                 .collect(),

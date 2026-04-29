@@ -150,7 +150,7 @@ impl<F: Float + Send + Sync + 'static> FittedQuantileTransformer<F> {
 /// approximation by Abramowitz and Stegun.
 fn probit<F: Float>(p: F) -> F {
     // Clamp to avoid infinities
-    let eps = F::from(1e-7).unwrap_or(F::min_positive_value());
+    let eps = F::from(1e-7).unwrap_or_else(F::min_positive_value);
     let p = if p < eps {
         eps
     } else if p > F::one() - eps {
@@ -206,7 +206,7 @@ fn interpolate_cdf<F: Float>(value: F, quantiles: &[F], references: &[F]) -> F {
     let mut lo = 0;
     let mut hi = quantiles.len() - 1;
     while lo < hi - 1 {
-        let mid = (lo + hi) / 2;
+        let mid = usize::midpoint(lo, hi);
         if quantiles[mid] <= value {
             lo = mid;
         } else {
@@ -259,7 +259,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for QuantileTransforme
 
         // Build evenly spaced reference levels in [0, 1]
         let references: Vec<F> = (0..effective_quantiles)
-            .map(|i| F::from(i).unwrap() / F::from(effective_quantiles - 1).unwrap_or(F::one()))
+            .map(|i| F::from(i).unwrap() / F::from(effective_quantiles - 1).unwrap_or_else(F::one))
             .collect();
 
         let mut quantiles = Vec::with_capacity(n_features);
@@ -396,8 +396,8 @@ mod tests {
         let fitted = qt.fit(&x, &()).unwrap();
         let out = fitted.transform(&x).unwrap();
         // All values should be in [0, 1]
-        for v in out.iter() {
-            assert!(*v >= 0.0 && *v <= 1.0, "Value {} not in [0,1]", v);
+        for v in &out {
+            assert!(*v >= 0.0 && *v <= 1.0, "Value {v} not in [0,1]");
         }
         // First should be 0, last should be 1
         assert_abs_diff_eq!(out[[0, 0]], 0.0, epsilon = 1e-6);

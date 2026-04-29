@@ -33,7 +33,7 @@ fn yeo_johnson<F: Float>(y: F, lambda: F) -> F {
     let zero = F::zero();
     let one = F::one();
     let two = one + one;
-    let eps = F::from(1e-10_f64).unwrap_or(F::epsilon());
+    let eps = F::from(1e-10_f64).unwrap_or_else(F::epsilon);
 
     if y >= zero {
         if (lambda - zero).abs() < eps {
@@ -65,10 +65,10 @@ fn yeo_johnson<F: Float>(y: F, lambda: F) -> F {
 /// `(λ - 1) * sum(sign(y) * ln(|y| + 1))` for each sample.
 /// We then add the normal log-likelihood of the transformed values.
 fn log_likelihood_yj<F: Float>(col: &[F], lambda: F) -> F {
-    let n = F::from(col.len()).unwrap_or(F::one());
+    let n = F::from(col.len()).unwrap_or_else(F::one);
     let one = F::one();
     let two = one + one;
-    let pi2 = F::from(std::f64::consts::TAU).unwrap_or(F::one()); // 2π
+    let pi2 = F::from(std::f64::consts::TAU).unwrap_or_else(F::one); // 2π
 
     // Transform each value
     let transformed: Vec<F> = col
@@ -240,11 +240,11 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for PowerTransformer<F
             // Minimize the negative log-likelihood using Brent's method.
             let result = ferrolearn_numerical::optimize::brent_bounded(
                 |lambda| {
-                    let lam = F::from(lambda).unwrap_or(F::one());
+                    let lam = F::from(lambda).unwrap_or_else(F::one);
                     // Convert column back to generic F for the log-likelihood.
                     let col_f: Vec<F> = col_f64
                         .iter()
-                        .map(|&v| F::from(v).unwrap_or(F::zero()))
+                        .map(|&v| F::from(v).unwrap_or_else(F::zero))
                         .collect();
                     let ll = log_likelihood_yj(&col_f, lam);
                     // Negate: minimize negative log-likelihood = maximize log-likelihood.
@@ -256,12 +256,12 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for PowerTransformer<F
                 500,
             );
 
-            lambdas[j] = F::from(result.x).unwrap_or(F::one());
+            lambdas[j] = F::from(result.x).unwrap_or_else(F::one);
         }
 
         // If standardize, compute mean and std of transformed data
         let (means, stds) = if self.standardize {
-            let n = F::from(n_samples).unwrap_or(F::one());
+            let n = F::from(n_samples).unwrap_or_else(F::one);
             let mut means_arr = Array1::zeros(n_features);
             let mut stds_arr = Array1::zeros(n_features);
             for j in 0..n_features {
@@ -322,7 +322,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedPowerTrans
         let mut out = x.to_owned();
         for (j, mut col) in out.columns_mut().into_iter().enumerate() {
             let lambda = self.lambdas[j];
-            for v in col.iter_mut() {
+            for v in &mut col {
                 *v = yeo_johnson(*v, lambda);
             }
 
@@ -331,7 +331,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedPowerTrans
                 let m = means[j];
                 let s = stds[j];
                 if s > F::zero() {
-                    for v in col.iter_mut() {
+                    for v in &mut col {
                         *v = (*v - m) / s;
                     }
                 }
@@ -448,7 +448,7 @@ mod tests {
         let fitted = pt.fit(&x, &()).unwrap();
         // Lambda should be within [-3, 3]
         let lambda = fitted.lambdas()[0];
-        assert!(lambda >= -3.0 && lambda <= 3.0);
+        assert!((-3.0..=3.0).contains(&lambda));
     }
 
     #[test]
@@ -525,7 +525,7 @@ mod tests {
         let fitted = pt.fit(&x, &()).unwrap();
         let out = fitted.transform(&x).unwrap();
         // Should not panic and produce finite values
-        for v in out.iter() {
+        for v in &out {
             assert!(v.is_finite(), "got non-finite value: {v}");
         }
     }

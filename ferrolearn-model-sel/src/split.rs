@@ -89,15 +89,12 @@ where
 
     // Build shuffled index list.
     let mut indices: Vec<usize> = (0..n_samples).collect();
-    match random_state {
-        Some(seed) => {
-            let mut rng = SmallRng::seed_from_u64(seed);
-            indices.shuffle(&mut rng);
-        }
-        None => {
-            let mut rng = SmallRng::from_os_rng();
-            indices.shuffle(&mut rng);
-        }
+    if let Some(seed) = random_state {
+        let mut rng = SmallRng::seed_from_u64(seed);
+        indices.shuffle(&mut rng);
+    } else {
+        let mut rng = SmallRng::from_os_rng();
+        indices.shuffle(&mut rng);
     }
 
     // Compute the number of test samples (at least 1).

@@ -315,7 +315,7 @@ mod tests {
 
         // All rows should have approximately the same scores.
         for row_idx in 0..result.test_scores.nrows() {
-            for &s in result.test_scores.row(row_idx).iter() {
+            for &s in result.test_scores.row(row_idx) {
                 assert!(s.abs() < 1e-10, "expected ~0, got {s}");
             }
         }
@@ -359,7 +359,7 @@ mod tests {
 
     #[test]
     fn test_validation_curve_scores_finite() {
-        let y_data: Vec<f64> = (0..30).map(|i| i as f64).collect();
+        let y_data: Vec<f64> = (0..30).map(f64::from).collect();
         let x = Array2::<f64>::zeros((30, 2));
         let y = Array1::from_vec(y_data);
         let kf = KFold::new(3);
@@ -374,10 +374,10 @@ mod tests {
         )
         .unwrap();
 
-        for &s in result.train_scores.iter() {
+        for &s in &result.train_scores {
             assert!(s.is_finite(), "train score should be finite, got {s}");
         }
-        for &s in result.test_scores.iter() {
+        for &s in &result.test_scores {
             assert!(s.is_finite(), "test score should be finite, got {s}");
         }
     }
@@ -400,7 +400,7 @@ mod tests {
 
         assert_eq!(result.param_values.len(), 1);
         assert_eq!(result.train_scores.shape(), &[1, 3]);
-        for &s in result.test_scores.iter() {
+        for &s in &result.test_scores {
             assert!(s.abs() < 1e-10, "expected ~0, got {s}");
         }
     }

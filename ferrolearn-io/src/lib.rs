@@ -213,7 +213,7 @@ mod tests {
     impl SimpleModel {
         fn example() -> Self {
             Self {
-                weights: vec![1.0, -2.5, 3.14],
+                weights: vec![1.0, -2.5, 3.5],
                 bias: 0.5,
                 name: "test".to_owned(),
             }
@@ -418,7 +418,7 @@ mod tests {
         }
 
         let model = LargeModel {
-            weights: (0..100_000).map(|i| i as f64 * 0.001).collect(),
+            weights: (0..100_000).map(|i| f64::from(i) * 0.001).collect(),
         };
 
         let bytes = save_model_bytes(&model).unwrap();

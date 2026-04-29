@@ -135,7 +135,7 @@ mod tests {
         let ft = FunctionTransformer::<f64>::new(|_| 42.0);
         let x = array![[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
         let out = ft.transform(&x).unwrap();
-        for v in out.iter() {
+        for v in &out {
             assert_abs_diff_eq!(*v, 42.0, epsilon = 1e-15);
         }
     }
@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn test_clamp_function() {
-        let ft = FunctionTransformer::<f64>::new(|v: f64| v.max(0.0).min(1.0));
+        let ft = FunctionTransformer::<f64>::new(|v: f64| v.clamp(0.0, 1.0));
         let x = array![[-1.0, 0.5, 2.0]];
         let out = ft.transform(&x).unwrap();
         assert_abs_diff_eq!(out[[0, 0]], 0.0, epsilon = 1e-10);

@@ -1,13 +1,13 @@
 [package]
 name = "ferrolearn-kernel"
-version = "0.2.0"
+version = "0.2.2"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Kernel regression for the ferrolearn ML framework"
+description = "Kernel methods for the ferrolearn ML framework: Nadaraya-Watson and local polynomial regression, Gaussian processes (regression and Laplace-approximation classification), kernel ridge, Nyström approximation, and RBF random Fourier features"
 readme = "README.md"
-keywords = ["machine-learning", "kernel-regression", "nadaraya-watson", "nonparametric", "bandwidth"]
+keywords = ["machine-learning", "kernel-regression", "gaussian-process", "kernel-ridge", "nystroem"]
 categories = ["science", "algorithms"]
 
 [dependencies]
@@ -20,6 +20,7 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
+rand_xoshiro = { workspace = true }
 statrs = "0.18"
 faer = { workspace = true }
 
@@ -28,5 +29,4 @@ approx = { workspace = true }
 float-cmp = { workspace = true }
 ferrolearn-metrics = { workspace = true }
 serde_json = { workspace = true }
-rand_xoshiro = { workspace = true }
 proptest = "1"

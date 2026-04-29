@@ -106,8 +106,7 @@ impl<F: Float + Send + Sync + 'static> RFE<F> {
             return Err(FerroError::InvalidParameter {
                 name: "n_features_to_select".into(),
                 reason: format!(
-                    "n_features_to_select ({}) must be in [1, {}]",
-                    n_features_to_select, n_features
+                    "n_features_to_select ({n_features_to_select}) must be in [1, {n_features}]"
                 ),
             });
         }

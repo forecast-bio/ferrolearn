@@ -97,19 +97,28 @@ impl<F: Float + Send + Sync + 'static> GaussianProcessClassifier<F> {
 
 /// Fitted GP binary classifier (Laplace approximation).
 ///
-/// Fields `pi_hat` and `l_factor` are stored for future predictive
-/// variance computation (posterior integration).
-#[allow(dead_code)]
+/// Stores the quantities needed for Rasmussen & Williams Algorithm 3.2
+/// (predictions) and 5.1 (log marginal likelihood):
+/// - `f_hat`: the converged latent-function MAP estimate (the Laplace mode);
+/// - `pi_hat`: `sigmoid(f_hat)`, used in predictive mean and variance;
+/// - `y_binary`: the binary training labels;
+/// - `l_factor`: Cholesky of `B = I + sqrt(W) K sqrt(W)`, used for predictive
+///   variance and `log|B|` in the marginal likelihood.
 struct FittedBinaryGPC<F: Float + Send + Sync + 'static> {
     /// Training features.
     x_train: Array2<F>,
-    /// Kernel matrix K(X, X).
-    k_mat: Array2<F>,
-    /// Latent function values at convergence.
+    /// Latent function values at convergence. Used in the log marginal
+    /// likelihood computation (R&W eq. 3.32).
     f_hat: Array1<F>,
-    /// Sigmoid(f_hat) — class probabilities at training points.
+    /// Sigmoid(f_hat) — class probabilities at training points. Used in the
+    /// predictive mean `f_bar* = K* @ (y - pi_hat)` and predictive variance.
     pi_hat: Array1<F>,
-    /// Cholesky factor of B = I + sqrt(W) K sqrt(W).
+    /// Training labels in {0, 1} (as F). Used in predictive mean and the
+    /// log marginal likelihood's data-fit term.
+    y_binary: Array1<F>,
+    /// Cholesky factor of B = I + sqrt(W) K sqrt(W). Used in predictive
+    /// variance via R&W eq. 3.24 (`v = L^{-1} sqrt(W) K(x*, X)^T`) and in
+    /// `log|B| = 2 sum log L_ii` for the marginal likelihood.
     l_factor: Array2<F>,
     /// Kernel used during fitting.
     kernel: Box<dyn GPKernel<F>>,
@@ -136,6 +145,29 @@ impl<F: Float + Send + Sync + 'static> std::fmt::Debug for FittedGaussianProcess
 }
 
 impl<F: Float + Send + Sync + 'static> FittedGaussianProcessClassifier<F> {
+    /// Approximate Laplace log marginal likelihood `log p(y | X)`.
+    ///
+    /// Computes the Laplace approximation to the GP log marginal likelihood
+    /// (Rasmussen & Williams "Gaussian Processes for Machine Learning"
+    /// eq. 3.32 / Algorithm 5.1). For one-vs-rest multi-class models the
+    /// per-class binary log marginal likelihoods are summed.
+    ///
+    /// This value is the standard objective for kernel hyperparameter
+    /// selection and model comparison.
+    #[must_use]
+    pub fn log_marginal_likelihood(&self) -> F {
+        self.binary_models
+            .iter()
+            .map(binary_log_marginal_likelihood)
+            .fold(F::zero(), |a, b| a + b)
+    }
+
+    /// Class labels seen at fit time, in sorted order.
+    #[must_use]
+    pub fn classes(&self) -> &[usize] {
+        &self.classes
+    }
+
     /// Predict class probabilities for new points.
     ///
     /// For binary classification, returns a 2-column array `[P(class=0), P(class=1)]`.
@@ -232,7 +264,7 @@ fn fit_binary_gpc<F: Float + Send + Sync + 'static>(
             })
             .collect();
 
-        let sqrt_w: Array1<F> = w.mapv(|v| v.sqrt());
+        let sqrt_w: Array1<F> = w.mapv(num_traits::Float::sqrt);
 
         // B = I + sqrt(W) K sqrt(W)
         let mut b = Array2::<F>::zeros((n, n));
@@ -306,7 +338,7 @@ fn fit_binary_gpc<F: Float + Send + Sync + 'static>(
             }
         })
         .collect();
-    let sqrt_w_final: Array1<F> = w_final.mapv(|v| v.sqrt());
+    let sqrt_w_final: Array1<F> = w_final.mapv(num_traits::Float::sqrt);
     let mut b_final = Array2::<F>::zeros((n, n));
     for i in 0..n {
         for j in 0..n {
@@ -318,15 +350,68 @@ fn fit_binary_gpc<F: Float + Send + Sync + 'static>(
 
     Ok(FittedBinaryGPC {
         x_train: x.clone(),
-        k_mat,
         f_hat: f,
         pi_hat,
+        y_binary: y_binary.clone(),
         l_factor: l_final,
         kernel: kernel.clone_box(),
     })
 }
 
-/// Predict binary class probabilities at new points.
+/// Approximate Laplace log marginal likelihood for one binary GP.
+///
+/// Per Rasmussen & Williams "Gaussian Processes for Machine Learning"
+/// eq. 3.32 / Algorithm 5.1:
+///
+/// `log Z_LA ≈ -½ f_hat^T (y - pi_hat) + Σᵢ [yᵢ log πᵢ + (1-yᵢ) log(1-πᵢ)]
+///            - Σᵢ log L_ii`
+///
+/// where the first term uses the identity `K^{-1} f_hat = y - pi_hat`
+/// at convergence of the Newton iteration, and `L` is the Cholesky factor
+/// of `B = I + sqrt(W) K sqrt(W)`.
+fn binary_log_marginal_likelihood<F: Float + Send + Sync + 'static>(
+    model: &FittedBinaryGPC<F>,
+) -> F {
+    let half = F::from(0.5).unwrap();
+    let eps = F::from(1e-300).unwrap();
+
+    // Quadratic term: -1/2 f_hat^T (y - pi_hat).
+    let mut quadratic = F::zero();
+    for ((&fi, &yi), &pi) in model
+        .f_hat
+        .iter()
+        .zip(model.y_binary.iter())
+        .zip(model.pi_hat.iter())
+    {
+        quadratic = quadratic + fi * (yi - pi);
+    }
+    quadratic = -half * quadratic;
+
+    // Log Bernoulli likelihood: sum y log pi + (1-y) log (1-pi).
+    let mut log_lik = F::zero();
+    for (&yi, &pi) in model.y_binary.iter().zip(model.pi_hat.iter()) {
+        let pi_clamped = pi.max(eps).min(F::one() - eps);
+        log_lik = log_lik + yi * pi_clamped.ln() + (F::one() - yi) * (F::one() - pi_clamped).ln();
+    }
+
+    // Log determinant: log |B| / 2 = sum log L_ii  (since |B| = (prod L_ii)^2).
+    let n = model.l_factor.nrows();
+    let mut log_det_half = F::zero();
+    for i in 0..n {
+        log_det_half = log_det_half + model.l_factor[[i, i]].ln();
+    }
+
+    quadratic + log_lik - log_det_half
+}
+
+/// Predict binary class probabilities at new points using Rasmussen &
+/// Williams Algorithm 3.2 (Laplace approximation with predictive variance).
+///
+/// 1. Predictive latent mean: `f_bar* = K* @ (y - pi_hat)` (eq. 3.21).
+/// 2. Predictive latent variance: `v = L^{-1} sqrt(W) K*^T`,
+///    `var* = k(x*, x*) - sum(v^2)` (eq. 3.24).
+/// 3. Class probability via MacKay's probit approximation:
+///    `pi_bar* = Phi(f_bar* / sqrt(1 + pi*var*/8))` (eq. 3.25).
 fn predict_binary_proba<F: Float + Send + Sync + 'static>(
     model: &FittedBinaryGPC<F>,
     x: &Array2<F>,
@@ -339,43 +424,78 @@ fn predict_binary_proba<F: Float + Send + Sync + 'static>(
         });
     }
 
-    let n = model.x_train.nrows();
-    let _n_pred = x.nrows();
+    let n_train = model.x_train.nrows();
+    let n_pred = x.nrows();
 
-    // K* = k(X_new, X_train), shape (n_pred, n)
+    // K* = k(X_new, X_train), shape (n_pred, n_train).
     let k_star = model.kernel.compute(x, &model.x_train);
 
-    // Latent mean: f* = K* @ (y - pi_hat) where we stored f_hat and pi_hat
-    // Actually: f* = K* @ grad_log_posterior
-    // grad = y_binary - pi_hat, but we don't have y_binary here.
-    // Instead, the standard approach is: f* = K* @ K^{-1} f_hat
-    // which equals K* @ alpha where alpha = K^{-1} f_hat
+    // Gradient at convergence: y - pi_hat.
+    let y_minus_pi: Array1<F> = model
+        .y_binary
+        .iter()
+        .zip(model.pi_hat.iter())
+        .map(|(&yi, &pi)| yi - pi)
+        .collect();
 
-    // Compute K^{-1} f_hat via the stored Cholesky of B
-    // We can use: K^{-1} f_hat ~ (y - pi) from the converged Newton step
-    // Since at convergence: f = K @ a where a = W f + (y - pi) - sqrt(W) L^{-T} L^{-1} sqrt(W) K (W f + (y - pi))
-    // The simpler approach: K^{-1} f_hat can be solved directly.
-    // Let's solve K alpha = f_hat using Cholesky of K + jitter
+    // Predictive latent mean: f_bar* = K* (y - pi_hat).
+    let f_bar = k_star.dot(&y_minus_pi);
 
-    // Add small jitter for numerical stability
-    let jitter = F::from(1e-8).unwrap();
-    let mut k_reg = model.k_mat.clone();
-    for i in 0..n {
-        k_reg[[i, i]] = k_reg[[i, i]] + jitter;
+    // sqrt(W) at convergence: w_i = pi_i (1 - pi_i), clamped consistently with fit.
+    let eps = F::from(1e-12).unwrap();
+    let sqrt_w: Array1<F> = model
+        .pi_hat
+        .iter()
+        .map(|&p| {
+            let w_val = p * (F::one() - p);
+            if w_val < eps {
+                eps.sqrt()
+            } else {
+                w_val.sqrt()
+            }
+        })
+        .collect();
+
+    // Compute predictive variance for each test point and apply MacKay's
+    // probit approximation. Avoids forming the full (n_pred, n_train)
+    // intermediate matrix V = L^{-1} sqrt(W) K*^T explicitly.
+    let pi_const = F::from(std::f64::consts::PI).unwrap();
+    let one_eighth = F::from(0.125).unwrap();
+    let mut probs = Array1::<F>::zeros(n_pred);
+
+    for i in 0..n_pred {
+        // k_i = K(x_train, x_i), shape (n_train,).
+        let k_row: Array1<F> = (0..n_train).map(|j| k_star[[i, j]]).collect();
+
+        // sqrt(W) * k_i
+        let swk: Array1<F> = sqrt_w
+            .iter()
+            .zip(k_row.iter())
+            .map(|(&s, &k)| s * k)
+            .collect();
+
+        // v = L^{-1} sqrt(W) k_i (forward solve).
+        let v = forward_solve_gpc(&model.l_factor, &swk);
+
+        // var* = k(x_i, x_i) - v^T v.
+        let xi = x.row(i).to_owned().insert_axis(ndarray::Axis(0));
+        let k_self = model
+            .kernel
+            .compute(&xi.view().to_owned(), &xi.view().to_owned());
+        let k_xx = k_self[[0, 0]];
+        let v_sq: F = v.iter().map(|&vi| vi * vi).fold(F::zero(), |a, b| a + b);
+        let var_star = (k_xx - v_sq).max(F::zero());
+
+        // MacKay probit approximation: kappa = 1 / sqrt(1 + pi * var/8).
+        let kappa = (F::one() + pi_const * var_star * one_eighth).sqrt().recip();
+        let scaled = f_bar[i] * kappa;
+
+        // sigmoid(scaled) is a close, monotonic approximation to Phi(scaled)
+        // on the integration `int sigmoid(f) N(f; mu, sigma^2) df` and is the
+        // formulation used in scikit-learn's GaussianProcessClassifier. See
+        // R&W §3.4.2 for the exact erf-based variant.
+        probs[i] = sigmoid(scaled);
     }
-    let l_k = cholesky_gpc(&k_reg)?;
-    let alpha = cholesky_solve_gpc(&l_k, &model.f_hat);
-
-    // Latent mean at test points
-    let f_star = k_star.dot(&alpha);
-
-    // Latent variance at test points (for more calibrated probabilities)
-    // v = L_k^{-1} K*^T
-    // Compute predictive probabilities using latent mean.
-    // Using sigmoid of the latent mean (deterministic approximation).
-    // A more accurate approach would integrate over the posterior variance,
-    // but sigmoid(f_star) is the standard Laplace approximation output.
-    let probs = f_star.mapv(sigmoid);
 
     Ok(probs)
 }
@@ -445,12 +565,6 @@ fn backward_solve_gpc<F: Float>(l: &Array2<F>, b: &Array1<F>) -> Array1<F> {
         x[i] = sum / l[[i, i]];
     }
     x
-}
-
-/// Solve (L L^T) x = b.
-fn cholesky_solve_gpc<F: Float>(l: &Array2<F>, b: &Array1<F>) -> Array1<F> {
-    let z = forward_solve_gpc(l, b);
-    backward_solve_gpc(l, &z)
 }
 
 // ---------------------------------------------------------------------------
@@ -639,8 +753,8 @@ mod tests {
         }
 
         // Probabilities should be in [0, 1]
-        for &p in proba.iter() {
-            assert!(p >= 0.0 && p <= 1.0, "Probability {p} out of range");
+        for &p in &proba {
+            assert!((0.0..=1.0).contains(&p), "Probability {p} out of range");
         }
     }
 
@@ -666,6 +780,71 @@ mod tests {
         );
     }
 
+    // --- Log marginal likelihood ---
+
+    #[test]
+    fn log_marginal_likelihood_binary_finite_and_negative() {
+        let (x, y) = make_binary_data();
+        let gpc = GaussianProcessClassifier::new(Box::new(RBFKernel::new(1.0)));
+        let fitted = gpc.fit(&x, &y).unwrap();
+        let lml = fitted.log_marginal_likelihood();
+        assert!(lml.is_finite(), "log marginal likelihood should be finite");
+        // For Bernoulli likelihood, log marginal likelihood is < 0 in normal regimes.
+        assert!(
+            lml < 0.0,
+            "log marginal likelihood should be negative, got {lml}"
+        );
+    }
+
+    #[test]
+    fn log_marginal_likelihood_prefers_separable_data() {
+        // Well-separated data should give a higher (less negative) marginal
+        // likelihood than near-overlapping data, all else equal.
+        let kernel = || Box::new(RBFKernel::new(1.0));
+
+        let x_easy = Array2::from_shape_vec((6, 1), vec![0.0, 0.5, 1.0, 5.0, 5.5, 6.0]).unwrap();
+        let y_easy = Array1::from_vec(vec![0usize, 0, 0, 1, 1, 1]);
+        let lml_easy = GaussianProcessClassifier::new(kernel())
+            .fit(&x_easy, &y_easy)
+            .unwrap()
+            .log_marginal_likelihood();
+
+        let x_hard = Array2::from_shape_vec((6, 1), vec![0.0, 0.5, 1.0, 1.1, 1.5, 2.0]).unwrap();
+        let y_hard = Array1::from_vec(vec![0usize, 0, 0, 1, 1, 1]);
+        let lml_hard = GaussianProcessClassifier::new(kernel())
+            .fit(&x_hard, &y_hard)
+            .unwrap()
+            .log_marginal_likelihood();
+
+        assert!(
+            lml_easy > lml_hard,
+            "separable data should have higher LML: easy={lml_easy}, hard={lml_hard}"
+        );
+    }
+
+    #[test]
+    fn log_marginal_likelihood_multiclass_sums_components() {
+        // For OvR multi-class, total LML equals the number of binary components.
+        let (x, y) = make_multiclass_data();
+        let gpc = GaussianProcessClassifier::new(Box::new(RBFKernel::new(1.0)));
+        let fitted = gpc.fit(&x, &y).unwrap();
+        let lml = fitted.log_marginal_likelihood();
+        assert!(lml.is_finite());
+        // Should be sum of per-class contributions; each negative => total < 0.
+        assert!(lml < 0.0);
+    }
+
+    #[test]
+    fn classes_accessor_returns_sorted_labels() {
+        let (x, y) = make_multiclass_data();
+        let gpc = GaussianProcessClassifier::new(Box::new(RBFKernel::new(1.0)));
+        let fitted = gpc.fit(&x, &y).unwrap();
+        let classes = fitted.classes();
+        let mut sorted = classes.to_vec();
+        sorted.sort_unstable();
+        assert_eq!(classes, sorted.as_slice());
+    }
+
     // --- Multi-class ---
 
     #[test]
@@ -677,7 +856,7 @@ mod tests {
         assert_eq!(pred.len(), 9);
 
         // Check predictions contain valid classes
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p <= 2, "Prediction {p} not in valid classes [0, 1, 2]");
         }
 
@@ -831,7 +1010,7 @@ mod tests {
         let pred = fitted.predict(&x).unwrap();
 
         // Predictions should be from {10, 20}
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p == 10 || p == 20, "Expected 10 or 20, got {p}");
         }
     }

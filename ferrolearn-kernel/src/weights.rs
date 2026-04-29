@@ -217,7 +217,7 @@ mod tests {
         let bw = array![1.0f64];
         let w = compute_kernel_weights(&x, &x, &bw, &GaussianKernel);
         let pred = nw_predict_from_weights(&w, &y);
-        for &p in pred.iter() {
+        for &p in &pred {
             assert_abs_diff_eq!(p, 3.0, epsilon = 1e-12);
         }
     }

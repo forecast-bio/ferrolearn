@@ -227,7 +227,7 @@ mod tests {
         let dist = Uniform::new(1.0, 5.0);
         for _ in 0..100 {
             if let ParamValue::Float(v) = dist.sample(&mut rng) {
-                assert!(v >= 1.0 && v < 5.0, "value {v} out of [1, 5)");
+                assert!((1.0..5.0).contains(&v), "value {v} out of [1, 5)");
             } else {
                 panic!("expected Float");
             }
@@ -255,7 +255,7 @@ mod tests {
         let dist = LogUniform::new(1e-4, 1e-1);
         for _ in 0..100 {
             if let ParamValue::Float(v) = dist.sample(&mut rng) {
-                assert!(v >= 1e-4 && v < 1e-1, "value {v} out of [1e-4, 1e-1)");
+                assert!((1e-4..1e-1).contains(&v), "value {v} out of [1e-4, 1e-1)");
             } else {
                 panic!("expected Float");
             }
@@ -283,7 +283,7 @@ mod tests {
         let dist = IntUniform::new(1, 10);
         for _ in 0..100 {
             if let ParamValue::Int(v) = dist.sample(&mut rng) {
-                assert!(v >= 1 && v <= 10, "value {v} out of [1, 10]");
+                assert!((1..=10).contains(&v), "value {v} out of [1, 10]");
             } else {
                 panic!("expected Int");
             }

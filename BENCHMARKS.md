@@ -2,7 +2,7 @@
 
 **ferrolearn vs. scikit-learn — benchmark comparison**
 
-Measured on Linux 6.6.87 (WSL2), AMD64. Rust benchmarks use [Criterion](https://github.com/bls12-381/criterion.rs) with statistical analysis; Python benchmarks use median wall-clock time over 20 iterations. scikit-learn 1.7.2, ferrolearn 0.1.x, Rust 1.85 (edition 2024).
+Measured on Linux 6.6.87 (WSL2), AMD64. Rust benchmarks use [Criterion](https://github.com/bls12-381/criterion.rs) with statistical analysis; Python benchmarks use median wall-clock time over 20 iterations. scikit-learn 1.7.2, ferrolearn 0.2.2, Rust 1.85 (edition 2024).
 
 All comparisons use identical dataset sizes, hyperparameters, and random seeds. Updated 2026-03-14 after oracle test coverage expansion and bug fix pass (OPTICS Xi extraction, Birch AgglomerativeClustering, PowerTransformer Brent's method, StratifiedKFold round-robin).
 

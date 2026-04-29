@@ -413,7 +413,7 @@ fn compute_fuzzy_simplicial_set(knn: &[Vec<(usize, f64)>], n: usize) -> Vec<(usi
         let mut lo = 1e-20_f64;
         let mut hi = 1e4_f64;
         for _iter in 0..64 {
-            let mid = (lo + hi) / 2.0;
+            let mid = f64::midpoint(lo, hi);
             let mut val = 0.0;
             for &(_, d) in &knn[i] {
                 let adjusted = (d - rho[i]).max(0.0);
@@ -428,7 +428,7 @@ fn compute_fuzzy_simplicial_set(knn: &[Vec<(usize, f64)>], n: usize) -> Vec<(usi
                 break;
             }
         }
-        sigma[i] = (lo + hi) / 2.0;
+        sigma[i] = f64::midpoint(lo, hi);
     }
 
     // Build directed graph with membership strengths.
@@ -498,14 +498,14 @@ fn find_ab_params(min_dist: f64, spread: f64) -> (f64, f64) {
     let mut best_err = f64::MAX;
 
     // Grid search over a and b.
-    let a_range: Vec<f64> = (1..=40).map(|i| i as f64 * 0.25).collect();
-    let b_range: Vec<f64> = (1..=30).map(|i| i as f64 * 0.1).collect();
+    let a_range: Vec<f64> = (1..=40).map(|i| f64::from(i) * 0.25).collect();
+    let b_range: Vec<f64> = (1..=30).map(|i| f64::from(i) * 0.1).collect();
 
     for &a in &a_range {
         for &b in &b_range {
             let mut err = 0.0;
             for k in 0..n_samples {
-                let d = (k as f64 + 0.5) / n_samples as f64 * d_max;
+                let d = (f64::from(k) + 0.5) / f64::from(n_samples) * d_max;
                 let target = if d <= min_dist {
                     1.0
                 } else {
@@ -530,12 +530,12 @@ fn find_ab_params(min_dist: f64, spread: f64) -> (f64, f64) {
     let b_hi = best_b + 0.15;
 
     for ia in 0..20 {
-        let a = a_lo + (a_hi - a_lo) * ia as f64 / 19.0;
+        let a = a_lo + (a_hi - a_lo) * f64::from(ia) / 19.0;
         for ib in 0..20 {
-            let b = b_lo + (b_hi - b_lo) * ib as f64 / 19.0;
+            let b = b_lo + (b_hi - b_lo) * f64::from(ib) / 19.0;
             let mut err = 0.0;
             for k in 0..n_samples {
-                let d = (k as f64 + 0.5) / n_samples as f64 * d_max;
+                let d = (f64::from(k) + 0.5) / f64::from(n_samples) * d_max;
                 let target = if d <= min_dist {
                     1.0
                 } else {
@@ -644,7 +644,7 @@ impl Fit<Array2<f64>, ()> for Umap {
         let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
         let uniform = Uniform::new(-10.0, 10.0).unwrap();
         let mut y = Array2::<f64>::zeros((n, dim));
-        for elem in y.iter_mut() {
+        for elem in &mut y {
             *elem = uniform.sample(&mut rng);
         }
 
@@ -660,10 +660,7 @@ impl Fit<Array2<f64>, ()> for Umap {
             });
         }
 
-        let max_weight = edges
-            .iter()
-            .map(|e| e.2)
-            .fold(0.0_f64, |a_val, b_val| a_val.max(b_val));
+        let max_weight = edges.iter().map(|e| e.2).fold(0.0_f64, f64::max);
 
         // Each edge gets `n_epochs * (weight / max_weight)` total updates.
         let epochs_per_sample: Vec<f64> = edges
@@ -838,7 +835,7 @@ mod tests {
         let normal = Normal::new(0.0, 0.3).unwrap();
         let n_per_cluster = 10;
         let n_features = 5;
-        let centers = vec![
+        let centers = [
             vec![0.0, 0.0, 0.0, 0.0, 0.0],
             vec![5.0, 5.0, 5.0, 5.0, 5.0],
             vec![10.0, 0.0, 10.0, 0.0, 10.0],
@@ -912,7 +909,7 @@ mod tests {
                 correct += 1;
             }
         }
-        let accuracy = correct as f64 / n as f64;
+        let accuracy = f64::from(correct) / n as f64;
         assert!(
             accuracy > 0.8,
             "UMAP k-NN accuracy should be > 80%, got {:.1}%",

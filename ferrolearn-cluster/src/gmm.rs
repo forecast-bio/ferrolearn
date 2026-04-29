@@ -225,9 +225,9 @@ impl<F: Float> FittedGaussianMixture<F> {
     /// `BIC = -2 · log_likelihood · n_samples + n_params · ln(n_samples)`
     #[must_use]
     pub fn bic(&self, n_samples: usize) -> F {
-        let n = F::from(n_samples).unwrap_or(F::one());
+        let n = F::from(n_samples).unwrap_or_else(F::one);
         let log_n = n.ln();
-        let params = F::from(self.n_free_params()).unwrap_or(F::one());
+        let params = F::from(self.n_free_params()).unwrap_or_else(F::one);
         -F::from(2.0).unwrap() * self.lower_bound_ * n + params * log_n
     }
 
@@ -238,9 +238,9 @@ impl<F: Float> FittedGaussianMixture<F> {
     /// `AIC = -2 · log_likelihood · n_samples + 2 · n_params`
     #[must_use]
     pub fn aic(&self, n_samples: usize) -> F {
-        let n = F::from(n_samples).unwrap_or(F::one());
+        let n = F::from(n_samples).unwrap_or_else(F::one);
         let two = F::from(2.0).unwrap();
-        let params = F::from(self.n_free_params()).unwrap_or(F::one());
+        let params = F::from(self.n_free_params()).unwrap_or_else(F::one);
         -two * self.lower_bound_ * n + two * params
     }
 
@@ -399,7 +399,7 @@ fn mahalanobis_full<F: Float>(diff: &[F], cov: &Array2<F>, d: usize) -> Result<F
 /// Adds a small regularisation `reg = 1e-6` to the diagonal to ensure
 /// positive definiteness in the presence of numerical noise.
 fn cholesky<F: Float>(cov: &Array2<F>, d: usize) -> Result<Array2<F>, FerroError> {
-    let reg = F::from(1e-6).unwrap_or(F::epsilon());
+    let reg = F::from(1e-6).unwrap_or_else(F::epsilon);
     let mut l = Array2::zeros((d, d));
     for i in 0..d {
         for j in 0..=i {
@@ -475,7 +475,7 @@ fn init_means<F: Float>(x: &Array2<F>, k: usize, rng: &mut StdRng) -> Array2<F> 
         // Add a tiny jitter to avoid degenerate covariances.
         for j in 0..n_features {
             let jitter: f64 = rng.random_range(-1e-4..1e-4);
-            means[[ki, j]] = means[[ki, j]] + F::from(jitter).unwrap_or(F::zero());
+            means[[ki, j]] = means[[ki, j]] + F::from(jitter).unwrap_or_else(F::zero);
         }
     }
     means
@@ -484,7 +484,7 @@ fn init_means<F: Float>(x: &Array2<F>, k: usize, rng: &mut StdRng) -> Array2<F> 
 /// Build a regularised initial full covariance (or tied, which reuses one block).
 fn init_full_cov<F: Float>(n_features: usize) -> Array2<F> {
     let mut cov = Array2::zeros((n_features, n_features));
-    let reg = F::from(1.0).unwrap_or(F::one());
+    let reg = F::from(1.0).unwrap_or_else(F::one);
     for j in 0..n_features {
         cov[[j, j]] = reg;
     }
@@ -566,7 +566,7 @@ fn run_em<F: Float>(
         prev_ll = ll;
 
         // Responsibilities in linear scale: r[n, k] = exp(log_resp[n, k]).
-        let resp: Array2<F> = log_resp.mapv(|v| v.exp());
+        let resp: Array2<F> = log_resp.mapv(num_traits::Float::exp);
 
         // ── M-step ────────────────────────────────────────────────────────────
         // Effective counts N_k = Σ_n r[n, k].
@@ -839,7 +839,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedGaussianMi
     fn transform(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
         let log_resp_raw = self.log_responsibilities(x)?;
         let (log_resp_norm, _) = log_sum_exp_rows(&log_resp_raw);
-        Ok(log_resp_norm.mapv(|v| v.exp()))
+        Ok(log_resp_norm.mapv(num_traits::Float::exp))
     }
 }
 
@@ -1068,7 +1068,7 @@ mod tests {
             .fit(&x, &())
             .unwrap();
         let labels = fitted.predict(&x).unwrap();
-        for &l in labels.iter() {
+        for &l in &labels {
             assert!(l < 2, "label {l} out of range");
         }
     }
@@ -1146,8 +1146,8 @@ mod tests {
             .fit(&x, &())
             .unwrap();
         let resp = fitted.transform(&x).unwrap();
-        for &v in resp.iter() {
-            assert!(v >= 0.0 && v <= 1.0 + 1e-10);
+        for &v in &resp {
+            assert!((0.0..=1.0 + 1e-10).contains(&v));
         }
     }
 

@@ -430,7 +430,9 @@ mod tests {
     use ndarray::{Array2, array};
 
     fn make_sin_data(n: usize) -> (Array2<f64>, Array1<f64>) {
-        let x_data: Vec<f64> = (0..n).map(|i| i as f64 * 6.28 / n as f64).collect();
+        let x_data: Vec<f64> = (0..n)
+            .map(|i| i as f64 * std::f64::consts::TAU / n as f64)
+            .collect();
         let x = Array2::from_shape_vec((n, 1), x_data).unwrap();
         let y = x.column(0).mapv(f64::sin);
         (x, y)
@@ -444,19 +446,19 @@ mod tests {
         let pred = fitted.predict(&x).unwrap();
         assert_eq!(pred.len(), 50);
         // Predictions should be finite
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite());
         }
     }
 
     #[test]
     fn predict_constant() {
-        let x = Array2::from_shape_vec((10, 1), (0..10).map(|i| i as f64).collect()).unwrap();
+        let x = Array2::from_shape_vec((10, 1), (0..10).map(f64::from).collect()).unwrap();
         let y = Array1::from_elem(10, 5.0);
         let model = NadarayaWatson::with_kernel(GaussianKernel, BandwidthStrategy::Fixed(1.0));
         let fitted = model.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
-        for &p in pred.iter() {
+        for &p in &pred {
             assert_abs_diff_eq!(p, 5.0, epsilon = 1e-10);
         }
     }
@@ -472,7 +474,7 @@ mod tests {
         let fitted = model.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
 
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(
                 p >= y_min - 1e-10 && p <= y_max + 1e-10,
                 "Prediction {p} outside [{y_min}, {y_max}]"
@@ -500,7 +502,7 @@ mod tests {
         let model = NadarayaWatson::with_kernel(GaussianKernel, BandwidthStrategy::Fixed(100.0));
         let fitted = model.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
-        for &p in pred.iter() {
+        for &p in &pred {
             assert_abs_diff_eq!(p, y_mean, epsilon = 0.1);
         }
     }
@@ -539,7 +541,7 @@ mod tests {
         let fitted = model.fit(&x, &y).unwrap();
         assert!(fitted.bandwidth[0] > 0.0);
         let pred = fitted.predict(&x).unwrap();
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite());
         }
     }
@@ -547,7 +549,7 @@ mod tests {
     #[test]
     fn boundary_reflection() {
         // y = x on [0, 1], predict at boundary x=1.0
-        let x_data: Vec<f64> = (0..50).map(|i| i as f64 / 49.0).collect();
+        let x_data: Vec<f64> = (0..50).map(|i| f64::from(i) / 49.0).collect();
         let x = Array2::from_shape_vec((50, 1), x_data).unwrap();
         let y = x.column(0).to_owned();
         let model = NadarayaWatson::with_kernel(GaussianKernel, BandwidthStrategy::Fixed(0.2))
@@ -570,7 +572,7 @@ mod tests {
             .flat_map(|i| vec![i as f64 / n as f64, (i as f64 / n as f64).powi(2)])
             .collect();
         let x = Array2::from_shape_vec((n, 2), x_data).unwrap();
-        let y: Array1<f64> = x.column(0).mapv(|xi| xi.sin());
+        let y: Array1<f64> = x.column(0).mapv(f64::sin);
         let model = NadarayaWatson::with_kernel(
             GaussianKernel,
             BandwidthStrategy::PerDimension(array![0.2, 0.2]),
@@ -578,7 +580,7 @@ mod tests {
         let fitted = model.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
         assert_eq!(pred.len(), n);
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite());
         }
     }

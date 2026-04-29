@@ -362,7 +362,7 @@ fn test_preprocessing_chain_e2e() {
         .expect("imputer transform failed");
 
     // Verify no NaN values remain.
-    for val in x_imputed.iter() {
+    for val in &x_imputed {
         assert!(
             !val.is_nan(),
             "Found NaN after imputation; imputer did not fill all missing values"
@@ -403,7 +403,7 @@ fn test_preprocessing_chain_e2e() {
     );
 
     // Verify the bias column is all ones.
-    for &val in x_poly.column(0).iter() {
+    for &val in x_poly.column(0) {
         assert!(
             (val - 1.0).abs() < 1e-10,
             "Bias column should be 1.0, got {val}",

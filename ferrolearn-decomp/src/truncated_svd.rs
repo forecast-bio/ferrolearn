@@ -171,7 +171,7 @@ fn qr_decomposition<F: Float + Send + Sync + 'static>(a: &Array2<F>) -> (Array2<
             .map(|&v| v * v)
             .fold(F::zero(), |a, b| a + b)
             .sqrt();
-        if norm < F::from(1e-30).unwrap_or(F::epsilon()) {
+        if norm < F::from(1e-30).unwrap_or_else(F::epsilon) {
             // Column is essentially zero.
             for i in j..m {
                 q[[i, j]] = F::zero();
@@ -191,7 +191,7 @@ fn qr_decomposition<F: Float + Send + Sync + 'static>(a: &Array2<F>) -> (Array2<
             .map(|&x| x * x)
             .fold(F::zero(), |a, b| a + b)
             .sqrt();
-        if v_norm > F::from(1e-30).unwrap_or(F::epsilon()) {
+        if v_norm > F::from(1e-30).unwrap_or_else(F::epsilon) {
             v.mapv_inplace(|x| x / v_norm);
         }
 
@@ -247,7 +247,7 @@ fn qr_decomposition<F: Float + Send + Sync + 'static>(a: &Array2<F>) -> (Array2<
             .sqrt();
         r2[[j, j]] = col_norm;
 
-        if col_norm > F::from(1e-30).unwrap_or(F::epsilon()) {
+        if col_norm > F::from(1e-30).unwrap_or_else(F::epsilon) {
             for row in 0..m {
                 q2[[row, j]] = basis[[row, j]] / col_norm;
             }
@@ -321,7 +321,7 @@ fn svd_via_eigendecomp<F: Float + Send + Sync + 'static>(
             }
 
             // V = B^T U / sigma.
-            if sv > F::from(1e-30).unwrap_or(F::epsilon()) {
+            if sv > F::from(1e-30).unwrap_or_else(F::epsilon) {
                 for j in 0..n {
                     let mut val = F::zero();
                     for i in 0..k {
@@ -365,7 +365,7 @@ fn svd_via_eigendecomp<F: Float + Send + Sync + 'static>(
             }
 
             // U = B V / sigma.
-            if sv > F::from(1e-30).unwrap_or(F::epsilon()) {
+            if sv > F::from(1e-30).unwrap_or_else(F::epsilon) {
                 for i in 0..k {
                     let mut val = F::zero();
                     for j in 0..n {
@@ -402,7 +402,7 @@ fn jacobi_eigen_internal<F: Float + Send + Sync + 'static>(
         v[[i, i]] = F::one();
     }
 
-    let tol = F::from(1e-12).unwrap_or(F::epsilon());
+    let tol = F::from(1e-12).unwrap_or_else(F::epsilon);
 
     for _iteration in 0..max_iter {
         let mut max_off = F::zero();
@@ -429,7 +429,7 @@ fn jacobi_eigen_internal<F: Float + Send + Sync + 'static>(
         let apq = mat[[p, q]];
 
         let theta = if (app - aqq).abs() < tol {
-            F::from(std::f64::consts::FRAC_PI_4).unwrap_or(F::one())
+            F::from(std::f64::consts::FRAC_PI_4).unwrap_or_else(F::one)
         } else {
             let tau = (aqq - app) / (F::from(2.0).unwrap() * apq);
             let t = if tau >= F::zero() {
@@ -534,9 +534,9 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for TruncatedSVD<F> {
 
         let normal = StandardNormal;
         let mut omega = Array2::<F>::zeros((n_features, n_random));
-        for elem in omega.iter_mut() {
+        for elem in &mut omega {
             let val: f64 = normal.sample(&mut rng);
-            *elem = F::from(val).unwrap_or(F::zero());
+            *elem = F::from(val).unwrap_or_else(F::zero);
         }
 
         // Step 2: Form Y = X @ Omega (n_samples x n_random).
@@ -575,7 +575,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for TruncatedSVD<F> {
         // Compute total variance from X directly: sum of squared Frobenius / (n-1).
         let total_var = {
             let mut ss = F::zero();
-            for &v in x.iter() {
+            for &v in x {
                 ss = ss + v * v;
             }
             ss / n_minus_1
@@ -705,7 +705,7 @@ mod tests {
             [3.1, 3.0, 1.5],
         ];
         let fitted = svd.fit(&x, &()).unwrap();
-        for &s in fitted.singular_values().iter() {
+        for &s in fitted.singular_values() {
             assert!(s >= 0.0, "singular value should be non-negative, got {s}");
         }
     }

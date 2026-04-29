@@ -90,8 +90,7 @@ impl CubicSpline {
         }
         if n_points < 2 {
             return Err(format!(
-                "at least 2 data points are required, got {}",
-                n_points
+                "at least 2 data points are required, got {n_points}"
             ));
         }
         for i in 1..n_points {
@@ -508,7 +507,7 @@ mod tests {
         // y = x^2 — natural spline forces S''(endpoints)=0, but the true
         // second derivative is 2, so it won't be exact near the boundaries.
         // In the interior it should still be close.
-        let x: Vec<f64> = (0..=10).map(|i| i as f64).collect();
+        let x: Vec<f64> = (0..=10).map(f64::from).collect();
         let y: Vec<f64> = x.iter().map(|&xi| xi * xi).collect();
 
         let spline = CubicSpline::new(&x, &y, BoundaryCondition::Natural).unwrap();
@@ -558,7 +557,7 @@ mod tests {
     #[test]
     fn integration_quadratic() {
         // y = x^2, integral from 0 to 1 should be 1/3.
-        let x: Vec<f64> = (0..=10).map(|i| i as f64 / 10.0).collect();
+        let x: Vec<f64> = (0..=10).map(|i| f64::from(i) / 10.0).collect();
         let y: Vec<f64> = x.iter().map(|&xi| xi * xi).collect();
 
         let spline = CubicSpline::new(&x, &y, BoundaryCondition::NotAKnot).unwrap();
@@ -575,7 +574,7 @@ mod tests {
 
         // Check that intermediate values stay within a reasonable range.
         for i in 0..x.len() - 1 {
-            let mid = (x[i] + x[i + 1]) / 2.0;
+            let mid = f64::midpoint(x[i], x[i + 1]);
             let val = spline.eval(mid);
             let lo = y[i].min(y[i + 1]) - 1.0;
             let hi = y[i].max(y[i + 1]) + 1.0;

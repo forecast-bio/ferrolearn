@@ -411,8 +411,7 @@ fn build_recursive(
                 .partial_cmp(&(*b_max - *b_min))
                 .unwrap_or(Ordering::Equal)
         })
-        .map(|(i, _)| i)
-        .unwrap_or(0);
+        .map_or(0, |(i, _)| i);
 
     let mid = start + count / 2;
     indices[start..end].select_nth_unstable_by(mid - start, |&a, &b| {

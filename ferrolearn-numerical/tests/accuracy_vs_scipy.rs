@@ -416,7 +416,7 @@ fn quadratic_exact_solution() {
     let b = Array1::ones(n);
 
     let diag_for_fg = diag_vals.clone();
-    let b_for_fg = b.clone();
+    let b_for_fg = b;
     let fun_grad = move |x: &Array1<f64>| {
         let ax = &diag_for_fg * x;
         let f_val = 0.5 * x.dot(&ax) - x.dot(&b_for_fg);
@@ -424,7 +424,7 @@ fn quadratic_exact_solution() {
         (f_val, g)
     };
 
-    let diag_for_hp = diag_vals.clone();
+    let diag_for_hp = diag_vals;
     let hessp = move |_x: &Array1<f64>, p: &Array1<f64>| &diag_for_hp * p;
 
     let x0 = Array1::from_elem(n, 5.0);
@@ -456,7 +456,7 @@ fn quadratic_exact_solution() {
 fn cubic_spline_sin_accuracy() {
     let n_knots = 100;
     let x_knots: Vec<f64> = (0..n_knots)
-        .map(|i| 2.0 * std::f64::consts::PI * i as f64 / (n_knots - 1) as f64)
+        .map(|i| 2.0 * std::f64::consts::PI * f64::from(i) / f64::from(n_knots - 1))
         .collect();
     let y_knots: Vec<f64> = x_knots.iter().map(|&xi| xi.sin()).collect();
 
@@ -467,7 +467,7 @@ fn cubic_spline_sin_accuracy() {
     let mut max_error = 0.0_f64;
     for i in 0..n_test {
         // Test at points offset from knots to ensure we're evaluating between them.
-        let x_test = 2.0 * std::f64::consts::PI * (i as f64 + 0.5) / n_test as f64;
+        let x_test = 2.0 * std::f64::consts::PI * (f64::from(i) + 0.5) / f64::from(n_test);
         let spline_val = spline.eval(x_test);
         let exact_val = x_test.sin();
         let error = (spline_val - exact_val).abs();
@@ -491,7 +491,7 @@ fn spline_reproduces_cubic_exactly() {
 
     let n_knots = 20;
     let x_knots: Vec<f64> = (0..n_knots)
-        .map(|i| -2.0 + 4.0 * i as f64 / (n_knots - 1) as f64)
+        .map(|i| -2.0 + 4.0 * f64::from(i) / f64::from(n_knots - 1))
         .collect();
     let y_knots: Vec<f64> = x_knots.iter().map(|&xi| cubic_poly(xi)).collect();
 
@@ -501,7 +501,7 @@ fn spline_reproduces_cubic_exactly() {
     let n_test = 100;
     let mut max_error = 0.0_f64;
     for i in 0..n_test {
-        let x_test = -2.0 + 4.0 * (i as f64 + 0.5) / n_test as f64;
+        let x_test = -2.0 + 4.0 * (f64::from(i) + 0.5) / f64::from(n_test);
         let spline_val = spline.eval(x_test);
         let exact_val = cubic_poly(x_test);
         let error = (spline_val - exact_val).abs();
@@ -527,7 +527,7 @@ fn spline_reproduces_cubic_exactly() {
 #[test]
 fn quad_matches_scipy_integrals() {
     // Integral of sin(x) from 0 to pi = 2.0
-    let r1 = quad(|x| x.sin(), 0.0, std::f64::consts::PI, 1e-14);
+    let r1 = quad(f64::sin, 0.0, std::f64::consts::PI, 1e-14);
     assert_abs_diff_eq!(r1.value, 2.0, epsilon = 1e-12,);
 
     // Integral of exp(-x^2) from -5 to 5 ~ sqrt(pi)
@@ -546,6 +546,7 @@ fn quad_matches_scipy_integrals() {
 /// Gauss-Legendre polynomial exactness:
 ///   - GL(3) on integral_{-1}^{1} x^4 dx should be exact (degree 4, 2*3-1=5 >= 4).
 ///   - GL(5) on integral_0^1 x^9 dx = 0.1 should be exact (degree 9, 2*5-1=9).
+///
 /// Verify within 1e-14.
 #[test]
 fn gauss_legendre_polynomial_exact() {

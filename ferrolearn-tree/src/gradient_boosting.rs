@@ -301,12 +301,11 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for GradientBoo
             .max(1)
             .min(n_samples);
 
-        let mut rng = match self.random_state {
-            Some(seed) => StdRng::seed_from_u64(seed),
-            None => {
-                use rand::RngCore;
-                StdRng::seed_from_u64(rand::rng().next_u64())
-            }
+        let mut rng = if let Some(seed) = self.random_state {
+            StdRng::seed_from_u64(seed)
+        } else {
+            use rand::RngCore;
+            StdRng::seed_from_u64(rand::rng().next_u64())
         };
 
         let mut trees = Vec::with_capacity(self.n_estimators);
@@ -678,12 +677,11 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>>
             .max(1)
             .min(n_samples);
 
-        let mut rng = match self.random_state {
-            Some(seed) => StdRng::seed_from_u64(seed),
-            None => {
-                use rand::RngCore;
-                StdRng::seed_from_u64(rand::rng().next_u64())
-            }
+        let mut rng = if let Some(seed) = self.random_state {
+            StdRng::seed_from_u64(seed)
+        } else {
+            use rand::RngCore;
+            StdRng::seed_from_u64(rand::rng().next_u64())
         };
 
         if n_classes == 2 {
@@ -1009,8 +1007,7 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedGradientBoos
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(k, _)| k)
-                    .unwrap_or(0);
+                    .map_or(0, |(k, _)| k);
                 predictions[i] = self.classes[best_k];
             }
             Ok(predictions)
@@ -1061,7 +1058,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 
@@ -1489,8 +1486,7 @@ mod tests {
         let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
         assert!(
             correct >= 6,
-            "Expected at least 6/9 correct, got {}/9",
-            correct
+            "Expected at least 6/9 correct, got {correct}/9"
         );
     }
 
@@ -1670,7 +1666,7 @@ mod tests {
         let preds = fitted.predict(&x).unwrap();
 
         assert_eq!(preds.len(), 6);
-        for &p in preds.iter() {
+        for &p in &preds {
             assert!(p == 10 || p == 20);
         }
     }
@@ -1706,7 +1702,7 @@ mod tests {
     fn test_quantile_f() {
         let vals = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let q90 = quantile_f(&vals, 0.9);
-        assert!(q90 >= 4.0 && q90 <= 5.0);
+        assert!((4.0..=5.0).contains(&q90));
     }
 
     #[test]

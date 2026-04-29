@@ -181,7 +181,7 @@ impl<F: Float + Send + Sync + 'static> FittedSparsePCA<F> {
 /// Small epsilon to prevent division by zero.
 #[inline]
 fn eps<F: Float>() -> F {
-    F::from(1e-12).unwrap_or(F::epsilon())
+    F::from(1e-12).unwrap_or_else(F::epsilon)
 }
 
 /// Soft-thresholding operator: sign(x) * max(|x| - threshold, 0).
@@ -290,7 +290,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SparsePCA<F> {
 
         let n_comp = self.n_components;
         let n_f = F::from(n_samples).unwrap();
-        let alpha_f = F::from(self.alpha).unwrap_or(F::one());
+        let alpha_f = F::from(self.alpha).unwrap_or_else(F::one);
 
         // Step 1: compute mean and centre data.
         let mut mean = Array1::<F>::zeros(n_features);
@@ -313,7 +313,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SparsePCA<F> {
 
         let mut v = Array2::<F>::zeros((n_comp, n_features));
         for elem in v.iter_mut() {
-            *elem = F::from(uniform.sample(&mut rng)).unwrap_or(F::zero());
+            *elem = F::from(uniform.sample(&mut rng)).unwrap_or_else(F::zero);
         }
         // Normalize each row of V.
         for i in 0..n_comp {
@@ -334,7 +334,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SparsePCA<F> {
 
         let n_cd_iters = 10; // inner coordinate descent iterations
         let mut prev_err = F::infinity();
-        let tol_f = F::from(self.tol).unwrap_or(F::epsilon());
+        let tol_f = F::from(self.tol).unwrap_or_else(F::epsilon);
         let mut actual_iter = 0;
 
         for iteration in 0..self.max_iter {
@@ -418,7 +418,7 @@ fn invert_small_symmetric<F: Float>(a: &Array2<F>) -> Option<Array2<F>> {
     }
 
     // Add regularisation to diagonal.
-    let reg = F::from(1e-10).unwrap_or(F::epsilon());
+    let reg = F::from(1e-10).unwrap_or_else(F::epsilon);
     for i in 0..n {
         aug[[i, i]] = aug[[i, i]] + reg;
     }
@@ -433,7 +433,7 @@ fn invert_small_symmetric<F: Float>(a: &Array2<F>) -> Option<Array2<F>> {
                 max_row = r;
             }
         }
-        if max_val < F::from(1e-15).unwrap_or(F::epsilon()) {
+        if max_val < F::from(1e-15).unwrap_or_else(F::epsilon) {
             return None;
         }
 

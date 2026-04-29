@@ -207,7 +207,7 @@ fn estimate_bandwidth<F: Float>(x: &Array2<F>) -> Result<F, FerroError> {
     if median == F::zero() {
         // Fallback: return the maximum distance so the algorithm does not
         // put everything in a single trivial cluster.
-        Ok(*dists.last().unwrap_or(&F::one()))
+        Ok(dists.last().copied().unwrap_or_else(F::one))
     } else {
         Ok(median)
     }
@@ -250,7 +250,7 @@ fn mean_shift_single<F: Float>(
             break;
         }
 
-        for v in mean.iter_mut() {
+        for v in &mut mean {
             *v = *v / count;
         }
 
@@ -350,13 +350,13 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for MeanShift<F> {
 
             // Compute the mean of the group as the representative center.
             let mut center = vec![F::zero(); n_features];
-            let g_len = F::from(group.len()).unwrap_or(F::one());
+            let g_len = F::from(group.len()).unwrap_or_else(F::one);
             for m in &group {
                 for (k, &v) in m.iter().enumerate() {
                     center[k] = center[k] + v;
                 }
             }
-            for v in center.iter_mut() {
+            for v in &mut center {
                 *v = *v / g_len;
             }
             centers.push(center);
@@ -545,7 +545,7 @@ mod tests {
             .fit(&x, &())
             .unwrap();
         assert_eq!(fitted.n_clusters(), 1);
-        for &l in fitted.labels().iter() {
+        for &l in fitted.labels() {
             assert_eq!(l, 0);
         }
     }
@@ -716,7 +716,7 @@ mod tests {
             .fit(&x, &())
             .unwrap();
         let n_c = fitted.n_clusters();
-        for &l in fitted.labels().iter() {
+        for &l in fitted.labels() {
             assert!(l < n_c);
         }
     }

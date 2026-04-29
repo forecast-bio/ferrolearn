@@ -255,7 +255,7 @@ impl<F: Float + Send + Sync + 'static> FittedBayesianGaussianMixture<F> {
 /// Small epsilon to prevent division by zero.
 #[inline]
 fn eps<F: Float>() -> F {
-    F::from(1e-10).unwrap_or(F::epsilon())
+    F::from(1e-10).unwrap_or_else(F::epsilon)
 }
 
 /// Initialise component means by sampling `k` distinct rows from `x`.
@@ -268,7 +268,7 @@ fn init_means<F: Float>(x: &Array2<F>, k: usize, rng: &mut StdRng) -> Array2<F> 
         means.row_mut(ki).assign(&x.row(idx));
         for j in 0..n_features {
             let jitter: f64 = rng.random_range(-1e-4..1e-4);
-            means[[ki, j]] = means[[ki, j]] + F::from(jitter).unwrap_or(F::zero());
+            means[[ki, j]] = means[[ki, j]] + F::from(jitter).unwrap_or_else(F::zero);
         }
     }
     means
@@ -400,7 +400,7 @@ fn run_variational_em<F: Float + Send + Sync + 'static>(
 
     let mut converged = false;
     let mut prev_elbo = F::neg_infinity();
-    let reg = F::from(1e-6).unwrap_or(F::epsilon());
+    let reg = F::from(1e-6).unwrap_or_else(F::epsilon);
 
     for _iteration in 0..max_iter {
         // ── E-step: compute responsibilities ──────────────────────────

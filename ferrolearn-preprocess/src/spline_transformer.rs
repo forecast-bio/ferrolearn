@@ -281,8 +281,8 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SplineTransformer<
                     let n = col_vals.len();
                     (0..self.n_knots)
                         .map(|i| {
-                            let frac =
-                                F::from(i).unwrap() / F::from(self.n_knots - 1).unwrap_or(F::one());
+                            let frac = F::from(i).unwrap()
+                                / F::from(self.n_knots - 1).unwrap_or_else(F::one);
                             let pos = frac * F::from(n.saturating_sub(1)).unwrap();
                             let lo = pos.floor().to_usize().unwrap_or(0).min(n - 1);
                             let hi = pos.ceil().to_usize().unwrap_or(0).min(n - 1);
@@ -426,12 +426,8 @@ mod tests {
         let x = array![[0.0], [0.1], [0.5], [0.9], [1.0]];
         let fitted = st.fit(&x, &()).unwrap();
         let out = fitted.transform(&x).unwrap();
-        for v in out.iter() {
-            assert!(
-                *v >= -1e-10,
-                "Basis value should be non-negative, got {}",
-                v
-            );
+        for v in &out {
+            assert!(*v >= -1e-10, "Basis value should be non-negative, got {v}");
         }
     }
 

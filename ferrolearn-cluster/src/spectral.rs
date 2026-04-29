@@ -277,7 +277,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SpectralClustering
         // Step 5: K-Means on the embedded points.
         // Convert embedding to F.
         let embed_f: Array2<F> = Array2::from_shape_fn(embed_norm.dim(), |(i, j)| {
-            F::from(embed_norm[[i, j]]).unwrap_or(F::zero())
+            F::from(embed_norm[[i, j]]).unwrap_or_else(F::zero)
         });
 
         let mut km = KMeans::<F>::new(k).with_n_init(self.n_init);
@@ -359,7 +359,7 @@ mod tests {
             .with_random_state(1)
             .fit(&x, &())
             .unwrap();
-        for &l in fitted.labels().iter() {
+        for &l in fitted.labels() {
             assert!(l < k, "label {l} >= n_clusters {k}");
         }
     }
@@ -371,7 +371,7 @@ mod tests {
             .with_random_state(0)
             .fit(&x, &())
             .unwrap();
-        for &l in fitted.labels().iter() {
+        for &l in fitted.labels() {
             assert_eq!(l, 0);
         }
     }

@@ -770,6 +770,7 @@ mod tests {
     /// A = diag(2, 4, 6) and b = [1, 2, 3].
     ///
     /// The solution is x* = A^{-1} b = [0.5, 0.5, 0.5].
+    #[allow(clippy::type_complexity)]
     fn quadratic_3d() -> (
         impl FnMut(&Array1<f64>) -> (f64, Array1<f64>),
         impl FnMut(&Array1<f64>, &Array1<f64>) -> Array1<f64>,
@@ -963,7 +964,7 @@ mod tests {
     #[test]
     fn brent_minimize_sin() {
         // Minimize sin(x) on [3, 6] → minimum at x = 3π/2 ≈ 4.71239.
-        let result = super::brent_bounded(|x| x.sin(), 3.0, 6.0, 1e-10, 500);
+        let result = super::brent_bounded(f64::sin, 3.0, 6.0, 1e-10, 500);
         assert!(result.success, "should converge");
         let expected = 1.5 * std::f64::consts::PI;
         assert_abs_diff_eq!(result.x, expected, epsilon = 1e-8);

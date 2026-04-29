@@ -407,7 +407,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 
@@ -698,7 +698,7 @@ fn resolve_max_features(strategy: MaxFeatures, n_features: usize) -> usize {
 
 /// Convert a `Float` value to `usize` (for class labels stored as floats).
 fn float_to_usize<F: Float>(v: F) -> usize {
-    v.to_f64().map(|f| f.round() as usize).unwrap_or(0)
+    v.to_f64().map_or(0, |f| f.round() as usize)
 }
 
 /// Generate a uniform random float in `[min_val, max_val]`.
@@ -763,8 +763,7 @@ fn make_classification_leaf<F: Float>(
         .iter()
         .enumerate()
         .max_by_key(|&(_, &count)| count)
-        .map(|(i, _)| i)
-        .unwrap_or(0);
+        .map_or(0, |(i, _)| i);
 
     let total_f = if n_samples > 0 {
         F::from(n_samples).unwrap()
@@ -1368,7 +1367,7 @@ mod tests {
             .with_max_features(MaxFeatures::All)
             .with_random_state(42);
         let fitted = model.fit(&x, &y).unwrap();
-        let preds = fitted.predict(&x).unwrap();
+        let _preds = fitted.predict(&x).unwrap();
 
         // With depth 1 and a single feature, it should still separate the classes.
         // The tree has exactly one split node and two leaves.
@@ -1540,7 +1539,7 @@ mod tests {
         let fitted = model.fit(&x, &y).unwrap();
         let preds = fitted.predict(&x).unwrap();
 
-        for &p in preds.iter() {
+        for &p in &preds {
             assert_relative_eq!(p, 5.0, epsilon = 1e-10);
         }
     }

@@ -241,7 +241,7 @@ fn kmeans_plus_plus_mb<F: Float>(x: &Array2<F>, k: usize, rng: &mut StdRng) -> A
             continue;
         }
 
-        let threshold: F = F::from(rng.random::<f64>()).unwrap_or(F::zero()) * total;
+        let threshold: F = F::from(rng.random::<f64>()).unwrap_or_else(F::zero) * total;
         let mut cumsum = F::zero();
         let mut chosen = n_samples - 1;
         for i in 0..n_samples {
@@ -360,7 +360,7 @@ fn update_centers_mini_batch<F: Float>(
     // Apply per-sample update: c += (1/count_c) * (x - c)
     for (&idx, &label) in batch_indices.iter().zip(batch_labels.iter()) {
         center_counts[label] += 1;
-        let lr = F::one() / F::from(center_counts[label]).unwrap_or(F::one());
+        let lr = F::one() / F::from(center_counts[label]).unwrap_or_else(F::one);
         let x_row = x.row(idx);
         for j in 0..n_features {
             centers[[label, j]] = centers[[label, j]] + lr * (x_row[j] - centers[[label, j]]);
@@ -769,7 +769,7 @@ mod tests {
             .with_batch_size(4);
         let fitted = model.fit(&x, &()).unwrap();
 
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert_eq!(label, 0);
         }
     }

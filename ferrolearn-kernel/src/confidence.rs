@@ -268,7 +268,7 @@ mod tests {
         let n = 100;
         let x_data: Vec<f64> = (0..n).map(|i| i as f64 * 0.06).collect();
         let x = Array2::from_shape_vec((n, 1), x_data).unwrap();
-        let y: Array1<f64> = x.column(0).mapv(|xi| xi.sin());
+        let y: Array1<f64> = x.column(0).mapv(f64::sin);
         (x, y)
     }
 
@@ -354,10 +354,10 @@ mod tests {
 
         let result = fan_yao_variance_estimation(&x, &y, &pred, &x, &bw);
 
-        for &v in result.variance_estimate.iter() {
+        for &v in &result.variance_estimate {
             assert!(v > 0.0, "Variance estimate should be positive");
         }
-        for &s in result.std_estimate.iter() {
+        for &s in &result.std_estimate {
             assert!(s > 0.0, "Std estimate should be positive");
         }
     }
@@ -373,7 +373,7 @@ mod tests {
             .column(0)
             .iter()
             .enumerate()
-            .map(|(i, &xi)| xi.sin() + xi * 0.3 * (i as f64 * 2.718).sin())
+            .map(|(i, &xi)| xi.sin() + xi * 0.3 * (i as f64 * 2.7).sin())
             .collect();
 
         let bw = array![0.5f64];

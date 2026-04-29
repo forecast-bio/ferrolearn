@@ -11,7 +11,7 @@ use ndarray::{Array1, Array2, array};
 use ferrolearn_core::{Fit, Predict};
 use ferrolearn_kernel::bandwidth::BandwidthStrategy;
 use ferrolearn_kernel::diagnostics::{HeteroscedasticityTest, heteroscedasticity_test};
-use ferrolearn_kernel::kernels::{EpanechnikovKernel, GaussianKernel};
+use ferrolearn_kernel::kernels::GaussianKernel;
 use ferrolearn_kernel::local_polynomial::LocalPolynomialRegression;
 use ferrolearn_kernel::nadaraya_watson::NadarayaWatson;
 use ferrolearn_kernel::weights;
@@ -72,7 +72,7 @@ fn heteroscedasticity_ghost() {
         .column(0)
         .iter()
         .enumerate()
-        .map(|(i, &xi)| xi.sin() + xi * 0.3 * (i as f64 * 2.718).sin())
+        .map(|(i, &xi)| xi.sin() + xi * 0.3 * (i as f64 * 2.7).sin())
         .collect();
 
     let bw = array![0.5f64];
@@ -116,14 +116,14 @@ fn noise_variable_robustness() {
     }
     let x = Array2::from_shape_vec((n, 6), x_data).unwrap();
     // y depends only on the first variable
-    let y: Array1<f64> = x.column(0).mapv(|xi| xi.sin());
+    let y: Array1<f64> = x.column(0).mapv(f64::sin);
 
     let nw = NadarayaWatson::with_kernel(GaussianKernel, BandwidthStrategy::Silverman);
     let fitted = nw.fit(&x, &y).unwrap();
     let pred = fitted.predict(&x).unwrap();
 
     // All predictions should be finite
-    for &p in pred.iter() {
+    for &p in &pred {
         assert!(p.is_finite(), "Prediction should be finite, got {p}");
     }
 
@@ -158,7 +158,7 @@ fn matrix_kill_collinear() {
         x_data.push(val * 2.0);
     }
     let x = Array2::from_shape_vec((n, 2), x_data).unwrap();
-    let y: Array1<f64> = x.column(0).mapv(|xi| xi.sin());
+    let y: Array1<f64> = x.column(0).mapv(f64::sin);
 
     let lpr = LocalPolynomialRegression::with_kernel(
         GaussianKernel,
@@ -180,7 +180,7 @@ fn matrix_kill_collinear() {
     let y_min = y.iter().copied().fold(f64::INFINITY, f64::min);
     let y_max = y.iter().copied().fold(f64::NEG_INFINITY, f64::max);
     let margin = (y_max - y_min) * 0.5;
-    for &p in pred.iter() {
+    for &p in &pred {
         assert!(
             p >= y_min - margin && p <= y_max + margin,
             "Prediction {p:.4} outside reasonable range [{:.4}, {:.4}]",

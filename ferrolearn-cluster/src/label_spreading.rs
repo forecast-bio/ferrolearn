@@ -88,11 +88,11 @@ impl<F: Float> LabelSpreading<F> {
     pub fn new() -> Self {
         Self {
             kernel: LabelSpreadingKernel::Rbf,
-            gamma: F::from(20.0).unwrap_or(F::one()),
+            gamma: F::from(20.0).unwrap_or_else(F::one),
             n_neighbors: 7,
             max_iter: 30,
-            tol: F::from(1e-4).unwrap_or(F::epsilon()),
-            alpha: F::from(0.2).unwrap_or(F::zero()),
+            tol: F::from(1e-4).unwrap_or_else(F::epsilon),
+            alpha: F::from(0.2).unwrap_or_else(F::zero),
         }
     }
 
@@ -422,7 +422,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<isize>> for LabelSp
                 }
             } else {
                 // Unlabeled: uniform distribution.
-                let uniform = F::one() / F::from(n_classes).unwrap_or(F::one());
+                let uniform = F::one() / F::from(n_classes).unwrap_or_else(F::one);
                 for c in 0..n_classes {
                     initial_y[[i, c]] = uniform;
                 }

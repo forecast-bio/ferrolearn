@@ -160,7 +160,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for VarianceThreshold<
             });
         }
 
-        let n = F::from(n_samples).unwrap_or(F::one());
+        let n = F::from(n_samples).unwrap_or_else(F::one);
         let n_features = x.ncols();
         let mut variances = Array1::zeros(n_features);
         let mut selected_indices = Vec::new();
@@ -621,7 +621,7 @@ impl<F: Float + Send + Sync + 'static> SelectFromModel<F> {
                 .iter()
                 .copied()
                 .fold(F::zero(), |acc, v| acc + v)
-                / F::from(n).unwrap_or(F::one())
+                / F::from(n).unwrap_or_else(F::one)
         });
 
         let selected_indices: Vec<usize> = importances

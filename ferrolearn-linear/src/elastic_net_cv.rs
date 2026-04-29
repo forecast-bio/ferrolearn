@@ -215,7 +215,7 @@ fn compute_alpha_max_enet<F: Float + FromPrimitive + ScalarOperand>(
     let n = F::from(x.nrows()).unwrap();
 
     let y_work = if fit_intercept {
-        let y_mean = y.mean().unwrap_or(F::zero());
+        let y_mean = y.mean().unwrap_or_else(F::zero);
         y - y_mean
     } else {
         y.clone()
@@ -230,7 +230,7 @@ fn compute_alpha_max_enet<F: Float + FromPrimitive + ScalarOperand>(
 
     let xty = x_work.t().dot(&y_work);
     let mut max_abs = F::zero();
-    for &v in xty.iter() {
+    for &v in &xty {
         let abs_v = v.abs();
         if abs_v > max_abs {
             max_abs = abs_v;
@@ -477,8 +477,8 @@ mod tests {
 
     #[test]
     fn test_elastic_net_cv_fit_selects_params() {
-        let x = Array2::from_shape_vec((20, 1), (1..=20).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((1..=20).map(|i| 2.0 * i as f64 + 1.0));
+        let x = Array2::from_shape_vec((20, 1), (1..=20).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((1..=20).map(|i| 2.0 * f64::from(i) + 1.0));
 
         let model = ElasticNetCV::<f64>::new()
             .with_l1_ratios(vec![0.5, 0.9, 1.0])
@@ -494,8 +494,8 @@ mod tests {
 
     #[test]
     fn test_elastic_net_cv_predict() {
-        let x = Array2::from_shape_vec((10, 1), (1..=10).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((1..=10).map(|i| 2.0 * i as f64 + 1.0));
+        let x = Array2::from_shape_vec((10, 1), (1..=10).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((1..=10).map(|i| 2.0 * f64::from(i) + 1.0));
 
         let model = ElasticNetCV::<f64>::new()
             .with_l1_ratios(vec![0.5, 0.9])
@@ -513,8 +513,8 @@ mod tests {
 
     #[test]
     fn test_elastic_net_cv_has_coefficients() {
-        let x = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((0..10).map(|i| i as f64));
+        let x = Array2::from_shape_vec((10, 2), (0..20).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((0..10).map(f64::from));
 
         let model = ElasticNetCV::<f64>::new()
             .with_l1_ratios(vec![0.5])
@@ -567,8 +567,8 @@ mod tests {
 
     #[test]
     fn test_elastic_net_cv_cv_too_small() {
-        let x = Array2::from_shape_vec((10, 1), (1..=10).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((1..=10).map(|i| i as f64));
+        let x = Array2::from_shape_vec((10, 1), (1..=10).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((1..=10).map(f64::from));
 
         let model = ElasticNetCV::<f64>::new().with_cv(1);
         let result = model.fit(&x, &y);
@@ -577,8 +577,8 @@ mod tests {
 
     #[test]
     fn test_elastic_net_cv_predict_feature_mismatch() {
-        let x_train = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((0..10).map(|i| i as f64));
+        let x_train = Array2::from_shape_vec((10, 2), (0..20).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((0..10).map(f64::from));
 
         let fitted = ElasticNetCV::<f64>::new()
             .with_l1_ratios(vec![0.5])
@@ -594,8 +594,8 @@ mod tests {
 
     #[test]
     fn test_elastic_net_cv_no_intercept() {
-        let x = Array2::from_shape_vec((10, 1), (1..=10).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((1..=10).map(|i| 2.0 * i as f64));
+        let x = Array2::from_shape_vec((10, 1), (1..=10).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((1..=10).map(|i| 2.0 * f64::from(i)));
 
         let model = ElasticNetCV::<f64>::new()
             .with_l1_ratios(vec![0.5])
@@ -611,8 +611,8 @@ mod tests {
     #[test]
     fn test_elastic_net_cv_pure_ridge_l1_ratio_zero() {
         // l1_ratio=0 should work (pure Ridge-like behavior).
-        let x = Array2::from_shape_vec((10, 1), (1..=10).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((1..=10).map(|i| 2.0 * i as f64 + 1.0));
+        let x = Array2::from_shape_vec((10, 1), (1..=10).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((1..=10).map(|i| 2.0 * f64::from(i) + 1.0));
 
         let model = ElasticNetCV::<f64>::new()
             .with_l1_ratios(vec![0.0, 0.5, 1.0])

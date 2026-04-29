@@ -663,8 +663,8 @@ mod tests {
             Algorithm::BallTree,
         ];
 
-        let mut reference_dists = None;
-        let mut reference_idxs = None;
+        let mut reference_dists: Option<ndarray::Array2<f64>> = None;
+        let mut reference_idxs: Option<Vec<Vec<usize>>> = None;
 
         for algo in &algos {
             let nn = NearestNeighbors::<f64>::new()
@@ -673,12 +673,18 @@ mod tests {
             let fitted = nn.fit(&x, &()).unwrap();
             let (dists, idxs) = fitted.kneighbors(&x, None).unwrap();
 
-            if reference_dists.is_none() {
-                reference_dists = Some(dists);
-                reference_idxs = Some(idxs);
-            } else {
-                let ref_d = reference_dists.as_ref().unwrap();
-                // Compare distances (indices may vary for equidistant points).
+            // Sort each row's indices so we can compare sets across algorithms
+            // (column order may differ for equidistant points).
+            let idx_sets: Vec<Vec<usize>> = (0..6)
+                .map(|i| {
+                    let mut row: Vec<usize> = (0..3).map(|j| idxs[[i, j]]).collect();
+                    row.sort_unstable();
+                    row
+                })
+                .collect();
+
+            if let (Some(ref_d), Some(ref_i)) = (reference_dists.as_ref(), reference_idxs.as_ref())
+            {
                 for i in 0..6 {
                     for j in 0..3 {
                         assert!(
@@ -688,7 +694,14 @@ mod tests {
                             ref_d[[i, j]]
                         );
                     }
+                    assert_eq!(
+                        idx_sets[i], ref_i[i],
+                        "algo={algo:?}, row={i}: index sets differ"
+                    );
                 }
+            } else {
+                reference_dists = Some(dists);
+                reference_idxs = Some(idx_sets);
             }
         }
     }
@@ -768,9 +781,9 @@ mod tests {
 
         // Radius 0 should only find exact matches.
         let results = fitted.radius_neighbors(&x, 0.0).unwrap();
-        for i in 0..3 {
-            assert_eq!(results[i].1.len(), 1);
-            assert_eq!(results[i].1[0], i);
+        for (i, (_dists, idxs)) in results.iter().enumerate() {
+            assert_eq!(idxs.len(), 1);
+            assert_eq!(idxs[0], i);
         }
     }
 }

@@ -267,7 +267,7 @@ fn tokenize(doc: &str, lowercase: bool) -> Vec<String> {
 
     text.split(|c: char| !c.is_alphanumeric())
         .filter(|s| !s.is_empty())
-        .map(|s| s.to_string())
+        .map(std::string::ToString::to_string)
         .collect()
 }
 
@@ -389,7 +389,7 @@ mod tests {
         let test = vec!["fish bird".to_string()];
         let counts = fitted.transform(&test).unwrap();
         // All zeros since no tokens match
-        for &v in counts.iter() {
+        for &v in &counts {
             assert_abs_diff_eq!(v, 0.0, epsilon = 1e-10);
         }
     }

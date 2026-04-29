@@ -206,7 +206,7 @@ fn compute_cluster_stats<F: Float>(x: &Array2<F>, indices: &[usize]) -> (Vec<F>,
             center[j] = center[j] + x[[idx, j]];
         }
     }
-    for val in center.iter_mut() {
+    for val in &mut center {
         *val = *val / n_f;
     }
 
@@ -286,13 +286,13 @@ fn run_2means<F: Float>(
         }
 
         if count0 > F::zero() {
-            for val in new_c0.iter_mut() {
+            for val in &mut new_c0 {
                 *val = *val / count0;
             }
             center0 = new_c0;
         }
         if count1 > F::zero() {
-            for val in new_c1.iter_mut() {
+            for val in &mut new_c1 {
                 *val = *val / count1;
             }
             center1 = new_c1;
@@ -623,7 +623,7 @@ mod tests {
         let fitted = model.fit(&x, &()).unwrap();
 
         // All in one cluster.
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert_eq!(label, 0);
         }
         assert_eq!(fitted.n_clusters(), 1);
@@ -792,7 +792,7 @@ mod tests {
         let fitted = model.fit(&x, &()).unwrap();
 
         let n_clusters = fitted.n_clusters() as isize;
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert!(label >= 0);
             assert!(label < n_clusters);
         }

@@ -432,7 +432,7 @@ fn compute_pij_row(dist_sq: &[f64], i: usize, target_perp: f64) -> Vec<f64> {
         if sum < 1e-16 {
             // All probabilities near zero — widen the kernel.
             hi = beta;
-            beta = (lo + hi) / 2.0;
+            beta = f64::midpoint(lo, hi);
             continue;
         }
 
@@ -457,7 +457,7 @@ fn compute_pij_row(dist_sq: &[f64], i: usize, target_perp: f64) -> Vec<f64> {
             // Entropy too low — need wider kernel (smaller beta).
             hi = beta;
         }
-        beta = (lo + hi) / 2.0;
+        beta = f64::midpoint(lo, hi);
     }
 
     p
@@ -603,7 +603,7 @@ impl Fit<Array2<f64>, ()> for Tsne {
         let normal = Normal::new(0.0, 1e-4).unwrap();
 
         let mut y = Array2::<f64>::zeros((n, dim));
-        for elem in y.iter_mut() {
+        for elem in &mut y {
             *elem = normal.sample(&mut rng);
         }
 
@@ -640,10 +640,10 @@ impl Fit<Array2<f64>, ()> for Tsne {
                     let g = gradient[[i, d]];
                     let v = velocity[[i, d]];
                     // Adaptive gain: increase if gradient and velocity disagree.
-                    if (g > 0.0) != (v > 0.0) {
-                        gains[[i, d]] += 0.2;
-                    } else {
+                    if (g > 0.0) == (v > 0.0) {
                         gains[[i, d]] = (gains[[i, d]] * 0.8_f64).max(0.01);
+                    } else {
+                        gains[[i, d]] += 0.2;
                     }
                     velocity[[i, d]] = momentum * v - lr * gains[[i, d]] * g;
                     y[[i, d]] += velocity[[i, d]];
@@ -696,7 +696,7 @@ impl Tsne {
         for d in 0..dim {
             let range = max_vals[d] - min_vals[d];
             width = width.max(range);
-            tree_center[d] = (min_vals[d] + max_vals[d]) / 2.0;
+            tree_center[d] = f64::midpoint(min_vals[d], max_vals[d]);
         }
         width *= 1.01; // Small padding.
 
@@ -817,7 +817,7 @@ mod tests {
         let normal = Normal::new(0.0, 0.3).unwrap();
         let n_per_cluster = 10;
         let n_features = 5;
-        let centers = vec![
+        let centers = [
             vec![0.0, 0.0, 0.0, 0.0, 0.0],
             vec![5.0, 5.0, 5.0, 5.0, 5.0],
             vec![10.0, 0.0, 10.0, 0.0, 10.0],
@@ -896,7 +896,7 @@ mod tests {
                 correct += 1;
             }
         }
-        let accuracy = correct as f64 / n as f64;
+        let accuracy = f64::from(correct) / n as f64;
         assert!(
             accuracy > 0.8,
             "t-SNE k-NN accuracy should be > 80%, got {:.1}%",

@@ -370,7 +370,7 @@ fn jacobi_eigen_small<F: Float + Send + Sync + 'static>(
     for i in 0..n {
         v[[i, i]] = F::one();
     }
-    let tol = F::from(1e-12).unwrap_or(F::epsilon());
+    let tol = F::from(1e-12).unwrap_or_else(F::epsilon);
     let two = F::from(2.0).unwrap();
     for _ in 0..max_iter {
         let mut max_off = F::zero();
@@ -394,7 +394,7 @@ fn jacobi_eigen_small<F: Float + Send + Sync + 'static>(
         let aqq = mat[[q, q]];
         let apq = mat[[p, q]];
         let theta = if (app - aqq).abs() < tol {
-            F::from(std::f64::consts::FRAC_PI_4).unwrap_or(F::one())
+            F::from(std::f64::consts::FRAC_PI_4).unwrap_or_else(F::one)
         } else {
             let tau = (aqq - app) / (two * apq);
             let t = if tau >= F::zero() {

@@ -630,7 +630,7 @@ mod tests {
         let pred = fitted.predict(&x).unwrap();
 
         // Should produce finite predictions
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite(), "Collinear prediction should be finite");
         }
     }

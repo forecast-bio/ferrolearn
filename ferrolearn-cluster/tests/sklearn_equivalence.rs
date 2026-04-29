@@ -63,7 +63,7 @@ fn sklearn_equiv_kmeans() {
     assert_eq!(labels.len(), x.nrows());
 
     // All labels in {0, 1, 2}.
-    for &l in labels.iter() {
+    for &l in labels {
         assert!(l < 3, "Label {l} out of range [0, 3)");
     }
 
@@ -186,7 +186,7 @@ fn sklearn_equiv_agglomerative() {
     assert_eq!(labels.len(), x.nrows());
     assert_eq!(fitted.n_clusters(), 3);
 
-    for &l in labels.iter() {
+    for &l in labels {
         assert!(l < 3, "Label {l} out of range [0, 3)");
     }
 

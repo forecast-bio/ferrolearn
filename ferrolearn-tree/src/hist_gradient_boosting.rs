@@ -588,16 +588,15 @@ fn build_hist_tree_recursive<F: Float>(
         params.min_samples_leaf,
     );
 
-    let split = match split {
-        Some(s) => s,
-        None => {
-            let idx = nodes.len();
-            nodes.push(HistNode::Leaf {
-                value: compute_leaf_value(grad_sum, hess_sum, params.l2_regularization),
-                n_samples: n,
-            });
-            return idx;
-        }
+    let split = if let Some(s) = split {
+        s
+    } else {
+        let idx = nodes.len();
+        nodes.push(HistNode::Leaf {
+            value: compute_leaf_value(grad_sum, hess_sum, params.l2_regularization),
+            n_samples: n,
+        });
+        return idx;
     };
 
     // Partition samples into left and right.
@@ -1897,8 +1896,7 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>>
                     .iter()
                     .enumerate()
                     .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                    .map(|(k, _)| k)
-                    .unwrap_or(0);
+                    .map_or(0, |(k, _)| k);
                 predictions[i] = self.classes[best_k];
             }
             Ok(predictions)
@@ -1949,7 +1947,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 
@@ -2038,9 +2036,10 @@ mod tests {
         assert_eq!(binned.len(), 4);
         assert_eq!(binned[0].len(), 2);
         // Values should be monotonically non-decreasing since input is sorted.
-        for j in 0..2 {
-            for i in 1..4 {
-                assert!(binned[i][j] >= binned[i - 1][j]);
+        for window in binned.windows(2) {
+            let (prev, curr) = (&window[0], &window[1]);
+            for (&p, &c) in prev.iter().zip(curr.iter()) {
+                assert!(c >= p);
             }
         }
     }
@@ -2322,8 +2321,8 @@ mod tests {
         let preds = fitted.predict(&x).unwrap();
         assert_eq!(preds.len(), 8);
         // Should still produce finite predictions for all samples (including NaN inputs).
-        for p in preds.iter() {
-            assert!(p.is_finite(), "Expected finite prediction, got {}", p);
+        for p in &preds {
+            assert!(p.is_finite(), "Expected finite prediction, got {p}");
         }
     }
 
@@ -2365,9 +2364,7 @@ mod tests {
 
         assert!(
             mse_many < mse_few,
-            "Expected MSE to decrease with more estimators: {} (50) vs {} (5)",
-            mse_many,
-            mse_few
+            "Expected MSE to decrease with more estimators: {mse_many} (50) vs {mse_few} (5)"
         );
     }
 
@@ -2479,8 +2476,7 @@ mod tests {
         let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
         assert!(
             correct >= 6,
-            "Expected at least 6/9 correct, got {}/9",
-            correct
+            "Expected at least 6/9 correct, got {correct}/9"
         );
     }
 
@@ -2661,7 +2657,7 @@ mod tests {
         let preds = fitted.predict(&x).unwrap();
 
         assert_eq!(preds.len(), 6);
-        for &p in preds.iter() {
+        for &p in &preds {
             assert!(p == 10 || p == 20);
         }
     }
@@ -2703,7 +2699,7 @@ mod tests {
         let preds = fitted.predict(&x).unwrap();
         assert_eq!(preds.len(), 8);
         // All predictions should be valid class labels.
-        for &p in preds.iter() {
+        for &p in &preds {
             assert!(p == 0 || p == 1);
         }
     }
@@ -2754,7 +2750,7 @@ mod tests {
         let hist_mse = mse(&hist_preds, &y);
 
         // Both should have low MSE on this simple task.
-        assert!(std_mse < 1.0, "Standard GBM MSE too high: {}", std_mse);
-        assert!(hist_mse < 1.0, "Hist GBM MSE too high: {}", hist_mse);
+        assert!(std_mse < 1.0, "Standard GBM MSE too high: {std_mse}");
+        assert!(hist_mse < 1.0, "Hist GBM MSE too high: {hist_mse}");
     }
 }

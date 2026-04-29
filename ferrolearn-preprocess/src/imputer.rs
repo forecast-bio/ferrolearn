@@ -197,7 +197,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SimpleImputer<F> {
             } else {
                 match &self.strategy {
                     ImputeStrategy::Mean => {
-                        let n = F::from(col_vals.len()).unwrap_or(F::one());
+                        let n = F::from(col_vals.len()).unwrap_or_else(F::one);
                         col_vals.iter().copied().fold(F::zero(), |acc, v| acc + v) / n
                     }
                     ImputeStrategy::Median => {
@@ -237,7 +237,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedSimpleImpu
 
         let mut out = x.to_owned();
         for (mut col, &fill) in out.columns_mut().into_iter().zip(self.fill_values.iter()) {
-            for v in col.iter_mut() {
+            for v in &mut col {
                 if v.is_nan() {
                     *v = fill;
                 }

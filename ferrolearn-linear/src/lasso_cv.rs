@@ -208,7 +208,7 @@ fn compute_alpha_max<F: Float + FromPrimitive + ScalarOperand>(
 ) -> F {
     let n = F::from(x.nrows()).unwrap();
     let y_work = if fit_intercept {
-        let y_mean = y.mean().unwrap_or(F::zero());
+        let y_mean = y.mean().unwrap_or_else(F::zero);
         y - y_mean
     } else {
         y.clone()
@@ -224,7 +224,7 @@ fn compute_alpha_max<F: Float + FromPrimitive + ScalarOperand>(
     // X^T y_centered
     let xty = x_work.t().dot(&y_work);
     let mut max_abs = F::zero();
-    for &v in xty.iter() {
+    for &v in &xty {
         let abs_v = v.abs();
         if abs_v > max_abs {
             max_abs = abs_v;
@@ -296,38 +296,35 @@ impl<F: Float + Send + Sync + ScalarOperand + FromPrimitive + 'static> Fit<Array
         }
 
         // Build alpha grid.
-        let alpha_grid: Vec<F> = match &self.alphas {
-            Some(user_alphas) => {
-                if user_alphas.is_empty() {
+        let alpha_grid: Vec<F> = if let Some(user_alphas) = &self.alphas {
+            if user_alphas.is_empty() {
+                return Err(FerroError::InvalidParameter {
+                    name: "alphas".into(),
+                    reason: "must contain at least one candidate".into(),
+                });
+            }
+            for &a in user_alphas {
+                if a < F::zero() {
                     return Err(FerroError::InvalidParameter {
                         name: "alphas".into(),
-                        reason: "must contain at least one candidate".into(),
+                        reason: "all alpha values must be non-negative".into(),
                     });
                 }
-                for &a in user_alphas {
-                    if a < F::zero() {
-                        return Err(FerroError::InvalidParameter {
-                            name: "alphas".into(),
-                            reason: "all alpha values must be non-negative".into(),
-                        });
-                    }
-                }
-                user_alphas.clone()
             }
-            None => {
-                if self.n_alphas == 0 {
-                    return Err(FerroError::InvalidParameter {
-                        name: "n_alphas".into(),
-                        reason: "must be at least 1".into(),
-                    });
-                }
-                let alpha_max = compute_alpha_max(x, y, self.fit_intercept);
-                if alpha_max <= F::zero() {
-                    // Degenerate case: y is all zeros or X columns are zero.
-                    vec![F::from(1e-6).unwrap(); self.n_alphas]
-                } else {
-                    logspace(alpha_max, F::from(1e-3).unwrap(), self.n_alphas)
-                }
+            user_alphas.clone()
+        } else {
+            if self.n_alphas == 0 {
+                return Err(FerroError::InvalidParameter {
+                    name: "n_alphas".into(),
+                    reason: "must be at least 1".into(),
+                });
+            }
+            let alpha_max = compute_alpha_max(x, y, self.fit_intercept);
+            if alpha_max <= F::zero() {
+                // Degenerate case: y is all zeros or X columns are zero.
+                vec![F::from(1e-6).unwrap(); self.n_alphas]
+            } else {
+                logspace(alpha_max, F::from(1e-3).unwrap(), self.n_alphas)
             }
         };
 
@@ -460,8 +457,8 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_auto_alpha_grid() {
-        let x = Array2::from_shape_vec((20, 1), (1..=20).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((1..=20).map(|i| 2.0 * i as f64 + 1.0));
+        let x = Array2::from_shape_vec((20, 1), (1..=20).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((1..=20).map(|i| 2.0 * f64::from(i) + 1.0));
 
         let model = LassoCV::<f64>::new().with_n_alphas(10).with_cv(3);
 
@@ -474,8 +471,8 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_explicit_alphas() {
-        let x = Array2::from_shape_vec((20, 1), (1..=20).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((1..=20).map(|i| 2.0 * i as f64 + 1.0));
+        let x = Array2::from_shape_vec((20, 1), (1..=20).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((1..=20).map(|i| 2.0 * f64::from(i) + 1.0));
 
         let alphas = vec![0.001, 0.01, 0.1, 1.0, 10.0];
         let model = LassoCV::<f64>::new().with_alphas(alphas.clone()).with_cv(3);
@@ -492,8 +489,8 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_predict() {
-        let x = Array2::from_shape_vec((10, 1), (1..=10).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((1..=10).map(|i| 2.0 * i as f64 + 1.0));
+        let x = Array2::from_shape_vec((10, 1), (1..=10).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((1..=10).map(|i| 2.0 * f64::from(i) + 1.0));
 
         let model = LassoCV::<f64>::new()
             .with_alphas(vec![0.001, 0.01, 0.1])
@@ -510,8 +507,8 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_has_coefficients() {
-        let x = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((0..10).map(|i| i as f64));
+        let x = Array2::from_shape_vec((10, 2), (0..20).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((0..10).map(f64::from));
 
         let model = LassoCV::<f64>::new()
             .with_alphas(vec![0.01, 0.1])
@@ -563,8 +560,8 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_cv_too_small() {
-        let x = Array2::from_shape_vec((10, 1), (1..=10).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((1..=10).map(|i| i as f64));
+        let x = Array2::from_shape_vec((10, 1), (1..=10).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((1..=10).map(f64::from));
 
         let model = LassoCV::<f64>::new().with_cv(1);
         let result = model.fit(&x, &y);
@@ -573,8 +570,8 @@ mod tests {
 
     #[test]
     fn test_lasso_cv_predict_feature_mismatch() {
-        let x_train = Array2::from_shape_vec((10, 2), (0..20).map(|i| i as f64).collect()).unwrap();
-        let y = Array1::from_iter((0..10).map(|i| i as f64));
+        let x_train = Array2::from_shape_vec((10, 2), (0..20).map(f64::from).collect()).unwrap();
+        let y = Array1::from_iter((0..10).map(f64::from));
 
         let fitted = LassoCV::<f64>::new()
             .with_alphas(vec![0.01, 0.1])

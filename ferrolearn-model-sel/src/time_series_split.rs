@@ -155,33 +155,30 @@ impl TimeSeriesSplit {
         }
 
         // Determine the test window size.
-        let test_sz = match self.test_size {
-            Some(ts) => {
-                if ts == 0 {
-                    return Err(FerroError::InvalidParameter {
-                        name: "test_size".into(),
-                        reason: "must be at least 1".into(),
-                    });
-                }
-                ts
+        let test_sz = if let Some(ts) = self.test_size {
+            if ts == 0 {
+                return Err(FerroError::InvalidParameter {
+                    name: "test_size".into(),
+                    reason: "must be at least 1".into(),
+                });
             }
-            None => {
-                // sklearn default: floor(n_samples / (n_splits + 1))
-                let default_ts = n_samples / (self.n_splits + 1);
-                if default_ts == 0 {
-                    return Err(FerroError::InsufficientSamples {
-                        required: self.n_splits + 1,
-                        actual: n_samples,
-                        context: format!(
-                            "TimeSeriesSplit with n_splits={}: not enough samples to form a \
-                             non-empty test window (floor({n_samples} / {}) == 0)",
-                            self.n_splits,
-                            self.n_splits + 1,
-                        ),
-                    });
-                }
-                default_ts
+            ts
+        } else {
+            // sklearn default: floor(n_samples / (n_splits + 1))
+            let default_ts = n_samples / (self.n_splits + 1);
+            if default_ts == 0 {
+                return Err(FerroError::InsufficientSamples {
+                    required: self.n_splits + 1,
+                    actual: n_samples,
+                    context: format!(
+                        "TimeSeriesSplit with n_splits={}: not enough samples to form a \
+                         non-empty test window (floor({n_samples} / {}) == 0)",
+                        self.n_splits,
+                        self.n_splits + 1,
+                    ),
+                });
             }
+            default_ts
         };
 
         // The last split's test window ends at index n_samples - 1.
@@ -353,8 +350,7 @@ mod tests {
         for window in train_sizes.windows(2) {
             assert!(
                 window[0] < window[1],
-                "training size should grow: {:?}",
-                train_sizes
+                "training size should grow: {train_sizes:?}"
             );
         }
     }
@@ -508,7 +504,7 @@ mod tests {
         let tss = TimeSeriesSplit::new(5);
         let scores = cross_val_score(&pipeline, &x, &y, &tss, mse).unwrap();
         assert_eq!(scores.len(), 5);
-        for &s in scores.iter() {
+        for &s in &scores {
             assert!(s.abs() < 1e-10, "expected 0 MSE, got {s}");
         }
     }

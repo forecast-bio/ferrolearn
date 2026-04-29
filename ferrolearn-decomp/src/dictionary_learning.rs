@@ -530,7 +530,7 @@ impl Fit<Array2<f64>, ()> for DictionaryLearning {
         let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
         let normal = Normal::new(0.0, 1.0).unwrap();
         let mut d = Array2::<f64>::zeros((n_components, n_features));
-        for elem in d.iter_mut() {
+        for elem in &mut d {
             *elem = normal.sample(&mut rng);
         }
         normalise_dictionary(&mut d);

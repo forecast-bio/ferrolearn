@@ -164,7 +164,7 @@ fn test_nmf_oracle() {
     assert_eq!(h.ncols(), 6, "NMF H matrix should have 6 columns");
 
     // H should be non-negative.
-    for &val in h.iter() {
+    for &val in h {
         assert!(val >= 0.0, "NMF H matrix contains negative value: {val}");
     }
 
@@ -198,7 +198,7 @@ fn test_nmf_oracle() {
     let w = fitted.transform(&x).unwrap();
     assert_eq!(w.nrows(), 40);
     assert_eq!(w.ncols(), 3);
-    for &val in w.iter() {
+    for &val in &w {
         assert!(val >= 0.0, "NMF W matrix contains negative value: {val}");
     }
 

@@ -208,7 +208,7 @@ mod tests {
     use ndarray::array;
 
     fn str_arr(v: &[&str]) -> Array1<String> {
-        Array1::from_vec(v.iter().map(|s| s.to_string()).collect())
+        Array1::from_vec(v.iter().map(std::string::ToString::to_string).collect())
     }
 
     #[test]

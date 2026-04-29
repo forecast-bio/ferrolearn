@@ -187,7 +187,7 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static, K: Kernel<F> + 'static> F
         }
 
         // Compute initial gradient: grad_i = sum_j alpha_j * K(x_i, x_j)
-        let eps = F::from(1e-12).unwrap_or(F::epsilon());
+        let eps = F::from(1e-12).unwrap_or_else(F::epsilon);
         let two = F::one() + F::one();
 
         let mut grad = vec![F::zero(); n_samples];

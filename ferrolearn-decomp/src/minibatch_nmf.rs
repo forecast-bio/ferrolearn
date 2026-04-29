@@ -203,7 +203,7 @@ impl<F: Float + Send + Sync + 'static> FittedMiniBatchNMF<F> {
 /// Small epsilon to prevent division by zero.
 #[inline]
 fn eps<F: Float>() -> F {
-    F::from(1e-12).unwrap_or(F::epsilon())
+    F::from(1e-12).unwrap_or_else(F::epsilon)
 }
 
 /// Initialise W and H with random non-negative values.
@@ -218,12 +218,12 @@ fn init_random<F: Float>(
 
     let mut w = Array2::<F>::zeros((n_samples, n_components));
     for elem in w.iter_mut() {
-        *elem = F::from(uniform.sample(&mut rng)).unwrap_or(F::zero()) + eps::<F>();
+        *elem = F::from(uniform.sample(&mut rng)).unwrap_or_else(F::zero) + eps::<F>();
     }
 
     let mut h = Array2::<F>::zeros((n_components, n_features));
     for elem in h.iter_mut() {
-        *elem = F::from(uniform.sample(&mut rng)).unwrap_or(F::zero()) + eps::<F>();
+        *elem = F::from(uniform.sample(&mut rng)).unwrap_or_else(F::zero) + eps::<F>();
     }
 
     (w, h)
@@ -261,7 +261,7 @@ fn init_nndsvd_simple<F: Float + Send + Sync + 'static>(
         // Random initial vector.
         let mut v = Array2::<F>::zeros((n_features, 1));
         for elem in v.iter_mut() {
-            *elem = F::from(uniform.sample(&mut rng)).unwrap_or(F::one());
+            *elem = F::from(uniform.sample(&mut rng)).unwrap_or_else(F::one);
         }
 
         // Power iteration (20 steps).
@@ -409,7 +409,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for MiniBatchNMF<F> {
         };
 
         let batch_size = self.batch_size.min(n_samples);
-        let tol_f = F::from(self.tol).unwrap_or(F::epsilon());
+        let tol_f = F::from(self.tol).unwrap_or_else(F::epsilon);
         let mut prev_err = reconstruction_error(x, &w, &h);
         let mut actual_iter = 0;
 
@@ -519,7 +519,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedMiniBatchN
         let n_comp = self.components_.nrows();
         let mut w = Array2::<F>::zeros((n_samples, n_comp));
         // Initialise W with uniform values.
-        let init_val = F::from(0.1).unwrap_or(F::one());
+        let init_val = F::from(0.1).unwrap_or_else(F::one);
         w.fill(init_val);
 
         update_w_batch(x, &mut w, &self.components_);

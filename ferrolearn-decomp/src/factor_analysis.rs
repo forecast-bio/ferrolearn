@@ -716,7 +716,7 @@ mod tests {
         let fa = FactorAnalysis::<f64>::new(1);
         let x = simple_data();
         let fitted = fa.fit(&x, &()).unwrap();
-        for &v in fitted.noise_variance().iter() {
+        for &v in fitted.noise_variance() {
             assert!(v > 0.0, "noise variance must be positive, got {v}");
         }
     }

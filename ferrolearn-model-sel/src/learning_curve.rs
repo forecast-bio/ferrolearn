@@ -301,10 +301,10 @@ mod tests {
         let result = learning_curve(&pipeline, &x, &y, &kf, &[0.5, 1.0], neg_mse).unwrap();
 
         // neg_mse of perfect predictions is 0.
-        for &s in result.train_scores.iter() {
+        for &s in &result.train_scores {
             assert!(s.abs() < 1e-10, "expected ~0 train score, got {s}");
         }
-        for &s in result.test_scores.iter() {
+        for &s in &result.test_scores {
             assert!(s.abs() < 1e-10, "expected ~0 test score, got {s}");
         }
     }
@@ -391,17 +391,17 @@ mod tests {
     #[test]
     fn test_learning_curve_scores_are_finite() {
         let pipeline = Pipeline::new().estimator_step("mean", Box::new(MeanEstimator));
-        let y_data: Vec<f64> = (0..30).map(|i| i as f64).collect();
+        let y_data: Vec<f64> = (0..30).map(f64::from).collect();
         let x = Array2::<f64>::zeros((30, 2));
         let y = Array1::from_vec(y_data);
         let kf = KFold::new(3);
 
         let result = learning_curve(&pipeline, &x, &y, &kf, &[0.3, 0.6, 1.0], neg_mse).unwrap();
 
-        for &s in result.train_scores.iter() {
+        for &s in &result.train_scores {
             assert!(s.is_finite(), "train score should be finite, got {s}");
         }
-        for &s in result.test_scores.iter() {
+        for &s in &result.test_scores {
             assert!(s.is_finite(), "test score should be finite, got {s}");
         }
     }

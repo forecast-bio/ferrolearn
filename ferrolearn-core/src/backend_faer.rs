@@ -294,7 +294,7 @@ mod tests {
         let eye = array![[1.0, 0.0], [0.0, 1.0]];
         let (u, s, vt) = B::svd(&eye).unwrap();
         // Singular values of identity are [1, 1]
-        for &val in s.iter() {
+        for &val in &s {
             assert_relative_eq!(val, 1.0, epsilon = 1e-12);
         }
         // U * diag(S) * Vt should reconstruct the original
@@ -425,7 +425,7 @@ mod tests {
         let eye = array![[1.0, 0.0], [0.0, 1.0]];
         let (eigenvalues, eigenvectors) = B::eigh(&eye).unwrap();
         // All eigenvalues should be 1
-        for &val in eigenvalues.iter() {
+        for &val in &eigenvalues {
             assert_relative_eq!(val, 1.0, epsilon = 1e-12);
         }
         // V * V^T should be identity

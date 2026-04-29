@@ -101,7 +101,7 @@ impl<F: Float + Send + Sync + 'static> FittedMaxAbsScaler<F> {
             if ma == F::zero() {
                 continue;
             }
-            for v in col.iter_mut() {
+            for v in &mut col {
                 *v = *v * ma;
             }
         }
@@ -140,7 +140,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for MaxAbsScaler<F> {
                 .column(j)
                 .iter()
                 .copied()
-                .map(|v| v.abs())
+                .map(num_traits::Float::abs)
                 .fold(F::zero(), |acc, v| if v > acc { v } else { acc });
             max_abs[j] = col_max_abs;
         }
@@ -178,7 +178,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedMaxAbsScal
                 // All-zero column: leave unchanged.
                 continue;
             }
-            for v in col.iter_mut() {
+            for v in &mut col {
                 *v = *v / ma;
             }
         }
@@ -283,7 +283,7 @@ mod tests {
         let x = array![[-10.0, 5.0], [3.0, -8.0], [7.0, 2.0]];
         let fitted = scaler.fit(&x, &()).unwrap();
         let scaled = fitted.transform(&x).unwrap();
-        for v in scaled.iter() {
+        for v in &scaled {
             assert!(
                 *v >= -1.0 - 1e-10 && *v <= 1.0 + 1e-10,
                 "value {v} out of [-1, 1]"

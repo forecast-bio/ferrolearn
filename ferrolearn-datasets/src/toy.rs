@@ -80,11 +80,7 @@ where
     }
 
     let n_samples = y_data.len();
-    let n_features = if n_samples > 0 {
-        x_data.len() / n_samples
-    } else {
-        0
-    };
+    let n_features = x_data.len().checked_div(n_samples).unwrap_or(0);
 
     let x = Array2::from_shape_vec((n_samples, n_features), x_data).map_err(|e| {
         FerroError::SerdeError {
@@ -132,10 +128,10 @@ where
 
     for i in 0..n_samples {
         let class = i % n_classes;
-        let offset = F::from(class as f64 * 5.0).unwrap_or(F::zero());
+        let offset = F::from(class as f64 * 5.0).unwrap_or_else(F::zero);
         for j in 0..n_features {
             // Deterministic synthetic value: offset + small per-feature variation.
-            let val = offset + F::from((i * n_features + j) as f64 * 0.001).unwrap_or(F::zero());
+            let val = offset + F::from((i * n_features + j) as f64 * 0.001).unwrap_or_else(F::zero);
             x_data.push(val);
         }
         y_data.push(class);
@@ -165,7 +161,7 @@ where
     for i in 0..n_samples {
         let mut row_sum = F::zero();
         for j in 0..n_features {
-            let val = F::from((i * n_features + j) as f64 * 0.01).unwrap_or(F::zero());
+            let val = F::from((i * n_features + j) as f64 * 0.01).unwrap_or_else(F::zero);
             x_data.push(val);
             row_sum = row_sum + val;
         }
@@ -739,8 +735,11 @@ mod tests {
     fn test_load_olivetti_faces_range() {
         let (x, _) = load_olivetti_faces::<f64>().unwrap();
         // All pixel values should be in [0, 1].
-        for &val in x.iter() {
-            assert!(val >= 0.0 && val <= 1.0, "pixel value out of range: {val}");
+        for &val in &x {
+            assert!(
+                (0.0..=1.0).contains(&val),
+                "pixel value out of range: {val}"
+            );
         }
     }
 

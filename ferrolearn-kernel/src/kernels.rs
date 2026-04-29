@@ -323,7 +323,7 @@ mod tests {
         ];
         for k in &kernels {
             let result = k.evaluate(&u.view());
-            for &v in result.iter() {
+            for &v in &result {
                 assert!(v >= 0.0, "Kernel produced negative value: {v}");
             }
         }
@@ -371,7 +371,7 @@ mod tests {
         for k in &compact {
             assert!(k.has_compact_support());
             let result = k.evaluate(&u.view());
-            for &v in result.iter() {
+            for &v in &result {
                 assert_abs_diff_eq!(v, 0.0, epsilon = 1e-15);
             }
         }

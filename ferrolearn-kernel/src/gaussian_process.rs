@@ -197,7 +197,7 @@ impl<F: Float + Send + Sync + 'static> FittedGaussianProcessRegressor<F> {
             }
         }
 
-        let std = var.mapv(|v| v.sqrt());
+        let std = var.mapv(num_traits::Float::sqrt);
         Ok((y_pred, std))
     }
 
@@ -209,10 +209,10 @@ impl<F: Float + Send + Sync + 'static> FittedGaussianProcessRegressor<F> {
     #[must_use]
     pub fn log_marginal_likelihood(&self, y: &Array1<F>) -> F {
         let n = F::from(self.x_train.nrows()).unwrap();
-        let y_centered = if self.y_mean != F::zero() {
-            y.mapv(|v| v - self.y_mean)
-        } else {
+        let y_centered = if self.y_mean == F::zero() {
             y.clone()
+        } else {
+            y.mapv(|v| v - self.y_mean)
         };
 
         // -0.5 * y^T alpha
@@ -414,7 +414,7 @@ mod tests {
         let fitted = gp.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
         assert_eq!(pred.len(), 5);
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite());
         }
     }
@@ -455,7 +455,7 @@ mod tests {
         assert_eq!(mean.len(), 5);
         assert_eq!(std.len(), 5);
         // Std at training points should be near zero
-        for &s in std.iter() {
+        for &s in &std {
             assert!(s < 1.0, "Training point std should be small, got {s}");
         }
     }
@@ -486,9 +486,9 @@ mod tests {
         let gp = GaussianProcessRegressor::new(Box::new(RBFKernel::new(1.0)));
         let fitted = gp.fit(&x, &y).unwrap();
 
-        let x_test = Array2::from_shape_vec((10, 1), (-5..5).map(|i| i as f64).collect()).unwrap();
+        let x_test = Array2::from_shape_vec((10, 1), (-5..5).map(f64::from).collect()).unwrap();
         let (_, std) = fitted.predict_with_std(&x_test).unwrap();
-        for &s in std.iter() {
+        for &s in &std {
             assert!(s >= 0.0, "std should be non-negative, got {s}");
         }
     }
@@ -542,7 +542,7 @@ mod tests {
         let gp = GaussianProcessRegressor::new(Box::new(MaternKernel::new(1.0, 2.5)));
         let fitted = gp.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite());
         }
     }
@@ -553,7 +553,7 @@ mod tests {
         let gp = GaussianProcessRegressor::new(Box::new(DotProductKernel::new(1.0))).alpha(1e-6);
         let fitted = gp.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite());
         }
     }
@@ -568,7 +568,7 @@ mod tests {
         let gp = GaussianProcessRegressor::new(Box::new(kernel));
         let fitted = gp.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite());
         }
     }
@@ -583,7 +583,7 @@ mod tests {
         let gp = GaussianProcessRegressor::new(Box::new(kernel));
         let fitted = gp.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite());
         }
     }
@@ -602,8 +602,9 @@ mod tests {
     #[test]
     fn log_marginal_likelihood_prefers_right_scale() {
         // LML should be higher when the kernel length scale matches the data
-        let x = Array2::from_shape_vec((20, 1), (0..20).map(|i| i as f64 * 0.5).collect()).unwrap();
-        let y: Array1<f64> = x.column(0).mapv(|xi| xi.sin());
+        let x =
+            Array2::from_shape_vec((20, 1), (0..20).map(|i| f64::from(i) * 0.5).collect()).unwrap();
+        let y: Array1<f64> = x.column(0).mapv(f64::sin);
 
         let gp_good = GaussianProcessRegressor::new(Box::new(RBFKernel::new(1.0))).alpha(1e-6);
         let gp_bad = GaussianProcessRegressor::new(Box::new(RBFKernel::new(0.01))).alpha(1e-6);
@@ -632,12 +633,12 @@ mod tests {
             })
             .collect();
         let x = Array2::from_shape_vec((n, 2), x_data).unwrap();
-        let y: Array1<f64> = x.column(0).mapv(|xi| xi.sin());
+        let y: Array1<f64> = x.column(0).mapv(f64::sin);
         let gp = GaussianProcessRegressor::new(Box::new(RBFKernel::new(0.5)));
         let fitted = gp.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
         assert_eq!(pred.len(), n);
-        for &p in pred.iter() {
+        for &p in &pred {
             assert!(p.is_finite());
         }
     }
@@ -696,7 +697,7 @@ mod tests {
         let gp = GaussianProcessRegressor::new(Box::new(RBFKernel::new(1.0)));
         let fitted = gp.fit(&x, &y).unwrap();
         let pred = fitted.predict(&x).unwrap();
-        for &p in pred.iter() {
+        for &p in &pred {
             assert_abs_diff_eq!(p, 7.0, epsilon = 1e-4);
         }
     }

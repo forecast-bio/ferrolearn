@@ -182,7 +182,7 @@ fn build_knn_graph(sq_dist: &Array2<f64>, k: usize) -> Vec<Vec<(usize, f64)>> {
     }
     // Deduplicate keeping shortest distance.
     for entry in &mut sym {
-        entry.sort_by(|a, b| a.0.cmp(&b.0));
+        entry.sort_by_key(|a| a.0);
         entry.dedup_by(|a, b| {
             if a.0 == b.0 {
                 b.1 = b.1.min(a.1);
@@ -311,9 +311,8 @@ impl Fit<Array2<f64>, ()> for Isomap {
                 if geodesic[[i, j]].is_infinite() {
                     return Err(FerroError::NumericalInstability {
                         message: format!(
-                            "kNN graph is disconnected (no path from point {} to {}). \
-                             Try increasing n_neighbors.",
-                            i, j
+                            "kNN graph is disconnected (no path from point {i} to {j}). \
+                             Try increasing n_neighbors."
                         ),
                     });
                 }

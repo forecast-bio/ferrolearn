@@ -113,7 +113,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for GaussianRandomProj
         let scale = F::one() / F::from(self.n_components).unwrap().sqrt();
         let normal = StandardNormal;
         let mut projection = Array2::zeros((n_features, self.n_components));
-        for v in projection.iter_mut() {
+        for v in &mut projection {
             let sample: f64 = normal.sample(&mut rng);
             *v = F::from(sample).unwrap() * scale;
         }
@@ -310,7 +310,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SparseRandomProjec
         let uniform = rand::distr::Uniform::new(0.0_f64, 1.0).unwrap();
 
         let mut projection = Array2::zeros((n_features, self.n_components));
-        for v in projection.iter_mut() {
+        for v in &mut projection {
             let u: f64 = uniform.sample(&mut rng);
             if u < d / 2.0 {
                 *v = scale.neg();

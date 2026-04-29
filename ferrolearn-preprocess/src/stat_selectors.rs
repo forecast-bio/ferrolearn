@@ -147,7 +147,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array1<F>, ()> for SelectFpr<F> {
         let n = x.len();
         validate_inputs(n, self.alpha)?;
 
-        let alpha_f = F::from(self.alpha).unwrap_or(F::zero());
+        let alpha_f = F::from(self.alpha).unwrap_or_else(F::zero);
         let selected_indices: Vec<usize> = x
             .iter()
             .enumerate()
@@ -276,8 +276,8 @@ impl<F: Float + Send + Sync + 'static> Fit<Array1<F>, ()> for SelectFdr<F> {
         let n = x.len();
         validate_inputs(n, self.alpha)?;
 
-        let alpha_f = F::from(self.alpha).unwrap_or(F::zero());
-        let n_f = F::from(n).unwrap_or(F::one());
+        let alpha_f = F::from(self.alpha).unwrap_or_else(F::zero);
+        let n_f = F::from(n).unwrap_or_else(F::one);
 
         // Sort features by p-value (ascending), keeping original indices
         let mut ranked: Vec<(usize, F)> = x.iter().copied().enumerate().collect();
@@ -289,7 +289,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array1<F>, ()> for SelectFdr<F> {
         // Find the largest rank k where p_(k) <= alpha * (k+1) / n
         let mut max_qualifying_rank: Option<usize> = None;
         for (rank, &(_, p_val)) in ranked.iter().enumerate() {
-            let bh_threshold = alpha_f * F::from(rank + 1).unwrap_or(F::one()) / n_f;
+            let bh_threshold = alpha_f * F::from(rank + 1).unwrap_or_else(F::one) / n_f;
             if p_val <= bh_threshold {
                 max_qualifying_rank = Some(rank);
             }
@@ -427,7 +427,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array1<F>, ()> for SelectFwe<F> {
         validate_inputs(n, self.alpha)?;
 
         let adjusted_alpha = self.alpha / n as f64;
-        let adjusted_alpha_f = F::from(adjusted_alpha).unwrap_or(F::zero());
+        let adjusted_alpha_f = F::from(adjusted_alpha).unwrap_or_else(F::zero);
 
         let selected_indices: Vec<usize> = x
             .iter()

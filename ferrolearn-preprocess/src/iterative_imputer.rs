@@ -104,7 +104,7 @@ impl<F: Float + Send + Sync + 'static> Default for IterativeImputer<F> {
     fn default() -> Self {
         Self::new(
             10,
-            F::from(1e-3).unwrap_or(F::epsilon()),
+            F::from(1e-3).unwrap_or_else(F::epsilon),
             InitialStrategy::Mean,
         )
     }
@@ -179,14 +179,14 @@ fn column_means_nan<F: Float>(x: &Array2<F>) -> Array1<F> {
         let col = x.column(j);
         let mut sum = F::zero();
         let mut count = 0usize;
-        for &v in col.iter() {
+        for &v in col {
             if !v.is_nan() {
                 sum = sum + v;
                 count += 1;
             }
         }
         means[j] = if count > 0 {
-            sum / F::from(count).unwrap_or(F::one())
+            sum / F::from(count).unwrap_or_else(F::one)
         } else {
             F::zero()
         };
@@ -220,7 +220,7 @@ fn column_medians_nan<F: Float>(x: &Array2<F>) -> Array1<F> {
 fn initial_fill<F: Float>(x: &Array2<F>, fill: &Array1<F>) -> Array2<F> {
     let mut out = x.to_owned();
     for (mut col, &f) in out.columns_mut().into_iter().zip(fill.iter()) {
-        for v in col.iter_mut() {
+        for v in &mut col {
             if v.is_nan() {
                 *v = f;
             }
@@ -243,13 +243,13 @@ fn ridge_fit<F: Float>(x: &Array2<F>, y: &Array1<F>, alpha: F) -> Option<(Array1
 
     // Center y
     let y_mean =
-        y.iter().copied().fold(F::zero(), |a, v| a + v) / F::from(n_samples).unwrap_or(F::one());
+        y.iter().copied().fold(F::zero(), |a, v| a + v) / F::from(n_samples).unwrap_or_else(F::one);
 
     // Center X
     let mut x_means = Array1::zeros(n_features);
     for j in 0..n_features {
         x_means[j] = x.column(j).iter().copied().fold(F::zero(), |a, v| a + v)
-            / F::from(n_samples).unwrap_or(F::one());
+            / F::from(n_samples).unwrap_or_else(F::one);
     }
 
     // Compute X^T X + alpha * I (n_features x n_features)
@@ -319,7 +319,7 @@ fn solve_linear_system<F: Float>(a: &Array2<F>, b: &Array1<F>) -> Option<Array1<
             }
         }
 
-        if max_val < F::from(1e-15).unwrap_or(F::min_positive_value()) {
+        if max_val < F::from(1e-15).unwrap_or_else(F::min_positive_value) {
             return None; // Singular matrix
         }
 
@@ -351,7 +351,7 @@ fn solve_linear_system<F: Float>(a: &Array2<F>, b: &Array1<F>) -> Option<Array1<
             sum = sum - aug[[i, j]] * x[j];
         }
         let diag = aug[[i, i]];
-        if diag.abs() < F::from(1e-15).unwrap_or(F::min_positive_value()) {
+        if diag.abs() < F::from(1e-15).unwrap_or_else(F::min_positive_value) {
             return None;
         }
         x[i] = sum / diag;
@@ -690,7 +690,7 @@ mod tests {
         let fitted = imputer.fit(&x, &()).unwrap();
         let out = fitted.transform(&x).unwrap();
         // All values should be non-NaN
-        for v in out.iter() {
+        for v in &out {
             assert!(!v.is_nan(), "Output contains NaN");
         }
     }
@@ -748,7 +748,7 @@ mod tests {
         let imputer = IterativeImputer::<f64>::new(10, 1e-3, InitialStrategy::Mean);
         let x = array![[1.0, 2.0], [3.0, f64::NAN], [f64::NAN, 6.0]];
         let out = imputer.fit_transform(&x).unwrap();
-        for v in out.iter() {
+        for v in &out {
             assert!(!v.is_nan());
         }
     }

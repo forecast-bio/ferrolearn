@@ -189,7 +189,7 @@ fn compute_percentile_threshold<F: Float>(values: &[F], pct: f64) -> F {
     if lower == upper {
         sorted[lower]
     } else {
-        let frac = F::from(rank - rank.floor()).unwrap_or(F::zero());
+        let frac = F::from(rank - rank.floor()).unwrap_or_else(F::zero);
         sorted[lower] * (F::one() - frac) + sorted[upper] * frac
     }
 }
@@ -248,10 +248,10 @@ impl<F: Float + Send + Sync + 'static> Fit<Array1<F>, ()> for SelectFromModelExt
         let threshold_value = match self.threshold {
             ThresholdStrategy::Mean => {
                 values.iter().copied().fold(F::zero(), |acc, v| acc + v)
-                    / F::from(n).unwrap_or(F::one())
+                    / F::from(n).unwrap_or_else(F::one)
             }
             ThresholdStrategy::Median => compute_median(&values),
-            ThresholdStrategy::Value(v) => F::from(v).unwrap_or(F::zero()),
+            ThresholdStrategy::Value(v) => F::from(v).unwrap_or_else(F::zero),
             ThresholdStrategy::Percentile(pct) => {
                 if pct <= 0.0 || pct > 100.0 {
                     return Err(FerroError::InvalidParameter {

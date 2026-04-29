@@ -452,7 +452,7 @@ fn gaussian_solve<F: Float>(
             }
         }
 
-        if max_val < F::from(1e-12).unwrap_or(F::epsilon()) {
+        if max_val < F::from(1e-12).unwrap_or_else(F::epsilon) {
             return Err(FerroError::NumericalInstability {
                 message: "singular matrix in Gaussian elimination".into(),
             });
@@ -482,7 +482,7 @@ fn gaussian_solve<F: Float>(
         for j in (i + 1)..n {
             s = s - aug[[i, j]] * x_sol[j];
         }
-        if aug[[i, i]].abs() < F::from(1e-12).unwrap_or(F::epsilon()) {
+        if aug[[i, i]].abs() < F::from(1e-12).unwrap_or_else(F::epsilon) {
             return Err(FerroError::NumericalInstability {
                 message: "near-zero pivot in back substitution".into(),
             });

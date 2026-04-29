@@ -362,7 +362,7 @@ mod tests {
         let fitted = model.fit(&x, &()).unwrap();
 
         let labels = fitted.labels();
-        for &label in labels.iter() {
+        for &label in labels {
             assert_eq!(label, -1);
         }
         assert_eq!(fitted.n_clusters(), 0);
@@ -377,7 +377,7 @@ mod tests {
         let model = DBSCAN::<f64>::new(0.001).with_min_samples(2);
         let fitted = model.fit(&x, &()).unwrap();
 
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert_eq!(label, -1);
         }
     }
@@ -545,7 +545,7 @@ mod tests {
         // All identical points should be in the same cluster.
         let labels = fitted.labels();
         assert!(labels[0] >= 0);
-        for &label in labels.iter() {
+        for &label in labels {
             assert_eq!(label, labels[0]);
         }
     }

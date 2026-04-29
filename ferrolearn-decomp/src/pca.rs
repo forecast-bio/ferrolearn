@@ -184,7 +184,7 @@ fn jacobi_eigen<F: Float + Send + Sync + 'static>(
         v[[i, i]] = F::one();
     }
 
-    let tol = F::from(1e-12).unwrap_or(F::epsilon());
+    let tol = F::from(1e-12).unwrap_or_else(F::epsilon);
 
     for iteration in 0..max_iter {
         // Find the largest off-diagonal element.
@@ -214,7 +214,7 @@ fn jacobi_eigen<F: Float + Send + Sync + 'static>(
         let apq = mat[[p, q]];
 
         let theta = if (app - aqq).abs() < tol {
-            F::from(std::f64::consts::FRAC_PI_4).unwrap_or(F::one())
+            F::from(std::f64::consts::FRAC_PI_4).unwrap_or_else(F::one)
         } else {
             let tau = (aqq - app) / (F::from(2.0).unwrap() * apq);
             // t = sign(tau) / (|tau| + sqrt(1 + tau^2))
@@ -749,7 +749,7 @@ mod tests {
         let pca = PCA::<f64>::new(2);
         let x = array![[2.5, 2.4], [0.5, 0.7], [2.2, 2.9], [1.9, 2.2], [3.1, 3.0],];
         let fitted = pca.fit(&x, &()).unwrap();
-        for &v in fitted.explained_variance().iter() {
+        for &v in fitted.explained_variance() {
             assert!(v >= 0.0, "negative variance: {v}");
         }
     }
@@ -759,7 +759,7 @@ mod tests {
         let pca = PCA::<f64>::new(2);
         let x = array![[2.5, 2.4], [0.5, 0.7], [2.2, 2.9], [1.9, 2.2], [3.1, 3.0],];
         let fitted = pca.fit(&x, &()).unwrap();
-        for &s in fitted.singular_values().iter() {
+        for &s in fitted.singular_values() {
             assert!(s >= 0.0, "negative singular value: {s}");
         }
     }

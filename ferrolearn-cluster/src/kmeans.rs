@@ -197,7 +197,7 @@ fn kmeans_plus_plus<F: Float>(x: &Array2<F>, k: usize, rng: &mut StdRng) -> Arra
             continue;
         }
 
-        let threshold: F = F::from(rng.random::<f64>()).unwrap_or(F::zero()) * total;
+        let threshold: F = F::from(rng.random::<f64>()).unwrap_or_else(F::zero) * total;
         let mut cumsum = F::zero();
         let mut chosen = n_samples - 1;
         for i in 0..n_samples {
@@ -754,7 +754,7 @@ mod tests {
         let fitted = model.fit(&x, &()).unwrap();
 
         // All points should be in cluster 0.
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert_eq!(label, 0);
         }
 

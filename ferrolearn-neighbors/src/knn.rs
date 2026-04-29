@@ -394,8 +394,8 @@ impl<F: Float + Send + Sync + 'static> FittedKNeighborsClassifier<F> {
             Weights::Uniform => {
                 for &(idx, _) in neighbors {
                     let label = self.y_train[idx];
-                    *class_weights.entry(label).or_insert(F::zero()) =
-                        *class_weights.entry(label).or_insert(F::zero()) + F::one();
+                    *class_weights.entry(label).or_insert_with(F::zero) =
+                        *class_weights.entry(label).or_insert_with(F::zero) + F::one();
                 }
             }
             Weights::Distance => {
@@ -407,16 +407,16 @@ impl<F: Float + Send + Sync + 'static> FittedKNeighborsClassifier<F> {
                     for &(idx, d) in neighbors {
                         if d < eps {
                             let label = self.y_train[idx];
-                            *class_weights.entry(label).or_insert(F::zero()) =
-                                *class_weights.entry(label).or_insert(F::zero()) + F::one();
+                            *class_weights.entry(label).or_insert_with(F::zero) =
+                                *class_weights.entry(label).or_insert_with(F::zero) + F::one();
                         }
                     }
                 } else {
                     for &(idx, d) in neighbors {
                         let label = self.y_train[idx];
                         let w = F::one() / d;
-                        *class_weights.entry(label).or_insert(F::zero()) =
-                            *class_weights.entry(label).or_insert(F::zero()) + w;
+                        *class_weights.entry(label).or_insert_with(F::zero) =
+                            *class_weights.entry(label).or_insert_with(F::zero) + w;
                     }
                 }
             }
@@ -428,8 +428,7 @@ impl<F: Float + Send + Sync + 'static> FittedKNeighborsClassifier<F> {
             .max_by(|(label_a, w_a), (label_b, w_b)| {
                 w_a.partial_cmp(w_b).unwrap().then(label_b.cmp(label_a))
             })
-            .map(|(label, _)| label)
-            .unwrap_or(0)
+            .map_or(0, |(label, _)| label)
     }
 }
 
@@ -476,7 +475,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
 
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 

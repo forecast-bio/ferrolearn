@@ -308,7 +308,7 @@ fn agglomerate<F: Float>(
         sizes[ci] = new_size;
 
         // Redirect all samples assigned to cj → ci.
-        for s in assignment.iter_mut() {
+        for s in &mut assignment {
             if *s == cj {
                 *s = ci;
             }
@@ -579,7 +579,7 @@ mod tests {
     fn test_labels_in_valid_range() {
         let x = make_three_blobs();
         let fitted = AgglomerativeClustering::<f64>::new(3).fit(&x, &()).unwrap();
-        for &l in fitted.labels().iter() {
+        for &l in fitted.labels() {
             assert!(l < 3, "label {l} out of range");
         }
     }
@@ -614,7 +614,7 @@ mod tests {
         let x = make_two_blobs();
         let fitted = AgglomerativeClustering::<f64>::new(1).fit(&x, &()).unwrap();
         // All samples should be in cluster 0.
-        for &l in fitted.labels().iter() {
+        for &l in fitted.labels() {
             assert_eq!(l, 0);
         }
     }
@@ -673,7 +673,7 @@ mod tests {
         let x =
             Array2::from_shape_vec((4, 2), vec![1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]).unwrap();
         let fitted = AgglomerativeClustering::<f64>::new(1).fit(&x, &()).unwrap();
-        for &l in fitted.labels().iter() {
+        for &l in fitted.labels() {
             assert_eq!(l, 0);
         }
     }

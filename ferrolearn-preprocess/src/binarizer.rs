@@ -123,7 +123,7 @@ mod tests {
         let b = Binarizer::<f64>::new(0.0);
         let x = array![[0.0, 0.0, 0.0]];
         let out = b.transform(&x).unwrap();
-        for v in out.iter() {
+        for v in &out {
             assert_abs_diff_eq!(*v, 0.0, epsilon = 1e-10);
         }
     }
@@ -133,7 +133,7 @@ mod tests {
         let b = Binarizer::<f64>::new(0.0);
         let x = array![[1.0, 2.0, 3.0]];
         let out = b.transform(&x).unwrap();
-        for v in out.iter() {
+        for v in &out {
             assert_abs_diff_eq!(*v, 1.0, epsilon = 1e-10);
         }
     }
@@ -186,7 +186,7 @@ mod tests {
         let b = Binarizer::<f64>::new(0.0);
         let x = array![[-5.0, -1.0, 0.0, 0.001, 1.0, 100.0]];
         let out = b.transform(&x).unwrap();
-        for v in out.iter() {
+        for v in &out {
             assert!(*v == 0.0 || *v == 1.0, "expected 0 or 1, got {v}");
         }
     }

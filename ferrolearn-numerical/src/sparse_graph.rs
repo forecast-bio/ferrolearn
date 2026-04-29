@@ -75,7 +75,7 @@ pub fn dijkstra(graph: &CsMat<f64>, source: usize) -> Result<DijkstraResult, Str
     }
 
     // Validate non-negative weights.
-    for (&w, _) in graph.iter() {
+    for (&w, _) in graph {
         if w < 0.0 {
             return Err(format!(
                 "negative edge weight {w} is not allowed in Dijkstra's algorithm"
@@ -169,7 +169,7 @@ pub fn connected_components(graph: &CsMat<f64>) -> Result<ConnectedComponentsRes
 
     // Build undirected adjacency lists from the CSR matrix.
     let mut adj: Vec<Vec<usize>> = vec![Vec::new(); n];
-    for (&val, (i, j)) in graph.iter() {
+    for (&val, (i, j)) in graph {
         if val != 0.0 {
             adj[i].push(j);
             adj[j].push(i);
@@ -232,7 +232,7 @@ pub fn minimum_spanning_tree(graph: &CsMat<f64>) -> Result<CsMat<f64>, String> {
 
     // Collect edges (deduplicate by requiring i < j).
     let mut edges: Vec<(f64, usize, usize)> = Vec::new();
-    for (&val, (i, j)) in graph.iter() {
+    for (&val, (i, j)) in graph {
         if val < 0.0 {
             return Err(format!(
                 "negative edge weight {val} is not allowed in minimum_spanning_tree"

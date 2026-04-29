@@ -243,7 +243,7 @@ fn gaussian_solve<F: Float>(
             }
         }
 
-        if max_val < F::from(1e-12).unwrap_or(F::epsilon()) {
+        if max_val < F::from(1e-12).unwrap_or_else(F::epsilon) {
             return Err(FerroError::NumericalInstability {
                 message: "singular matrix in Gaussian elimination".into(),
             });
@@ -273,7 +273,7 @@ fn gaussian_solve<F: Float>(
         for j in (i + 1)..n {
             s = s - aug[[i, j]] * x_sol[j];
         }
-        if aug[[i, i]].abs() < F::from(1e-12).unwrap_or(F::epsilon()) {
+        if aug[[i, i]].abs() < F::from(1e-12).unwrap_or_else(F::epsilon) {
             return Err(FerroError::NumericalInstability {
                 message: "near-zero pivot in back substitution".into(),
             });
@@ -596,7 +596,7 @@ mod tests {
             // For OLS the outlier pulls the slope significantly higher.
             // y_outlier OLS slope ≈ much larger than 2.0
             let n = 10.0_f64;
-            let xv: Vec<f64> = (1..=10).map(|i| i as f64).collect();
+            let xv: Vec<f64> = (1..=10).map(f64::from).collect();
             let yv = vec![2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 200.0];
             let xmean = xv.iter().sum::<f64>() / n;
             let ymean = yv.iter().sum::<f64>() / n;

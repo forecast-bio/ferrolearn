@@ -396,7 +396,7 @@ impl Fit<Array2<f64>, ()> for LatentDirichletAllocation {
                 reason: "document-term matrix must have at least 1 word".into(),
             });
         }
-        for &val in x.iter() {
+        for &val in x {
             if val < 0.0 {
                 return Err(FerroError::InvalidParameter {
                     name: "X".into(),
@@ -414,7 +414,7 @@ impl Fit<Array2<f64>, ()> for LatentDirichletAllocation {
         let mut rng = Xoshiro256PlusPlus::seed_from_u64(seed);
         let uniform = Uniform::new(0.5, 1.5).unwrap();
         let mut lambda = Array2::<f64>::zeros((n_topics, n_words));
-        for elem in lambda.iter_mut() {
+        for elem in &mut lambda {
             *elem = uniform.sample(&mut rng) + beta;
         }
 
@@ -621,7 +621,7 @@ impl Transform<Array2<f64>> for FittedLatentDirichletAllocation {
                 context: "FittedLatentDirichletAllocation::transform".into(),
             });
         }
-        for &val in x.iter() {
+        for &val in x {
             if val < 0.0 {
                 return Err(FerroError::InvalidParameter {
                     name: "X".into(),
@@ -781,7 +781,7 @@ mod tests {
         let dtm = two_topic_corpus();
         let lda = LatentDirichletAllocation::new(2).with_random_state(42);
         let fitted = lda.fit(&dtm, &()).unwrap();
-        for &val in fitted.components().iter() {
+        for &val in fitted.components() {
             assert!(val >= 0.0, "component should be non-negative, got {val}");
         }
     }

@@ -96,7 +96,7 @@ fn empirical_cov<F: Float + Send + Sync + 'static>(
 ///
 /// Adds a small regularisation to the diagonal for numerical stability.
 fn cholesky<F: Float>(a: &Array2<F>, d: usize) -> Result<Array2<F>, FerroError> {
-    let reg = F::from(1e-8).unwrap_or(F::epsilon());
+    let reg = F::from(1e-8).unwrap_or_else(F::epsilon);
     let mut l = Array2::zeros((d, d));
     for i in 0..d {
         for j in 0..=i {
@@ -885,7 +885,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for OAS<F> {
         let rho_num = (F::one() - two / p_f) * tr_s2 + tr_s * tr_s;
         let rho_den = (n_f + F::one() - two / p_f) * (tr_s2 - tr_s * tr_s / p_f);
 
-        let shrinkage = if rho_den.abs() < F::from(1e-15).unwrap_or(F::epsilon()) {
+        let shrinkage = if rho_den.abs() < F::from(1e-15).unwrap_or_else(F::epsilon) {
             F::one()
         } else {
             let ratio = rho_num / rho_den;
@@ -1116,7 +1116,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for MinCovDet<F> {
                 cov.mapv_inplace(|v| v / sub_n_f);
 
                 // Add small regularisation for numerical stability.
-                let reg = F::from(1e-10).unwrap_or(F::epsilon());
+                let reg = F::from(1e-10).unwrap_or_else(F::epsilon);
                 for i in 0..p {
                     cov[[i, i]] = cov[[i, i]] + reg;
                 }
@@ -1167,7 +1167,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for MinCovDet<F> {
             }
             cov.mapv_inplace(|v| v / sub_n_f);
 
-            let reg = F::from(1e-10).unwrap_or(F::epsilon());
+            let reg = F::from(1e-10).unwrap_or_else(F::epsilon);
             for i in 0..p {
                 cov[[i, i]] = cov[[i, i]] + reg;
             }
@@ -1629,7 +1629,7 @@ mod tests {
         let fitted = est.fit(&x, &()).unwrap();
         let dists = fitted.mahalanobis(&x).unwrap();
         assert_eq!(dists.len(), 4);
-        for &d in dists.iter() {
+        for &d in &dists {
             assert!(d >= 0.0, "Mahalanobis distance should be non-negative");
         }
     }
@@ -1705,7 +1705,7 @@ mod tests {
         let fitted = est.fit(&x, &()).unwrap();
         let dists = fitted.mahalanobis(&x).unwrap();
         assert_eq!(dists.len(), 4);
-        for &d in dists.iter() {
+        for &d in &dists {
             assert!(d >= 0.0);
         }
     }
@@ -1858,7 +1858,7 @@ mod tests {
         let fitted = est.fit(&x, &()).unwrap();
         let labels = fitted.predict(&x).unwrap();
         assert_eq!(labels.len(), 7);
-        for &l in labels.iter() {
+        for &l in &labels {
             assert!(l == 1 || l == -1);
         }
     }

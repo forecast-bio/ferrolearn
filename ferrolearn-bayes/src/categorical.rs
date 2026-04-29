@@ -265,14 +265,13 @@ impl<F: Float + Send + Sync + 'static> FittedCategoricalNB<F> {
     /// log probability based on the number of known categories for that feature.
     fn log_prob_for(&self, feature_idx: usize, class_idx: usize, cat_value: usize) -> F {
         let cats = &self.categories[feature_idx];
-        match cats.binary_search(&cat_value) {
-            Ok(cat_idx) => self.feature_log_prob[feature_idx][class_idx][cat_idx],
-            Err(_) => {
-                // Unseen category: use uniform probability 1 / (n_known_cats + 1).
-                // This gracefully degrades for unseen categories.
-                let n_cats_plus_one = F::from(cats.len() + 1).unwrap();
-                (F::one() / n_cats_plus_one).ln()
-            }
+        if let Ok(cat_idx) = cats.binary_search(&cat_value) {
+            self.feature_log_prob[feature_idx][class_idx][cat_idx]
+        } else {
+            // Unseen category: use uniform probability 1 / (n_known_cats + 1).
+            // This gracefully degrades for unseen categories.
+            let n_cats_plus_one = F::from(cats.len() + 1).unwrap();
+            (F::one() / n_cats_plus_one).ln()
         }
     }
 
@@ -418,7 +417,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 

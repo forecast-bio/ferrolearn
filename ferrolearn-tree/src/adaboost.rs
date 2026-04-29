@@ -283,7 +283,7 @@ impl<F: Float + Send + Sync + 'static> AdaBoostClassifier<F> {
                 let row = x.row(i);
                 let leaf_idx = decision_tree::traverse(&tree, &row);
                 if let Node::Leaf { value, .. } = tree[leaf_idx] {
-                    preds[i] = value.to_f64().map(|f| f.round() as usize).unwrap_or(0);
+                    preds[i] = value.to_f64().map_or(0, |f| f.round() as usize);
                 }
                 if preds[i] != y_mapped[i] {
                     weighted_error = weighted_error + weights[i];
@@ -497,7 +497,7 @@ impl<F: Float + Send + Sync + 'static> FittedAdaBoostClassifier<F> {
             for (t, tree_nodes) in self.estimators.iter().enumerate() {
                 let leaf_idx = decision_tree::traverse(tree_nodes, &row);
                 if let Node::Leaf { value, .. } = tree_nodes[leaf_idx] {
-                    let class_idx = value.to_f64().map(|f| f.round() as usize).unwrap_or(0);
+                    let class_idx = value.to_f64().map_or(0, |f| f.round() as usize);
                     if class_idx < self.n_classes {
                         class_scores[class_idx] =
                             class_scores[class_idx] + self.estimator_weights[t];
@@ -509,8 +509,7 @@ impl<F: Float + Send + Sync + 'static> FittedAdaBoostClassifier<F> {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(k, _)| k)
-                .unwrap_or(0);
+                .map_or(0, |(k, _)| k);
             predictions[i] = self.classes[best];
         }
 
@@ -550,7 +549,7 @@ impl<F: Float + Send + Sync + 'static> FittedAdaBoostClassifier<F> {
                 } else {
                     // Leaf without distribution: predict from value.
                     if let Node::Leaf { value, .. } = tree_nodes[leaf_idx] {
-                        let class_idx = value.to_f64().map(|f| f.round() as usize).unwrap_or(0);
+                        let class_idx = value.to_f64().map_or(0, |f| f.round() as usize);
                         if class_idx < self.n_classes {
                             accumulated[class_idx] = accumulated[class_idx] + F::one();
                         }
@@ -562,8 +561,7 @@ impl<F: Float + Send + Sync + 'static> FittedAdaBoostClassifier<F> {
                 .iter()
                 .enumerate()
                 .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
-                .map(|(k, _)| k)
-                .unwrap_or(0);
+                .map_or(0, |(k, _)| k);
             predictions[i] = self.classes[best];
         }
 
@@ -604,7 +602,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 
@@ -704,8 +702,7 @@ mod tests {
         let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
         assert!(
             correct >= 5,
-            "Expected at least 5/9 correct, got {}/9",
-            correct
+            "Expected at least 5/9 correct, got {correct}/9"
         );
     }
 
@@ -755,8 +752,7 @@ mod tests {
         let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
         assert!(
             correct >= 5,
-            "Expected at least 5/9 correct for SAMME multiclass, got {}/9",
-            correct
+            "Expected at least 5/9 correct for SAMME multiclass, got {correct}/9"
         );
     }
 
@@ -907,7 +903,7 @@ mod tests {
         let preds = fitted.predict(&x).unwrap();
 
         assert_eq!(preds.len(), 6);
-        for &p in preds.iter() {
+        for &p in &preds {
             assert!(p == 10 || p == 20);
         }
     }
@@ -992,11 +988,8 @@ mod tests {
     fn test_resample_weighted_uniform() {
         let weights = vec![0.25, 0.25, 0.25, 0.25];
         let indices = resample_weighted(&weights, 4);
-        assert_eq!(indices.len(), 4);
-        // With uniform weights, each index should appear once.
-        for i in 0..4 {
-            assert_eq!(indices[i], i);
-        }
+        // With uniform weights, each index should appear once in order.
+        assert_eq!(indices, vec![0, 1, 2, 3]);
     }
 
     #[test]

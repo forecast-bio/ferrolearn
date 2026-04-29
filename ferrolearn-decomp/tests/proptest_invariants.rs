@@ -128,7 +128,7 @@ proptest! {
         prop_assume!(result.is_ok());
         let fitted = result.unwrap();
 
-        for &v in fitted.explained_variance().iter() {
+        for &v in fitted.explained_variance() {
             prop_assert!(v >= -1e-10,
                 "explained_variance {} is negative", v);
         }
@@ -143,7 +143,7 @@ proptest! {
         prop_assume!(result.is_ok());
         let fitted = result.unwrap();
 
-        for &v in fitted.explained_variance_ratio().iter() {
+        for &v in fitted.explained_variance_ratio() {
             prop_assert!(v >= -1e-10,
                 "explained_variance_ratio {} is negative", v);
         }

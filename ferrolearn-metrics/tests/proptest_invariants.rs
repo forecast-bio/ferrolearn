@@ -68,7 +68,7 @@ proptest! {
         // We reuse y_true for simplicity but shuffle it conceptually.
         // Instead, just use y_true twice with different strategies.
         let acc = accuracy_score(&y_true, &y_true).unwrap();
-        prop_assert!(acc >= 0.0 && acc <= 1.0,
+        prop_assert!((0.0..=1.0).contains(&acc),
             "accuracy {} not in [0, 1]", acc);
     }
 }

@@ -266,61 +266,60 @@ impl<F: Float + Send + Sync + 'static> FittedGaussianNB<F> {
             });
         }
 
-        for &class_label in y.iter() {
-            let ci = match self.classes.iter().position(|&c| c == class_label) {
-                Some(idx) => idx,
-                None => {
-                    // New class discovered: extend arrays.
-                    self.classes.push(class_label);
-                    let ci = self.classes.len() - 1;
+        for &class_label in y {
+            let ci = if let Some(idx) = self.classes.iter().position(|&c| c == class_label) {
+                idx
+            } else {
+                // New class discovered: extend arrays.
+                self.classes.push(class_label);
+                let ci = self.classes.len() - 1;
 
-                    // Sort classes and find the new index.
-                    let mut sorted_classes = self.classes.clone();
-                    sorted_classes.sort_unstable();
+                // Sort classes and find the new index.
+                let mut sorted_classes = self.classes.clone();
+                sorted_classes.sort_unstable();
 
-                    // Rebuild with insertion.
-                    let insert_pos = sorted_classes
-                        .iter()
-                        .position(|&c| c == class_label)
-                        .unwrap();
+                // Rebuild with insertion.
+                let insert_pos = sorted_classes
+                    .iter()
+                    .position(|&c| c == class_label)
+                    .unwrap();
 
-                    self.classes = sorted_classes;
-                    let n_classes = self.classes.len();
+                self.classes = sorted_classes;
+                let n_classes = self.classes.len();
 
-                    // Expand theta, raw_sigma, sigma, log_prior, class_counts.
-                    let mut new_theta = Array2::<F>::zeros((n_classes, n_features));
-                    let mut new_sigma = Array2::<F>::zeros((n_classes, n_features));
-                    let mut new_raw_sigma = Array2::<F>::zeros((n_classes, n_features));
-                    let mut new_log_prior = Array1::<F>::zeros(n_classes);
-                    let mut new_counts = vec![0usize; n_classes];
+                // Expand theta, raw_sigma, sigma, log_prior, class_counts.
+                let mut new_theta = Array2::<F>::zeros((n_classes, n_features));
+                let mut new_sigma = Array2::<F>::zeros((n_classes, n_features));
+                let mut new_raw_sigma = Array2::<F>::zeros((n_classes, n_features));
+                let mut new_log_prior = Array1::<F>::zeros(n_classes);
+                let mut new_counts = vec![0usize; n_classes];
 
-                    let mut old_idx = 0;
-                    for new_idx in 0..n_classes {
-                        if new_idx == insert_pos {
-                            // New class: zero-initialized.
-                            continue;
-                        }
-                        if old_idx < self.theta.nrows() {
-                            for j in 0..n_features {
-                                new_theta[[new_idx, j]] = self.theta[[old_idx, j]];
-                                new_sigma[[new_idx, j]] = self.sigma[[old_idx, j]];
-                                new_raw_sigma[[new_idx, j]] = self.raw_sigma[[old_idx, j]];
-                            }
-                            new_log_prior[new_idx] = self.log_prior[old_idx];
-                            new_counts[new_idx] = self.class_counts[old_idx];
-                            old_idx += 1;
-                        }
+                let mut old_idx = 0;
+                for new_idx in 0..n_classes {
+                    if new_idx == insert_pos {
+                        // New class: zero-initialized.
+                        continue;
                     }
-
-                    self.theta = new_theta;
-                    self.sigma = new_sigma;
-                    self.raw_sigma = new_raw_sigma;
-                    self.log_prior = new_log_prior;
-                    self.class_counts = new_counts;
-
-                    let _ = ci; // suppress unused
-                    insert_pos
+                    if old_idx < self.theta.nrows() {
+                        for j in 0..n_features {
+                            new_theta[[new_idx, j]] = self.theta[[old_idx, j]];
+                            new_sigma[[new_idx, j]] = self.sigma[[old_idx, j]];
+                            new_raw_sigma[[new_idx, j]] = self.raw_sigma[[old_idx, j]];
+                        }
+                        new_log_prior[new_idx] = self.log_prior[old_idx];
+                        new_counts[new_idx] = self.class_counts[old_idx];
+                        old_idx += 1;
+                    }
                 }
+
+                self.theta = new_theta;
+                self.sigma = new_sigma;
+                self.raw_sigma = new_raw_sigma;
+                self.log_prior = new_log_prior;
+                self.class_counts = new_counts;
+
+                let _ = ci; // suppress unused
+                insert_pos
             };
 
             // We already have the class index. Now gather samples for this class.
@@ -559,7 +558,7 @@ impl<F: Float + ToPrimitive + FromPrimitive + Send + Sync + 'static> FittedPipel
 {
     fn predict_pipeline(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
         let preds = self.0.predict(x)?;
-        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or(F::nan())))
+        Ok(preds.mapv(|v| F::from_usize(v).unwrap_or_else(F::nan)))
     }
 }
 

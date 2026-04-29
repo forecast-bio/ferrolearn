@@ -8,7 +8,7 @@ fn bench_kmeans(c: &mut Criterion) {
     group.sample_size(10);
     for &(label, n, p) in SIZES {
         let (x, _) = clustering_data(n, p);
-        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("fit", label), &(), |b, ()| {
             b.iter(|| {
                 KMeans::<f64>::new(8)
                     .with_random_state(42)
@@ -22,7 +22,7 @@ fn bench_kmeans(c: &mut Criterion) {
             .with_n_init(3)
             .fit(&x, &())
             .unwrap();
-        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, _| {
+        group.bench_with_input(BenchmarkId::new("predict", label), &(), |b, ()| {
             b.iter(|| fitted.predict(&x).unwrap());
         });
     }

@@ -555,7 +555,7 @@ mod tests {
         let embedded = fitted.transform(&x).unwrap();
 
         // All values should be 0.0 or 1.0
-        for &val in embedded.iter() {
+        for &val in &embedded {
             assert!(
                 (val - 0.0).abs() < 1e-10 || (val - 1.0).abs() < 1e-10,
                 "values should be 0 or 1, got {val}"

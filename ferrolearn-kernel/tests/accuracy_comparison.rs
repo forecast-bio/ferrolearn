@@ -21,6 +21,9 @@ fn linspace(start: f64, end: f64, n: usize) -> Vec<f64> {
 // Scenario 1: NW on sin(x) with deterministic noise
 // =========================================================================
 
+// Noise generator uses 2.718 as a deterministic seed (matches the Python reference
+// constants below); not intended as the E constant. Hence `clippy::approx_constant`.
+#[allow(clippy::approx_constant)]
 #[test]
 fn nw_sin_accuracy_vs_ground_truth() {
     let n = 200;
@@ -70,6 +73,7 @@ fn nw_sin_accuracy_vs_ground_truth() {
 // Scenario 2: LPR order 1 on sin(x)
 // =========================================================================
 
+#[allow(clippy::approx_constant)]
 #[test]
 fn lpr_sin_accuracy_vs_ground_truth() {
     let n = 200;
@@ -125,7 +129,7 @@ fn nw_linear_boundary_bias_matches_python() {
     let n = 200;
     let x_vec = linspace(0.0, 1.0, n);
     let x = Array2::from_shape_vec((n, 1), x_vec.clone()).unwrap();
-    let y: Array1<f64> = Array1::from_vec(x_vec.clone());
+    let y: Array1<f64> = Array1::from_vec(x_vec);
 
     let python_results = [
         (

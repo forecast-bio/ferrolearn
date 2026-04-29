@@ -134,7 +134,7 @@ where
     /// Each non-zero becomes one triplet entry.
     pub fn to_coo(&self) -> CooMatrix<T> {
         let mut coo = CooMatrix::with_capacity(self.n_rows(), self.n_cols(), self.nnz());
-        for (val, (r, c)) in self.inner.iter() {
+        for (val, (r, c)) in &self.inner {
             // indices come from a valid matrix so push is infallible here
             let _ = coo.push(r, c, val.clone());
         }

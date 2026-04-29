@@ -149,15 +149,12 @@ impl KFold {
         // Build (possibly shuffled) index list.
         let mut indices: Vec<usize> = (0..n_samples).collect();
         if self.shuffle {
-            match self.random_state {
-                Some(seed) => {
-                    let mut rng = SmallRng::seed_from_u64(seed);
-                    indices.shuffle(&mut rng);
-                }
-                None => {
-                    let mut rng = SmallRng::from_os_rng();
-                    indices.shuffle(&mut rng);
-                }
+            if let Some(seed) = self.random_state {
+                let mut rng = SmallRng::seed_from_u64(seed);
+                indices.shuffle(&mut rng);
+            } else {
+                let mut rng = SmallRng::from_os_rng();
+                indices.shuffle(&mut rng);
             }
         }
 
@@ -1035,7 +1032,7 @@ mod tests {
         let y = Array1::<f64>::from_elem(20, 5.0);
         let kf = KFold::new(5);
         let scores = cross_val_score(&pipeline, &x, &y, &kf, mse).unwrap();
-        for &s in scores.iter() {
+        for &s in &scores {
             assert!(s.abs() < 1e-10, "expected 0 MSE, got {s}");
         }
     }
@@ -1050,7 +1047,7 @@ mod tests {
         let kf = KFold::new(3);
         let scores = cross_val_score(&pipeline, &x, &y, &kf, mse).unwrap();
         assert_eq!(scores.len(), 3);
-        for &s in scores.iter() {
+        for &s in &scores {
             assert!(s.abs() < 1e-10);
         }
     }
@@ -1151,7 +1148,7 @@ mod tests {
         let y = Array1::<f64>::from_elem(20, 7.0);
         let kf = KFold::new(5);
         let preds = cross_val_predict(&pipeline, &x, &y, &kf).unwrap();
-        for &p in preds.iter() {
+        for &p in &preds {
             assert!((p - 7.0).abs() < 1e-10, "expected 7.0, got {p}");
         }
     }
@@ -1175,7 +1172,7 @@ mod tests {
         let kf = KFold::new(3);
         let preds = cross_val_predict(&pipeline, &x, &y, &kf).unwrap();
         assert_eq!(preds.len(), 15);
-        for &p in preds.iter() {
+        for &p in &preds {
             assert!((p - 3.0).abs() < 1e-10, "expected 3.0, got {p}");
         }
     }
@@ -1198,14 +1195,14 @@ mod tests {
         assert_eq!(perm_scores.len(), 10);
         // For constant y, real score = 0 (neg MSE), and permuted scores should also be 0.
         assert!((score - 0.0).abs() < 1e-10);
-        assert!(p_value >= 0.0 && p_value <= 1.0);
+        assert!((0.0..=1.0).contains(&p_value));
     }
 
     #[test]
     fn test_permutation_test_score_deterministic() {
         let pipeline = Pipeline::new().estimator_step("mean", Box::new(MeanEstimator));
         let x = Array2::<f64>::zeros((20, 3));
-        let y: Array1<f64> = Array1::from_iter((0..20).map(|i| i as f64));
+        let y: Array1<f64> = Array1::from_iter((0..20).map(f64::from));
         let kf = KFold::new(5);
         let (s1, ps1, p1) =
             permutation_test_score(&pipeline, &x, &y, &kf, neg_mse, 5, Some(42)).unwrap();
@@ -1222,7 +1219,7 @@ mod tests {
     fn test_permutation_test_score_p_value_range() {
         let pipeline = Pipeline::new().estimator_step("mean", Box::new(MeanEstimator));
         let x = Array2::<f64>::zeros((20, 3));
-        let y: Array1<f64> = Array1::from_iter((0..20).map(|i| i as f64));
+        let y: Array1<f64> = Array1::from_iter((0..20).map(f64::from));
         let kf = KFold::new(5);
         let (_, _, p_value) =
             permutation_test_score(&pipeline, &x, &y, &kf, neg_mse, 20, Some(42)).unwrap();

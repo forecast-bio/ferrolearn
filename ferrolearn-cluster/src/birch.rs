@@ -65,7 +65,7 @@ impl<F: Float> Birch<F> {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            threshold: F::from(0.5).unwrap_or(F::epsilon()),
+            threshold: F::from(0.5).unwrap_or_else(F::epsilon),
             branching_factor: 50,
             n_clusters: None,
         }
@@ -165,7 +165,7 @@ impl<F: Float> ClusteringFeature<F> {
 
     /// Compute the centroid of this subcluster.
     fn centroid(&self) -> Vec<F> {
-        let n = F::from(self.n).unwrap_or(F::one());
+        let n = F::from(self.n).unwrap_or_else(F::one);
         self.ls.iter().map(|&v| v / n).collect()
     }
 
@@ -173,7 +173,7 @@ impl<F: Float> ClusteringFeature<F> {
     fn would_exceed_threshold(&self, point: &[F], threshold: F) -> bool {
         // Compute the radius if we were to add this point.
         let new_n = self.n + 1;
-        let n_f = F::from(new_n).unwrap_or(F::one());
+        let n_f = F::from(new_n).unwrap_or_else(F::one);
         let new_ss = self.ss + point.iter().fold(F::zero(), |acc, &v| acc + v * v);
         let new_ls: Vec<F> = self
             .ls
@@ -298,7 +298,10 @@ fn find_closest_pair<F: Float>(subclusters: &[ClusteringFeature<F>]) -> (usize, 
     let mut best_j = 1;
     let mut best_dist = F::max_value();
 
-    let centroids: Vec<Vec<F>> = subclusters.iter().map(|sc| sc.centroid()).collect();
+    let centroids: Vec<Vec<F>> = subclusters
+        .iter()
+        .map(ClusteringFeature::centroid)
+        .collect();
 
     for i in 0..centroids.len() {
         for j in (i + 1)..centroids.len() {
@@ -371,7 +374,10 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for Birch<F> {
         let n_subclusters = subclusters.len();
 
         // Compute subcluster centroids.
-        let centroids: Vec<Vec<F>> = subclusters.iter().map(|sc| sc.centroid()).collect();
+        let centroids: Vec<Vec<F>> = subclusters
+            .iter()
+            .map(ClusteringFeature::centroid)
+            .collect();
 
         // Build the subcluster centers array.
         let mut centers_data = vec![F::zero(); n_subclusters * n_features];
@@ -605,7 +611,7 @@ mod tests {
         let model = Birch::<f64>::new().with_threshold(0.5).with_n_clusters(3);
         let fitted = model.fit(&x, &()).unwrap();
 
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert!(label < 3, "label {label} out of range [0, 3)");
         }
     }
@@ -618,7 +624,7 @@ mod tests {
         let model = Birch::<f64>::new().with_threshold(0.5).with_n_clusters(1);
         let fitted = model.fit(&x, &()).unwrap();
 
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert_eq!(label, 0);
         }
     }
@@ -639,7 +645,7 @@ mod tests {
         let model = Birch::<f64>::new().with_threshold(1.0).with_n_clusters(1);
         let fitted = model.fit(&x, &()).unwrap();
 
-        for &label in fitted.labels().iter() {
+        for &label in fitted.labels() {
             assert_eq!(label, 0);
         }
     }

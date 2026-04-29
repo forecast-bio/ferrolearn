@@ -44,7 +44,7 @@ proptest! {
 
         let classes = fitted.classes();
 
-        for &p in preds.iter() {
+        for &p in &preds {
             prop_assert!(classes.contains(&p),
                 "Predicted label {} not in training classes {:?}", p, classes);
         }

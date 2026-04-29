@@ -264,8 +264,7 @@ impl Fit<Array2<f64>, ()> for SpectralEmbedding {
                 return Err(FerroError::InvalidParameter {
                     name: "n_neighbors".into(),
                     reason: format!(
-                        "n_neighbors ({}) must be less than n_samples ({})",
-                        n_neighbors, n
+                        "n_neighbors ({n_neighbors}) must be less than n_samples ({n})"
                     ),
                 });
             }

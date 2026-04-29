@@ -693,7 +693,7 @@ mod tests {
             assert_eq!(s.len(), 3);
             assert_abs_diff_eq!(s.sum(), 1.0, epsilon = 1e-10);
             // All components should be positive.
-            for &v in s.iter() {
+            for &v in &s {
                 assert!(v > 0.0);
             }
         }

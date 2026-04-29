@@ -35,7 +35,7 @@ proptest! {
     #[test]
     fn symmetry_permutation_invariant(
         (x, y) in arb_dataset_1d(10..30, 5.0),
-        seed in 0u64..1000,
+        _seed in 0u64..1000,
     ) {
         let bw = ndarray::array![0.5f64];
         let w1 = weights::compute_kernel_weights(&x, &x, &bw, &GaussianKernel);
@@ -122,7 +122,7 @@ proptest! {
     /// All kernel weights must be >= 0.
     #[test]
     fn weights_nonnegative(
-        (x, y) in arb_dataset_1d(5..20, 5.0),
+        (x, _y) in arb_dataset_1d(5..20, 5.0),
         bw_val in 0.01..10.0f64,
     ) {
         let bw = ndarray::array![bw_val];
@@ -168,7 +168,7 @@ proptest! {
     /// Smaller bandwidth → higher effective DF (more complex fit).
     #[test]
     fn bandwidth_monotonicity_df(
-        (x, y) in arb_dataset_1d(10..30, 5.0),
+        (x, _y) in arb_dataset_1d(10..30, 5.0),
         bw_small in 0.1..1.0f64,
     ) {
         let bw_large = bw_small * 5.0;
@@ -187,7 +187,7 @@ proptest! {
     /// Invariant 10: Hat matrix trace bounded by [1, n].
     #[test]
     fn hat_matrix_trace_bounded(
-        (x, y) in arb_dataset_1d(5..25, 5.0),
+        (x, _y) in arb_dataset_1d(5..25, 5.0),
         bw_val in 0.1..5.0f64,
     ) {
         let bw = ndarray::array![bw_val];

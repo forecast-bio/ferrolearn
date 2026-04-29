@@ -101,7 +101,7 @@ fn test_kmeans_oracle() {
 
     // Centroids should be very close (< 0.5 Euclidean).
     for sk_row in 0..sklearn_centers.nrows() {
-        let dist = min_centroid_dist(sklearn_centers.row(sk_row), &centers);
+        let dist = min_centroid_dist(sklearn_centers.row(sk_row), centers);
         assert!(
             dist < 0.5,
             "KMeans centroid {sk_row}: min dist to ferrolearn = {dist:.4} (expected < 0.5)"
@@ -233,7 +233,7 @@ fn test_mini_batch_kmeans_oracle() {
 
     // Centroids should be close (< 1.0 Euclidean).
     for sk_row in 0..sklearn_centers.nrows() {
-        let dist = min_centroid_dist(sklearn_centers.row(sk_row), &centers);
+        let dist = min_centroid_dist(sklearn_centers.row(sk_row), centers);
         assert!(
             dist < 1.0,
             "MiniBatchKMeans centroid {sk_row}: min dist = {dist:.4} (expected < 1.0)"
@@ -282,7 +282,7 @@ fn test_mean_shift_oracle() {
     // Centroids should be very close (< 0.5).
     let centers = fitted.cluster_centers();
     for sk_row in 0..sklearn_centers.nrows() {
-        let dist = min_centroid_dist(sklearn_centers.row(sk_row), &centers);
+        let dist = min_centroid_dist(sklearn_centers.row(sk_row), centers);
         assert!(
             dist < 0.5,
             "MeanShift centroid {sk_row}: min dist = {dist:.4} (expected < 0.5)"
@@ -328,7 +328,7 @@ fn test_gaussian_mixture_oracle() {
     // Component means should be close (< 1.0).
     let means = fitted.means();
     for sk_row in 0..sklearn_means.nrows() {
-        let dist = min_centroid_dist(sklearn_means.row(sk_row), &means);
+        let dist = min_centroid_dist(sklearn_means.row(sk_row), means);
         assert!(
             dist < 1.0,
             "GMM mean {sk_row}: min dist = {dist:.4} (expected < 1.0)"

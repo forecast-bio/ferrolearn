@@ -142,7 +142,7 @@ impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for Normalizer<F> {
                 // Zero-norm row: leave unchanged.
                 continue;
             }
-            for v in row.iter_mut() {
+            for v in &mut row {
                 *v = *v / norm_val;
             }
         }

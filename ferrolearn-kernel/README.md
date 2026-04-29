@@ -1,6 +1,6 @@
 # ferrolearn-kernel
 
-Kernel regression for the [ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework.
+Kernel methods for the [ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework: nonparametric regression, Gaussian processes, kernel ridge, and kernel approximations.
 
 ## Algorithms
 
@@ -10,6 +10,16 @@ Kernel regression for the [ferrolearn](https://crates.io/crates/ferrolearn) mach
 |-------|-------------|
 | `NadarayaWatson` | Local constant (order 0) kernel regression |
 | `LocalPolynomialRegression` | Local polynomial regression (orders 0–3+) with Tikhonov regularization |
+| `KernelRidge` | Dual-form kernel ridge regression `(K + αI) c = y` |
+| `GaussianProcessRegressor` | Bayesian nonparametric regression with predictive mean & variance |
+| `GaussianProcessClassifier` | Probabilistic classification via Laplace approximation (R&W Algorithm 3.2), with `log_marginal_likelihood()` for hyperparameter selection |
+
+### Kernel Approximations
+
+| Method | Description |
+|--------|-------------|
+| `Nystroem` | Low-rank kernel approximation by sampling basis points |
+| `RBFSampler` | Random Fourier features for the RBF kernel (Rahimi & Recht 2007) |
 
 ### Kernel Functions
 
@@ -48,6 +58,10 @@ Kernel regression for the [ferrolearn](https://crates.io/crates/ferrolearn) mach
 | `wild_bootstrap_confidence_intervals` | Wild bootstrap CI with 5 bias correction methods |
 | `fan_yao_variance_estimation` | Nonparametric variance function σ²(x) |
 | `conformal_calibrate_ci` | Split conformal prediction intervals |
+
+### GP Kernels
+
+`RBFKernel`, `MaternKernel` (ν ∈ {0.5, 1.5, 2.5}), `ConstantKernel`, `WhiteKernel`, `DotProductKernel`, plus `SumKernel` and `ProductKernel` for composition via the [`GPKernel`] trait.
 
 ## Example
 
