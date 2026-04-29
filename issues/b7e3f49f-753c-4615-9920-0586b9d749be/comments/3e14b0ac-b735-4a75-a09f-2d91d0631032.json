@@ -1,0 +1,10 @@
+{
+  "uuid": "3e14b0ac-b735-4a75-a09f-2d91d0631032",
+  "issue_uuid": "b7e3f49f-753c-4615-9920-0586b9d749be",
+  "author": "doll-agent",
+  "content": "ferrolearn-decomp audit complete. 18 of 23 sklearn estimators present after wiring orphans (~78%). Big surprise: ferrolearn-decomp also hosts the 6 covariance estimators (EmpiricalCovariance, ShrunkCovariance, LedoitWolf, OAS, MinCovDet, EllipticEnvelope) — partially fulfills #252.\n\nSub-issues closed in this pass:\n- #294 wired orphaned MiniBatchNMF + SparsePCA into lib.rs\n- #295 inverse_transform on FittedIncrementalPCA / FittedTruncatedSVD / FittedNMF / FittedFactorAnalysis (FittedKernelPCA deferred — needs fit_inverse_transform flag)\n- #298 proof-of-API integration test (19 tests)\n\nFiled during audit (deferred):\n- #296 GaussianRandomProjection + SparseRandomProjection + johnson_lindenstrauss_min_dim (entire random_projection module — none present)\n- #297 MiniBatchSparsePCA + module-level functions (dict_learning, dict_learning_online, fastica, non_negative_factorization, randomized_svd, sparse_encode)\n\nExisting related issues (deferred to their own work):\n- #90 MiniBatchDictionaryLearning\n- #91 SparseCoder\n- #222 trustworthiness (manifold metric)\n\nGenuinely missing without an issue yet:\n- KernelPCA inverse_transform with fit_inverse_transform flag\n\nferrolearn extras over sklearn:\n- 6 covariance estimators living in this crate (sklearn keeps them in sklearn.covariance — partial fulfillment of #252)\n- Umap (sklearn does not include UMAP; it's a third-party umap-learn)\n\nVerification: 429 tests pass (370 unit + 19 api_proof + 2 oracle + 6 proptest + 2 sklearn_equiv + 30 doctest). Zero regressions.",
+  "created_at": "2026-04-29T19:52:49.799194274Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAywP0/wdC1/dgbZrTZ1pWkkvERU9ur+Th5LImfC/NO5gq9Z+jkZfYQA459QRWtBsPuA3xTHgx7ZNIgd5lLcioDg=="
+}
