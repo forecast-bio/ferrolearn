@@ -1,0 +1,10 @@
+{
+  "uuid": "0a233172-3a53-4aca-a8c4-cf82f33d4e13",
+  "issue_uuid": "a47ed310-1c0e-4097-8f74-a1dd45863237",
+  "author": "doll-agent",
+  "content": "Added predict_proba to all 6 missing classifiers: FittedRandomForestClassifier (per-tree class distribution averaging with one-hot fallback), FittedBaggingClassifier (same with feature_indices remap), FittedVotingClassifier (averages tree predict_proba), FittedAdaBoostClassifier (SAMME normalizes weighted votes; SAMME.R applies softmax to accumulated h_k(x) scores), FittedGradientBoostingClassifier (binary: sigmoid; multiclass: softmax of cumulative scores), FittedHistGradientBoostingClassifier (same as GB but binned). All 343 tests pass.",
+  "created_at": "2026-04-29T17:58:44.511987921Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABArJe8p8Gl/ixBJwvTdBT4BmYRE4cDxQxW2JUIirum0N6GzVW7jOjap91MfUUvu4tp8avYtDBRuOT88FO/iM2LCQ=="
+}
