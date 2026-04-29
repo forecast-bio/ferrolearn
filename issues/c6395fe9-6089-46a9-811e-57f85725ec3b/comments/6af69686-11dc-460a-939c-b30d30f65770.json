@@ -1,0 +1,10 @@
+{
+  "uuid": "6af69686-11dc-460a-939c-b30d30f65770",
+  "issue_uuid": "c6395fe9-6089-46a9-811e-57f85725ec3b",
+  "author": "doll-agent",
+  "content": "Added score() to FittedKernelRidge (R²), FittedGaussianProcessRegressor (R²), and FittedGaussianProcessClassifier (mean accuracy) using shared crate::r2_score / crate::mean_accuracy helpers in lib.rs. All 217 tests pass.",
+  "created_at": "2026-04-29T19:24:18.131361865Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAauENFy5wrrB/KWXbid1u0j+T6j0caL2ER2fkv8/xiXlS2fw9vPwcNzObajV8yGkzNgXhGGnDzdwShAM/rvmJBg=="
+}
