@@ -1,0 +1,10 @@
+{
+  "uuid": "6984eb43-6255-45b4-b8a0-ad0075647856",
+  "issue_uuid": "585aa407-d49d-4ebb-b8e7-709531e3b1bc",
+  "author": "doll-agent",
+  "content": "Added partial_fit() to FittedCategoricalNB. Restructured the fitted struct to store raw category_counts and class_counts. ferrolearn-extra: partial_fit transparently extends both classes and per-feature category lists when new values arrive (sklearn errors). Cached log probs and priors recomputed via shared recompute_feature_log_prob and resolve_class_log_prior helpers. Validated by api_proof_categorical_nb.",
+  "created_at": "2026-04-29T16:56:00.506670119Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAtXfbN2fq4qLOCMeOPISviDDBe7DENqzaYTcB3IkHctY04T6lUt4v9HBgXGUK+nuEl0l3YFPRWtko3xWf6DpcCw=="
+}
