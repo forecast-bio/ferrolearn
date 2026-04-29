@@ -1,0 +1,10 @@
+{
+  "uuid": "dbbb94aa-af3d-465d-b93e-03aa4eaaf2cd",
+  "issue_uuid": "51e25db1-816b-4ada-9538-dcebcb6aeb8f",
+  "author": "doll-agent",
+  "content": "Created tests/api_proof.rs for all 5 utility crates: ferrolearn-core (7 tests covering Backend, Dataset, FerroError, introspection traits, Pipeline, StreamingFitter, TypedPipeline, Predict/Transform/FitTransform), ferrolearn-datasets (5 tests covering 7 toy loaders + 15 generators including the 7 added in #318), ferrolearn-sparse (4 tests covering CSR/CSC/COO + new helpers), ferrolearn-numerical (6 tests covering 7 distributions + integrate + interpolate + optimize + sparse_eig + sparse_graph), ferrolearn-io (5 tests covering envelope + JSON round-trips + corruption rejection). Also fixed stale trybuild snapshot for predict_unfitted_kmeans (pre-existing breakage from cluster audit's fit_predict addition).",
+  "created_at": "2026-04-29T21:03:13.713612824Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAf9VExVAG5XqUxRmVYAHFRhd5D7KpnXBdBZ9cypwFWSmSEbxjIZ3T40JpiDfNWJrv4MrUFGUlZHmmtRDdcGFOCg=="
+}
