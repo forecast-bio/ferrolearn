@@ -1,0 +1,10 @@
+{
+  "uuid": "6549cca6-92e6-49ba-9788-298703b82372",
+  "issue_uuid": "2f357c66-9496-4caa-88c8-8783cd8a2fce",
+  "author": "doll-agent",
+  "content": "Added tests/api_proof.rs with 19 integration tests covering every public estimator: PCA + IncrementalPCA + KernelPCA (all 4 kernels) + SparsePCA, TruncatedSVD, NMF (both solvers x both inits) + MiniBatchNMF (both inits), FastICA (both algorithms x all 3 nonlinearities), FactorAnalysis, DictionaryLearning (both transform algorithms), LatentDirichletAllocation (both learning methods), MDS + Isomap + LLE + SpectralEmbedding (RBF + NearestNeighbors affinities) + TSNE + Umap (both metrics), CCA + PLSRegression + PLSCanonical + PLSSVD, all 6 covariance estimators. Also exercises inverse_transform on PCA / IncrementalPCA / TruncatedSVD / NMF / FactorAnalysis (added in #295). All 19 pass. Final ferrolearn-decomp test count: 429.",
+  "created_at": "2026-04-29T19:52:11.009852278Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAbSnnnA+xuM7fQsqHLjxHI4rYdZTcnaEP1Cn6ppkC/t2S20B5BjC1BaSVJGeMR9kJilN/1bPgHWY2nc1UnLrQAg=="
+}
