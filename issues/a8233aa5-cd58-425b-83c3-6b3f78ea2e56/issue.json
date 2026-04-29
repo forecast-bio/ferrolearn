@@ -1,0 +1,11 @@
+{
+  "uuid": "a8233aa5-cd58-425b-83c3-6b3f78ea2e56",
+  "display_id": 309,
+  "title": "metrics: write tests/api_proof.rs covering every public API in ferrolearn-metrics",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "81e3e592-d6c5-4870-ae6a-1b0c0afd8824",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T20:22:07.675466990Z",
+  "updated_at": "2026-04-29T20:22:07.675466990Z"
+}
