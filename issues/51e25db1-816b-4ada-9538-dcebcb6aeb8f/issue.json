@@ -1,0 +1,11 @@
+{
+  "uuid": "51e25db1-816b-4ada-9538-dcebcb6aeb8f",
+  "display_id": 323,
+  "title": "utility crates: write tests/api_proof.rs for core, datasets, sparse, numerical, io",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "9df9e74d-4501-4707-b2c9-bae64eb5ad50",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T20:50:48.110946067Z",
+  "updated_at": "2026-04-29T20:50:48.110946067Z"
+}
