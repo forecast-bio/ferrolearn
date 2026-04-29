@@ -1,0 +1,10 @@
+{
+  "uuid": "71719bcd-c478-489d-a834-9c6024a02438",
+  "issue_uuid": "00271d2d-d2e5-406f-afc2-b312643e442a",
+  "author": "doll-agent",
+  "content": "Switching bench architecture to shared on-disk datasets. Adding gen_datasets.py that uses sklearn make_* as the single source of truth, then both Rust harness and sklearn_bench.py load the same fixtures via a tiny FERRBNCH binary format. This makes accuracy numbers directly comparable.",
+  "created_at": "2026-04-29T23:27:47.224198763Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAWnQJoVYPHxs+/1PmS/H1Kdi1m9vzIPTWkiFyE48ZlDcHWD5Au/vgcu++IpZtMnNJXnBkrUrhAM/4jldQeV/3AQ=="
+}
