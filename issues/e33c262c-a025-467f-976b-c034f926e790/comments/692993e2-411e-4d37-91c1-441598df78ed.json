@@ -1,0 +1,10 @@
+{
+  "uuid": "692993e2-411e-4d37-91c1-441598df78ed",
+  "issue_uuid": "e33c262c-a025-467f-976b-c034f926e790",
+  "author": "doll-agent",
+  "content": "Built ferrolearn-fetch crate (21st workspace member). Contents: cache.rs (get_data_home, clear_data_home, dataset_dir with FERROLEARN_DATA env override + dirs::data_local_dir fallback), fetch.rs (RemoteFile struct + fetch_file with SHA-256 cache verification, ureq+rustls+gzip), california_housing.rs (full sklearn-equivalent column derivation), covtype.rs, kddcup99.rs (Full + 10PCT subsets, categorical column encoding), newsgroups.rs (tarball extraction + load_files reuse, Train/Test/All subsets), openml.rs (generic OpenML client: data_info JSON -> ARFF download -> minimal numeric+nominal ARFF parser). Wired into umbrella crate as ferrolearn::fetch. URL+SHA-256 list copied from sklearn 1.9 source files; one place to update if upstream rotates URLs. 21 unit tests + 3 offline api_proof tests pass; 6 network tests #[ignore]'d. Workspace 3662 tests total, build clean, clippy clean.",
+  "created_at": "2026-04-29T22:44:56.471156919Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAKn8q+9Lyxi74AxKvkZBW+DngU7KcbGVc45bu4H8LVAr3EU9AiDeiIlWtQwr4qh8oE9W6iuNqid6CbP0olGkACQ=="
+}
