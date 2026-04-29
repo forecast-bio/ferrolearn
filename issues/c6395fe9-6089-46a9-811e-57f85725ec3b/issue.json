@@ -1,0 +1,12 @@
+{
+  "uuid": "c6395fe9-6089-46a9-811e-57f85725ec3b",
+  "display_id": 289,
+  "title": "Add score() to KernelRidge / GaussianProcessRegressor / GaussianProcessClassifier",
+  "description": "sklearn ClassifierMixin.score = mean accuracy; RegressorMixin.score = R². Currently missing on:\n- FittedKernelRidge (regressor — R²)\n- FittedGaussianProcessRegressor (regressor — R²)\n- FittedGaussianProcessClassifier (classifier — mean accuracy)\nApply the standard r2_score / mean_accuracy pattern used in the other audited crates.",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "5dec6bab-74a3-4b77-a389-7f78ddf2361b",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T19:21:09.877929049Z",
+  "updated_at": "2026-04-29T19:21:09.877929049Z"
+}
