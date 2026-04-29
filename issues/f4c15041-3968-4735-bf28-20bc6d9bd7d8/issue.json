@@ -1,0 +1,12 @@
+{
+  "uuid": "f4c15041-3968-4735-bf28-20bc6d9bd7d8",
+  "display_id": 253,
+  "title": "Add predict_log_proba and predict_joint_log_proba methods to all Naive Bayes fitted estimators",
+  "description": "sklearn API contract: every NB classifier provides predict_log_proba (returns log-probabilities) and predict_joint_log_proba (returns unnormalized joint log-likelihood log P(c) + log P(x|c)).\n\nferrolearn-bayes currently has only predict_proba on each Fitted*NB. Add the two log variants. predict_log_proba is just the log of normalized predict_proba; predict_joint_log_proba is the per-class joint log-likelihood used internally before normalization.\n\nAffected types:\n- FittedGaussianNB, FittedMultinomialNB, FittedBernoulliNB, FittedComplementNB, FittedCategoricalNB\n\nAdd unit tests asserting predict_log_proba == predict_proba.ln() (within tol) and predict_joint_log_proba shape == (n_samples, n_classes).",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "066c7e24-b41d-48a7-950a-ef16dd30e892",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:24:47.134786648Z",
+  "updated_at": "2026-04-29T16:24:47.134786648Z"
+}
