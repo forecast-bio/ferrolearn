@@ -1,0 +1,10 @@
+{
+  "uuid": "bc1f7b6c-e741-4f1c-b27b-b6315fe3c258",
+  "issue_uuid": "bb3e808b-fdec-415d-ab14-74e8d2e62525",
+  "author": "doll-agent",
+  "content": "[action] Fixed RandomForest per-split feature sampling bug. Was per-tree fixed subset (Bagging-style). Now matches Breiman 2001/sklearn. Real impact at medium_10Kx100: +14.85pp accuracy (78.20% -> 93.05%, sklearn 94.25%). At small/tiny ferrolearn now BEATS sklearn (+1.5pp, +10pp). Saved reports/post_rf_fix.{json,md}.",
+  "created_at": "2026-04-29T23:48:28.261672403Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABATyn6MECw2cbjxLGbRNqi4VQsYy1ETE2+H0kyXwGyvb5V+F4XgNVWriOEyLXnp6EJKaJEOkOEttYiEqBRgbJ1Bg=="
+}
