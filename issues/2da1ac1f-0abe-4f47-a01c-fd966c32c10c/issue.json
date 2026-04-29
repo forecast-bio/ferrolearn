@@ -3,10 +3,11 @@
   "display_id": 272,
   "title": "Add decision_function to GradientBoosting / HistGradientBoosting / AdaBoost classifiers",
   "description": "Returns the raw (pre-softmax / pre-sign) score for each sample, used as input to ROC-AUC and as a calibration source. sklearn GradientBoostingClassifier and HistGradientBoostingClassifier expose decision_function(X) returning shape (n_samples,) for binary or (n_samples, n_classes) for multi-class. AdaBoostClassifier exposes the same.\n\nFor GB/HGB: return the cumulative raw scores before the link function.\nFor AdaBoost (SAMME): return the weighted sum of estimator votes.",
-  "status": "open",
+  "status": "closed",
   "priority": "medium",
   "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T17:38:18.705407671Z",
-  "updated_at": "2026-04-29T17:38:18.705407671Z"
+  "updated_at": "2026-04-29T18:03:54.641666382Z",
+  "closed_at": "2026-04-29T18:03:54.641666382Z"
 }
