@@ -1,0 +1,11 @@
+{
+  "uuid": "d2a04adf-d98f-43a6-85d7-d17665aecc21",
+  "display_id": 238,
+  "title": "Address clippy warnings from rust 1.95 update across workspace",
+  "description": "Clippy update (rust 1.95.0) surfaced ~72 warnings across the workspace. Categories: manual Range/RangeInclusive::contains (~19), useless_vec (~3), needless_borrow (~4), approx PI/E/TAU constants (~5), unused variables/assignments, useless_conversion, sort_by_key suggestion, manual_div_ceil. All are stylistic / lint-only — no behavioral bugs except a now-fixed always-true assert in lle.rs and a stale assignment in nearest_neighbors.rs (both fixed in #237). Should be addressable mostly via cargo clippy --fix.",
+  "status": "open",
+  "priority": "medium",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T12:15:59.727102598Z",
+  "updated_at": "2026-04-29T12:15:59.727102598Z"
+}
