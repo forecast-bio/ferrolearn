@@ -1,0 +1,10 @@
+{
+  "uuid": "d67f5217-43e4-4d32-b170-59622a508d55",
+  "issue_uuid": "cedef571-d386-4f7d-a2d0-3a10f99cbf34",
+  "author": "doll-agent",
+  "content": "Added fit_prior bool field (default true) and with_fit_prior() builder to MultinomialNB, BernoulliNB, ComplementNB, CategoricalNB. When false and class_prior is None, fit() and partial_fit() use uniform priors. State carried into Fitted* structs so partial_fit stays consistent. Validated by api_proof exercising both true and false.",
+  "created_at": "2026-04-29T16:55:09.137026822Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAuQdCSph9vOSGOiSwRZpRqe6DE0OOanjMpVCLSixNQuBRBR4AIq/uHILZa2qjk3nqRXCNgz5lTKPjZPatFsiABA=="
+}
