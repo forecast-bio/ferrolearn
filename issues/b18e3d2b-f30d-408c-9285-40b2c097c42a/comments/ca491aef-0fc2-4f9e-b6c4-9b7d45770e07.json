@@ -1,0 +1,10 @@
+{
+  "uuid": "ca491aef-0fc2-4f9e-b6c4-9b7d45770e07",
+  "issue_uuid": "b18e3d2b-f30d-408c-9285-40b2c097c42a",
+  "author": "doll-agent",
+  "content": "Added svmlight.rs to ferrolearn-datasets: load_svmlight_file + load_svmlight_str + load_svmlight_files (one-shot multi-file), dump_svmlight_file (sparse write), load_files (recursive directory tree to (docs, labels, target_names)). Type aliases SvmlightDataset + LoadFilesResult. 1-based to 0-based feature index conversion + comment stripping. 7 unit tests pass.",
+  "created_at": "2026-04-29T22:25:29.802484842Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAonKM0qgzIZAc9g0zDYaoUVyEWnnwGq+dyqnCimdjHSPSA243HFxsb53MqOX38vFlzu8u4pBtRwBsciaSNyTsDg=="
+}
