@@ -1,0 +1,11 @@
+{
+  "uuid": "f393912c-9765-4bf8-afe4-0c0d507f5474",
+  "display_id": 310,
+  "title": "model-sel: wire 4 orphaned modules (feature_union, multiclass, multioutput, transformed_target) in lib.rs",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "9daa00a7-2c01-48d3-9258-44776a1e8f4a",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T20:36:36.952928436Z",
+  "updated_at": "2026-04-29T20:36:36.952928436Z"
+}
