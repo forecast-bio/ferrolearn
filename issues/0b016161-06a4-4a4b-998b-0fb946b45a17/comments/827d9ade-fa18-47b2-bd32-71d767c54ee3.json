@@ -1,0 +1,10 @@
+{
+  "uuid": "827d9ade-fa18-47b2-bd32-71d767c54ee3",
+  "issue_uuid": "0b016161-06a4-4a4b-998b-0fb946b45a17",
+  "author": "doll-agent",
+  "content": "Added GraphicalLasso + GraphicalLassoCV (coordinate-descent solver per Friedman/Hastie/Tibshirani 2008) and 7 function-style helpers: empirical_covariance, shrunk_covariance, ledoit_wolf, ledoit_wolf_shrinkage, oas, log_likelihood (with adaptive Cholesky regularization for near-SPD matrices), fast_mcd. All wired in lib.rs. 53 lib + 5 api_proof tests pass.",
+  "created_at": "2026-04-29T21:21:11.229996243Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA8123EcUKRqr+W2XIB5hOAp7TrrZZqIppYz6r01lBgaRnHECvZtVkc9OpEkZx3k8xBiqZ8kYEgoqBn8RI/dM+Ag=="
+}
