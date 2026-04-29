@@ -1,0 +1,12 @@
+{
+  "uuid": "81467ea2-86b7-4aec-ac42-9fdfe2b5f377",
+  "display_id": 268,
+  "title": "Add score() method to every fitted tree / ensemble estimator",
+  "description": "sklearn ClassifierMixin.score = mean accuracy; RegressorMixin.score = R². ferrolearn-tree currently has neither on any of its 22 fitted estimators. Add to:\n- FittedDecisionTreeClassifier / Regressor\n- FittedExtraTreeClassifier / Regressor\n- FittedRandomForestClassifier / Regressor\n- FittedExtraTreesClassifier / Regressor\n- FittedGradientBoostingClassifier / Regressor\n- FittedHistGradientBoostingClassifier / Regressor\n- FittedAdaBoostClassifier / FittedAdaBoostRegressor\n- FittedBaggingClassifier / Regressor\n- FittedVotingClassifier / Regressor\n- FittedIsolationForest (returns mean score_samples typically — sklearn doesn't define score for IF, can skip)\n\nReuse the r2_score helper from ferrolearn-neighbors::knn (or move it to ferrolearn-core).",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T17:38:04.537368547Z",
+  "updated_at": "2026-04-29T17:38:04.537368547Z"
+}
