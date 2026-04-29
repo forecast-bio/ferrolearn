@@ -1,0 +1,10 @@
+{
+  "uuid": "2cfbc82a-fd90-413c-b899-51da2d972863",
+  "issue_uuid": "43dda5a1-03ad-4889-8f1a-33a0a72172e4",
+  "author": "doll-agent",
+  "content": "ferrolearn-neighbors audit complete. 9 of 13 sklearn neighbors estimators present (KNeighborsClassifier, KNeighborsRegressor, RadiusNeighborsClassifier, RadiusNeighborsRegressor, NearestNeighbors, NearestCentroid, LocalOutlierFactor, KdTree, BallTree).\n\nSub-issues closed:\n- #261 predict_proba on classifiers\n- #262 score() on every estimator (mean accuracy / R²)\n- #263 kneighbors() / radius_neighbors() methods on supervised estimators\n- #264 kneighbors_graph + radius_neighbors_graph + sort_graph_by_row_values (free fns + methods)\n- #265 LocalOutlierFactor full sklearn API (decision_function, fit_predict, score_samples, novelty)\n- #266 proof-of-API integration test\n\nDeferred to existing issues (will be addressed in their own audit pass):\n- #60 KNeighborsTransformer + RadiusNeighborsTransformer (missing estimators)\n- #63 NeighborhoodComponentsAnalysis (missing estimator)\n- #64 KernelDensity (missing estimator)\n- #66 sparse data support\n- #67 precomputed distance matrix\n- #148 DistanceMetric class\n\nferrolearn-extras over sklearn:\n- BallTree implementation always available alongside KdTree (sklearn picks one)\n- LOF predict() supports both training data and new data without strict novelty mode separation\n\nVerification: 160 tests pass (131 unit + 10 api_proof + 2 oracle + 3 proptest + 2 sklearn_equiv + 12 doctest). Zero regressions.",
+  "created_at": "2026-04-29T17:30:09.278824767Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAQQcbhmyihCp91IXWSscIqvqKPTIpaObsY7DC0qGLSOi0ZLOnGm/tLoXnagSKSrP4KihFlf3wJsFxuiruovG6Cw=="
+}
