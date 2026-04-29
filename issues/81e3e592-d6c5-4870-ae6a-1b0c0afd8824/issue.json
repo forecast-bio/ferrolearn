@@ -1,0 +1,12 @@
+{
+  "uuid": "81e3e592-d6c5-4870-ae6a-1b0c0afd8824",
+  "display_id": 248,
+  "title": "Audit ferrolearn-metrics vs sklearn: close gaps, add API proof tests",
+  "description": "Step 8 of 12 in sklearn parity audit (#240).\n\nLargest historical gap (~24% coverage in old report). Scope: sklearn.metrics — classification, regression, ranking, clustering, distance/pairwise, plotting, scorers. ~72 public functions + classes.\n\nRelated existing issues: #149 (make_scorer/get_scorer), #150 (d2 score variants), #151 (class_likelihood_ratios)",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "7eb7ab02-78ae-4381-bf5d-cc11173429c5",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:22:55.438123112Z",
+  "updated_at": "2026-04-29T16:22:55.438123112Z"
+}
