@@ -1,0 +1,10 @@
+{
+  "uuid": "697eeee5-1282-4f62-a139-1e93f29586fd",
+  "issue_uuid": "bac03bbb-bdd3-4cba-8093-cc2754064873",
+  "author": "doll-agent",
+  "content": "Added scorer registry to scorer.rs: BUILTIN_SCORER_NAMES const, get_scorer (string name -> Scorer<f64>), get_scorer_names, check_scoring (accepts ScoringInput::{Name, Scorer}). 12 built-in regression scorers (neg_* loss family + r2 + explained_variance + neg poisson/gamma deviance). Added DistanceMetric trait to pairwise.rs (dyn-friendly with default distance() impl), Metric enum implements it.",
+  "created_at": "2026-04-29T22:25:26.714273631Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA2V9Qzz/liX9EVNns/yN5tXkOQ5GgKgDtmAYMCWkgFR3gambxvM6TUq0Rp1UTB9rTgheyIJ0suThqN2LSFU62Dw=="
+}
