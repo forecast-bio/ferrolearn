@@ -1,0 +1,10 @@
+{
+  "uuid": "a6089385-8b5a-4cb8-b5ba-4f8ad867ea6c",
+  "issue_uuid": "9daa00a7-2c01-48d3-9258-44776a1e8f4a",
+  "author": "doll-agent",
+  "content": "ferrolearn-model-sel audit COMPLETE. Wired 4 orphan modules (#310). Added 7 CV splitters (#311). Added DummyClassifier + DummyRegressor (#314). api_proof.rs (#317) covers 30+ public types. Deferred: #312 (group-aware splitters needing group label API), #313 (ClassifierChain/RegressorChain/OutputCodeClassifier — meta-meta-estimators), #315 (inspection partial_dependence/permutation_importance), #316 (make_pipeline/make_union helpers + threshold classifiers). 264 tests pass (219 lib + 9 api_proof + 3 + 33 doctests). Workspace builds clean, clippy clean, fmt clean.",
+  "created_at": "2026-04-29T20:46:44.485046969Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAwGxlXiecEn+hhlnlussAldUER/pnE5cRxTYrdh3xxoJS8sl+728J60GTYLsxlGMDIlteEfRdPEjX97Mk1atuDA=="
+}
