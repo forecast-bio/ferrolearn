@@ -1,0 +1,10 @@
+{
+  "uuid": "0074f02b-c9d4-4566-8bb4-79b71e5605e4",
+  "issue_uuid": "968463bd-e988-4afc-816a-5861d824d8fc",
+  "author": "doll-agent",
+  "content": "Implemented via blanket-impl traits ClassifierScore<F> and RegressorScore<F> in lib.rs, both blanket-impld over T: Predict<Array2<F>, Output=...>. Every fitted classifier (Output=Array1<usize>) and every fitted regressor (Output=Array1<F>) automatically gets a .score(x, y) method returning mean accuracy / R² respectively. Mirrors sklearn ClassifierMixin.score / RegressorMixin.score. Users import the trait via use ferrolearn_linear::ClassifierScore; (or RegressorScore). Single edit covers all ~30 fitted estimators in the crate; mean_accuracy and r2_score live as private helpers in lib.rs. All 498 tests pass.",
+  "created_at": "2026-04-29T19:02:08.396395893Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAynRbc5YJK9fpX7cPUI3Hv0/OP5lr8nR6qbzD85rPpv3KmPGc1Wk2IS1t8mkISuzgozzUqDq1DPncY1dc/pj+Cg=="
+}
