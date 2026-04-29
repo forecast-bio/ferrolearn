@@ -1,0 +1,10 @@
+{
+  "uuid": "928ca40a-01e0-4592-9711-b6aa5bd9e33f",
+  "issue_uuid": "e86f0a46-908f-4428-a6ae-d777e1706688",
+  "author": "doll-agent",
+  "content": "Added tests/api_proof.rs with 9 integration tests exercising every public API in ferrolearn-bayes: per-estimator builder/fit/predict/predict_proba/predict_log_proba/predict_joint_log_proba/score/partial_fit/HasClasses, plus conjugate.posterior_normal_normal, plus f32 smoke, plus Default impls, plus ShapeMismatch surface. All 9 pass. Total ferrolearn-bayes test count: 117.",
+  "created_at": "2026-04-29T16:56:13.181045762Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAag4SNzZf1MrGa5aniit0P8MK5zr2gfmzZKSKHsZInV4tDdDxgJOi00QT4jR/gkrZJkR5PPZzoqkuDjYgxPlcDg=="
+}
