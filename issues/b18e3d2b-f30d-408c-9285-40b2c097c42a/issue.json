@@ -1,0 +1,11 @@
+{
+  "uuid": "b18e3d2b-f30d-408c-9285-40b2c097c42a",
+  "display_id": 320,
+  "title": "datasets: add file I/O loaders (load_svmlight_file, dump_svmlight_file, load_files)",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "9df9e74d-4501-4707-b2c9-bae64eb5ad50",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T20:50:34.046617781Z",
+  "updated_at": "2026-04-29T20:50:34.046617781Z"
+}
