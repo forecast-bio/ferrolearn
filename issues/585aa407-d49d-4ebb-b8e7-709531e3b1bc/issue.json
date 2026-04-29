@@ -1,0 +1,12 @@
+{
+  "uuid": "585aa407-d49d-4ebb-b8e7-709531e3b1bc",
+  "display_id": 259,
+  "title": "Add partial_fit method to CategoricalNB",
+  "description": "sklearn CategoricalNB supports partial_fit(X, y, classes=None) for incremental learning. ferrolearn FittedCategoricalNB is missing partial_fit; the other 4 NB variants already have it.\n\nImplementation: increment per-(class, feature, category) count tables, recompute log-probabilities. Validate that no new categories appear unless min_categories accommodates them (cf. #?? min_categories issue).",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "066c7e24-b41d-48a7-950a-ef16dd30e892",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:25:07.952987715Z",
+  "updated_at": "2026-04-29T16:25:07.952987715Z"
+}
