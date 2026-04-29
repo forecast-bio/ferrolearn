@@ -3,10 +3,11 @@
   "display_id": 296,
   "title": "Add GaussianRandomProjection / SparseRandomProjection / johnson_lindenstrauss_min_dim",
   "description": "sklearn.random_projection has 2 estimators + 1 module-level helper. ferrolearn-decomp currently has none. Add as a new module random_projection.rs in this crate. johnson_lindenstrauss_min_dim is a closed-form size formula used to pick the projection dimension.",
-  "status": "open",
+  "status": "closed",
   "priority": "low",
   "parent_uuid": "b7e3f49f-753c-4615-9920-0586b9d749be",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T19:39:38.963806381Z",
-  "updated_at": "2026-04-29T19:39:38.963806381Z"
+  "updated_at": "2026-04-29T19:56:42.680697706Z",
+  "closed_at": "2026-04-29T19:56:42.680697706Z"
 }
