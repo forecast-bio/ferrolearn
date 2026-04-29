@@ -1,0 +1,10 @@
+{
+  "uuid": "0a559199-c57f-432c-8231-c336c70b2701",
+  "issue_uuid": "80e4894e-395d-47b4-89e5-cf14abc6aa7b",
+  "author": "doll-agent",
+  "content": "Added force_alpha bool field (default true) and with_force_alpha() builder to all 4 discrete NBs. Shared crate::clamp_alpha helper. When false, alpha < 1e-10 is silently clamped (sklearn legacy). Validated by api_proof tests.",
+  "created_at": "2026-04-29T16:55:22.460084459Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAm1uUZWp/Yxb0Jq1XE+gUP6TBlTShf0FHD6SaYvwR17wuw4Le+eRBxidgd7CjTdY8mwWscgbb/H/GfoxWF4ZcCQ=="
+}
