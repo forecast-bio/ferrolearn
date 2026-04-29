@@ -1,0 +1,10 @@
+{
+  "uuid": "98311d35-5300-4ab6-9f04-656f28978887",
+  "issue_uuid": "22854c0e-c26f-4046-ac3d-0ca95f838fd1",
+  "author": "doll-agent",
+  "content": "Added tests/api_proof.rs with 16 integration tests exercising every public API of ferrolearn-cluster: per-estimator builders, fit, predict (where applicable), transform (KMeans family + GMM + FeatureAgglomeration), fit_predict, predict_proba (GMM + BayesianGMM + LabelPropagation + LabelSpreading), score / score_samples / bic / aic (GMM + BayesianGMM), labels accessors. Iterates every Linkage / CovarianceType / BayesianCovType / WeightPriorType / BisectingStrategy / AgglomerativeLinkage / PoolingFunc / kernel variant. AffinityPropagation tolerates non-convergence on tiny synthetic data. All 16 pass. Final ferrolearn-cluster test count: 348 (299 unit + 16 api_proof + 9 oracle + 5 proptest + 3 sklearn_equiv + 16 doctest).",
+  "created_at": "2026-04-29T18:43:20.437128194Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABArJrSRQGJSTo5M/RNv6ht2lVukxH74QC8nrpLCHWlsBHgTKrTaCpta73J1yX65rjTgF3dqMrWe1uZj3+YMMhKCg=="
+}
