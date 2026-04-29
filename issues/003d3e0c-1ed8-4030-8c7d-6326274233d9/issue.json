@@ -2,12 +2,13 @@
   "uuid": "003d3e0c-1ed8-4030-8c7d-6326274233d9",
   "display_id": 328,
   "title": "covariance + neural: write api_proof.rs for both new crates",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "56b6b279-f4fa-45fc-9d46-ead108a3b292",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T21:08:39.223387665Z",
-  "updated_at": "2026-04-29T21:08:40.431182022Z",
+  "updated_at": "2026-04-29T21:21:35.926834549Z",
+  "closed_at": "2026-04-29T21:21:35.926834549Z",
   "labels": [
     "ferrolearn-covariance"
   ]
