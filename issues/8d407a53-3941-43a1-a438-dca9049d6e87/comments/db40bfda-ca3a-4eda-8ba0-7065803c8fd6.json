@@ -1,0 +1,10 @@
+{
+  "uuid": "db40bfda-ca3a-4eda-8ba0-7065803c8fd6",
+  "issue_uuid": "8d407a53-3941-43a1-a438-dca9049d6e87",
+  "author": "doll-agent",
+  "content": "[action] Maintenance pass complete: fixed 5 clippy issues, restored real assertions in lle.rs and nearest_neighbors.rs, opened #238 for remaining 67 clippy warnings from rust 1.95 update. 2926 tests passing.",
+  "created_at": "2026-04-29T12:22:51.172611209Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAECTzW5hc7+XfUmOuCLDyi9iLy/GjRzTtkq9YNI+NrHYExWNw3UuzjKFKss/D9DisQaLMZ2nceYrPIqXF9p5FAA=="
+}
