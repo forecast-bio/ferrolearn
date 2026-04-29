@@ -1,0 +1,10 @@
+{
+  "uuid": "a74f4c8d-f391-498a-803d-6ae338619c3e",
+  "issue_uuid": "b5b56490-e5b6-49af-86d0-c7ee4f838466",
+  "author": "doll-agent",
+  "content": "Wired 14 previously-orphaned linear estimators into lib.rs via new pub mod + pub use declarations: ARDRegression, GLMRegressor + GLMFamily + PoissonRegressor + GammaRegressor + TweedieRegressor (and FittedGLMRegressor), Lars + LassoLars, LinearSVC + LinearSVCLoss, LinearSVR + LinearSVRLoss, LogisticRegressionCV, MLPClassifier + MLPRegressor + Activation + Solver enums, OrthogonalMatchingPursuit (FittedOMP), QDA, QuantileRegressor, RidgeClassifier. All types existed in src/ but were unreachable. MLP belongs logically in a future neural_network crate (#252) but stays here for now. All 498 tests pass.",
+  "created_at": "2026-04-29T18:59:09.886275560Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAM0aKNygOpr3iKHzFkJ2SadeOam3zx0xlxieObew0sbm8KCrUVspzZbX4kzWgGLIuhUhXPP0Y0NUACcN8q07YCw=="
+}
