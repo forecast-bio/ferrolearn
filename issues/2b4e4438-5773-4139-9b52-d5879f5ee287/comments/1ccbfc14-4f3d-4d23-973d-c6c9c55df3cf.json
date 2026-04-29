@@ -1,0 +1,10 @@
+{
+  "uuid": "1ccbfc14-4f3d-4d23-973d-c6c9c55df3cf",
+  "issue_uuid": "2b4e4438-5773-4139-9b52-d5879f5ee287",
+  "author": "doll-agent",
+  "content": "Added 13 classification metrics in classification.rs (lines 1274-1736): hamming_loss, zero_one_loss, balanced_accuracy_score, matthews_corrcoef, cohen_kappa_score, jaccard_score, fbeta_score, brier_score_loss, hinge_loss, multilabel_confusion_matrix, precision_recall_fscore_support, classification_report, det_curve. All wired via lib.rs flat re-exports. Build clean.",
+  "created_at": "2026-04-29T20:30:44.601072775Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABACTe1rUCrXsASgmcbhJZzldv7k8vWlE5zhErQ4MnJAwm3E76s+YhGmoD+BAE13KIfZVH79gej6P15ohWM7dcwAw=="
+}
