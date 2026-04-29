@@ -1,0 +1,12 @@
+{
+  "uuid": "814cd531-36ab-4257-a6a7-aee54f70a98b",
+  "display_id": 300,
+  "title": "Add inverse_transform to scalers (StandardScaler, MinMaxScaler, MaxAbsScaler, RobustScaler, QuantileTransformer, PowerTransformer)",
+  "description": "sklearn provides inverse_transform on every scaler, used to map back to original feature space (essential for pipelines that wrap a regressor). Currently missing on ferrolearn scalers.\n\nImplementation per scaler:\n- StandardScaler: x = (x_scaled * scale) + mean\n- MinMaxScaler: x = x_scaled * (max - min) / (1 - 0) + min\n- MaxAbsScaler: x = x_scaled * max_abs\n- RobustScaler: x = (x_scaled * iqr) + median\n- QuantileTransformer: invert via stored quantile bins\n- PowerTransformer: invert Yeo-Johnson via per-feature lambda",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "4b2313cc-d57f-451f-bf7e-71554a5768fb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T19:55:50.954107317Z",
+  "updated_at": "2026-04-29T19:55:50.954107317Z"
+}
