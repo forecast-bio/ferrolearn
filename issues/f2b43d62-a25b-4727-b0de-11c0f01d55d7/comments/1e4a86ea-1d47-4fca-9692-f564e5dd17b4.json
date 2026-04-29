@@ -1,0 +1,10 @@
+{
+  "uuid": "1e4a86ea-1d47-4fca-9692-f564e5dd17b4",
+  "issue_uuid": "f2b43d62-a25b-4727-b0de-11c0f01d55d7",
+  "author": "doll-agent",
+  "content": "Added sample_y(x, n_samples, random_state) to FittedGaussianProcessRegressor. Implementation: computes K** = kernel.compute(x,x), reuses the existing l_factor to forward-substitute V from K*^T, builds K_post = K** - V^T V with a 1e-10 jitter on the diagonal, Choleskys K_post → L_post, then for each draw samples z ~ N(0,I) via rand_distr StandardNormal and returns mean + L_post @ z. Uses Xoshiro256Plus from rand_xoshiro for reproducible draws when random_state is Some. Returns shape (n_query, n_samples). All 222 tests pass.",
+  "created_at": "2026-04-29T19:27:01.017755865Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAVKLhoWUKRMKow+lFXcpe63Xinm4rGAtDO1zgml9IAlYEunIHpiOfZxyUbec3f9VYCaPPaMNCPeCMP5f6PwrOBQ=="
+}
