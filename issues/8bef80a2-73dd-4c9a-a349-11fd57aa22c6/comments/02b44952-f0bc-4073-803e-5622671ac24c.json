@@ -1,0 +1,10 @@
+{
+  "uuid": "02b44952-f0bc-4073-803e-5622671ac24c",
+  "issue_uuid": "8bef80a2-73dd-4c9a-a349-11fd57aa22c6",
+  "author": "doll-agent",
+  "content": "[action] Pedantic clippy follow-up (#239) complete: ~630 fixes via auto-fix + or_fun_call regex sweep. 2930 tests passing, default clippy clean. Pedantic count 3230 → 2600; remaining are documented-out-of-scope categories.",
+  "created_at": "2026-04-29T12:52:58.860887596Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABATNhnOFEp9nSEfdorPcWUYT67KrgBz1MXK3o2k+cBOlFU+PHoe+Q4NaoFhPpkb8ffAInPUJQ4zCGFghoccw/UCA=="
+}
