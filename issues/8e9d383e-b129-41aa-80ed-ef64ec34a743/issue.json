@@ -1,0 +1,12 @@
+{
+  "uuid": "8e9d383e-b129-41aa-80ed-ef64ec34a743",
+  "display_id": 292,
+  "title": "Add proof-of-API integration test for ferrolearn-kernel",
+  "description": "Final step of #250. tests/api_proof.rs covering every public API:\n- KernelRidge: builders, fit, predict, score\n- Nystroem: builders, fit, transform, KernelType variants\n- RBFSampler: builders, fit, transform\n- GaussianProcessRegressor: builders, fit, predict, predict_with_std, sample_y, log_marginal_likelihood, score\n- GaussianProcessClassifier: builders, fit, predict, predict_proba, predict_log_proba, log_marginal_likelihood, score\n- GP kernels: RBF, Matern (variants), Constant, White, DotProduct, Sum/Product composition\n- Local kernel-regression family (NadarayaWatson, LocalPolynomialRegression) since they're public\n- Module-level helpers: scott_bandwidth, silverman_bandwidth, CrossValidatedBandwidth, heteroscedasticity_test, residual_diagnostics, etc.\n- Standard kernel functions (Gaussian/Epanechnikov/etc.) via the Kernel trait",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "5dec6bab-74a3-4b77-a389-7f78ddf2361b",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T19:21:22.644785310Z",
+  "updated_at": "2026-04-29T19:21:22.644785310Z"
+}
