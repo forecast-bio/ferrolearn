@@ -3,10 +3,11 @@
   "display_id": 284,
   "title": "Wire 14 orphaned linear estimators into lib.rs (ARD, GLM family, Lars+LassoLars, LinearSVC/R, LogRegCV, OMP, QDA, QuantileRegressor, RidgeClassifier, MLP)",
   "description": "ferrolearn-linear/src has 11 source files containing 14 fully implemented public estimator types that are NEVER declared via pub mod or pub use in lib.rs. Same orphan-bug pattern as ferrolearn-tree (#267). Files:\n\n- ard.rs → ARDRegression, FittedARDRegression\n- glm.rs → GLMRegressor, FittedGLMRegressor, PoissonRegressor, GammaRegressor, TweedieRegressor + GLMFamily enum\n- lars.rs → Lars, FittedLars, LassoLars, FittedLassoLars\n- linear_svc.rs → LinearSVC, FittedLinearSVC, LinearSVCLoss\n- linear_svr.rs → LinearSVR, FittedLinearSVR, LinearSVRLoss\n- logistic_regression_cv.rs → LogisticRegressionCV, FittedLogisticRegressionCV\n- mlp.rs → MLPClassifier, FittedMLPClassifier, MLPRegressor, FittedMLPRegressor + Activation, Solver enums (logically belongs in a future neural_network crate but already implemented here; expose for now and note the migration path)\n- omp.rs → OrthogonalMatchingPursuit, FittedOMP\n- qda.rs → QDA, FittedQDA\n- quantile_regressor.rs → QuantileRegressor, FittedQuantileRegressor\n- ridge_classifier.rs → RidgeClassifier, FittedRidgeClassifier",
-  "status": "open",
+  "status": "closed",
   "priority": "high",
   "parent_uuid": "525a7a6b-f0e8-4438-8387-776979b9064a",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T18:57:12.351800226Z",
-  "updated_at": "2026-04-29T18:57:12.351800226Z"
+  "updated_at": "2026-04-29T18:59:20.621790459Z",
+  "closed_at": "2026-04-29T18:59:20.621790459Z"
 }
