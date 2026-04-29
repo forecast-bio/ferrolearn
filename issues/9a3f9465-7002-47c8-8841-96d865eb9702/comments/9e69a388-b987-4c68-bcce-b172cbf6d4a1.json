@@ -1,0 +1,10 @@
+{
+  "uuid": "9e69a388-b987-4c68-bcce-b172cbf6d4a1",
+  "issue_uuid": "9a3f9465-7002-47c8-8841-96d865eb9702",
+  "author": "doll-agent",
+  "content": "Completed sklearn LocalOutlierFactor API surface:\n- Added novelty: bool field + with_novelty() builder on LocalOutlierFactor (informational; ferrolearn does not enforce sklearn's strict mode separation since predict already supports both training and new data).\n- Added fit_predict(&self, x) on the unfit LocalOutlierFactor (sklearn shorthand).\n- Refactored predict() to delegate to a new private compute_lof() helper so the LOF-on-new-data path is shared with the new methods.\n- Added score_samples(&self, x) → -lof (higher = more inlier-like, sklearn convention).\n- Added decision_function(&self, x) → threshold - lof (positive = inlier, negative = outlier).\nValidated by api_proof_local_outlier_factor asserting outlier samples have lower score_samples than inliers and decision_function < 0 for the planted outliers.",
+  "created_at": "2026-04-29T17:29:18.570034583Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAiKvr4RgA78Tjya1ykL095rmw5QvJrs1f8MQkuC6nLv3SH/4EIaJwot6bxEKWFGcHCZj8MrhoRmu3KXp98LdaAA=="
+}
