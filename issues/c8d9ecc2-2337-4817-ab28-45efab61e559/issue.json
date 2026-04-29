@@ -1,0 +1,12 @@
+{
+  "uuid": "c8d9ecc2-2337-4817-ab28-45efab61e559",
+  "display_id": 299,
+  "title": "Wire orphaned preprocess estimators into lib.rs (LabelBinarizer, MultiLabelBinarizer, SelectFpr/Fdr/Fwe, SequentialFeatureSelector, feature scoring fns)",
+  "description": "Five orphan files in ferrolearn-preprocess/src/ contain ~5 estimators + 3 module-level scoring functions + 1 enum that are never declared via pub mod / pub use:\n\n- label_binarizer.rs: LabelBinarizer + FittedLabelBinarizer\n- multi_label_binarizer.rs: MultiLabelBinarizer + FittedMultiLabelBinarizer\n- stat_selectors.rs: SelectFpr/Fdr/Fwe + Fitted* variants\n- sequential_feature_selector.rs: SequentialFeatureSelector + Direction enum + FittedSequentialFeatureSelector\n- feature_scoring.rs: f_classif, f_regression, chi2 module-level functions\n\nSame orphan-bug pattern as ferrolearn-tree (#267), ferrolearn-linear (#284), ferrolearn-decomp (#294). Fix with pub mod + pub use.",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "4b2313cc-d57f-451f-bf7e-71554a5768fb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T19:55:46.556085574Z",
+  "updated_at": "2026-04-29T19:55:46.556085574Z"
+}
