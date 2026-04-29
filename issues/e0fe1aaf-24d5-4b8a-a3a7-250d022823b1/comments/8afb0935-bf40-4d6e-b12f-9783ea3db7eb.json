@@ -1,0 +1,10 @@
+{
+  "uuid": "8afb0935-bf40-4d6e-b12f-9783ea3db7eb",
+  "issue_uuid": "e0fe1aaf-24d5-4b8a-a3a7-250d022823b1",
+  "author": "doll-agent",
+  "content": "Wired orphaned MiniBatchNMF (+ MiniBatchNMFInit + FittedMiniBatchNMF) and SparsePCA (+ FittedSparsePCA) into ferrolearn-decomp lib.rs via new pub mod + pub use declarations. Both already had Transform impls; just needed exposure. All 410 tests pass.",
+  "created_at": "2026-04-29T19:41:24.044540378Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAxV+tfunRbcv9x0kL8y8IVy1uqfV6NKYahTxcrnmSp7ysACDLJToem1QFsj2I8w0Lt0Tr07rLaQqs5YfqjqbZAg=="
+}
