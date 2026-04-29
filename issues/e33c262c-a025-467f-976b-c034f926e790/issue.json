@@ -2,12 +2,13 @@
   "uuid": "e33c262c-a025-467f-976b-c034f926e790",
   "display_id": 321,
   "title": "datasets: add network fetch_* loaders + cache management (fetch_california_housing, get_data_home, clear_data_home, fetch_openml)",
-  "status": "open",
+  "status": "closed",
   "priority": "low",
   "parent_uuid": "9df9e74d-4501-4707-b2c9-bae64eb5ad50",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T20:50:38.692411322Z",
-  "updated_at": "2026-04-29T20:50:39.889784648Z",
+  "updated_at": "2026-04-29T22:44:57.854067703Z",
+  "closed_at": "2026-04-29T22:44:57.854067703Z",
   "labels": [
     "ferrolearn-datasets"
   ]
