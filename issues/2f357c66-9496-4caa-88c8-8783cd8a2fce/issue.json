@@ -1,0 +1,12 @@
+{
+  "uuid": "2f357c66-9496-4caa-88c8-8783cd8a2fce",
+  "display_id": 298,
+  "title": "Add proof-of-API integration test for ferrolearn-decomp",
+  "description": "Final step of #246. tests/api_proof.rs exercising every public estimator in ferrolearn-decomp: PCA + IncrementalPCA + KernelPCA + SparsePCA, TruncatedSVD, NMF + MiniBatchNMF, FastICA, FactorAnalysis, DictionaryLearning, LatentDirichletAllocation, MDS + Isomap + LLE + SpectralEmbedding + TSNE + Umap, CCA + PLSRegression + PLSCanonical + PLSSVD, plus the 6 covariance estimators (EmpiricalCovariance, ShrunkCovariance, LedoitWolf, OAS, MinCovDet, EllipticEnvelope) that surprise-live in this crate.",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "b7e3f49f-753c-4615-9920-0586b9d749be",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T19:39:47.467403768Z",
+  "updated_at": "2026-04-29T19:39:47.467403768Z"
+}
