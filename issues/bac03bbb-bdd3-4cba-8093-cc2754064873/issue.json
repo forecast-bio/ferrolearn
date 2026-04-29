@@ -1,0 +1,11 @@
+{
+  "uuid": "bac03bbb-bdd3-4cba-8093-cc2754064873",
+  "display_id": 308,
+  "title": "metrics: add scorer registry (get_scorer, get_scorer_names, check_scoring) + DistanceMetric trait",
+  "status": "open",
+  "priority": "low",
+  "parent_uuid": "81e3e592-d6c5-4870-ae6a-1b0c0afd8824",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T20:22:03.032638768Z",
+  "updated_at": "2026-04-29T20:22:03.032638768Z"
+}
