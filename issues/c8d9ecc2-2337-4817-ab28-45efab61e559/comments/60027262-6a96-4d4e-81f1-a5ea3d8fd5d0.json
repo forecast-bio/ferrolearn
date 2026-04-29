@@ -1,0 +1,10 @@
+{
+  "uuid": "60027262-6a96-4d4e-81f1-a5ea3d8fd5d0",
+  "issue_uuid": "c8d9ecc2-2337-4817-ab28-45efab61e559",
+  "author": "doll-agent",
+  "content": "Wired 5 orphaned modules (label_binarizer, multi_label_binarizer, sequential_feature_selector, stat_selectors, feature_scoring) into ferrolearn-preprocess lib.rs via pub mod + pub use. Newly exposed: LabelBinarizer + FittedLabelBinarizer, MultiLabelBinarizer + FittedMultiLabelBinarizer, SelectFpr/Fdr/Fwe + Fitted variants, SequentialFeatureSelector + Direction enum + FittedSequentialFeatureSelector, plus module-level f_classif / f_regression / chi2 / compute_scores_classif / compute_scores_regression scoring functions. All 473 tests pass.",
+  "created_at": "2026-04-29T19:57:49.584348413Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAfLk9YfrZGKAW7ixA4wFj2aWhLgN417JPKeOx9dCHiHNHQC6VFkdXiE7RWLtg0cQGZmlr69zfak1/FBcgb9heDA=="
+}
