@@ -1,0 +1,12 @@
+{
+  "uuid": "f31b1f19-a63f-46c0-b79c-bdf214ba8207",
+  "display_id": 281,
+  "title": "Add predict_proba + score to LabelPropagation and LabelSpreading",
+  "description": "sklearn semi-supervised classifiers expose ClassifierMixin's predict_proba(X) and score(X, y). ferrolearn has Predict on both but no probabilistic outputs and no mean-accuracy score.\n\nImplementation: predict_proba assigns each query its k-NN's softmaxed similarity to each class's labeled centroid. Or simpler, just return one-hot of the predicted label (sklearn-faithful is the soft form via the propagation matrix, which the fitted struct may already have). Score is mean accuracy via predict + label comparison.",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "af796161-926c-47ff-a352-377e02032a72",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T18:22:22.507061225Z",
+  "updated_at": "2026-04-29T18:22:22.507061225Z"
+}
