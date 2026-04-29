@@ -1,0 +1,10 @@
+{
+  "uuid": "238f0341-19e5-4774-b32c-151d61e4c0d5",
+  "issue_uuid": "b7e3f49f-753c-4615-9920-0586b9d749be",
+  "author": "doll-agent",
+  "content": "Scope expansion: ferrolearn-kernel actually owns the gaussian_process estimators (per recent commit 8fde2b4 'complete GP classifier'). Add to scope: GaussianProcessRegressor, GaussianProcessClassifier, kernel functions (RBF, Matern, RationalQuadratic, ExpSineSquared, ConstantKernel, WhiteKernel, DotProduct, kernel composition with + * **). Originally was just kernel_approximation + kernel_ridge + KernelCenterer.",
+  "created_at": "2026-04-29T16:23:51.844813351Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA9PWJntePTbH2UdUEXwrkYdc0Pv9zG/rd+jBg+6IRHQmCEn4MLP4eyf5drSRGQRLxHVsLjsHmN6yvCZ5hcMaqAA=="
+}
