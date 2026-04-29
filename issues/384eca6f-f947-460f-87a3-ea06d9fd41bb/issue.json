@@ -1,0 +1,12 @@
+{
+  "uuid": "384eca6f-f947-460f-87a3-ea06d9fd41bb",
+  "display_id": 243,
+  "title": "Audit ferrolearn-tree vs sklearn (tree + ensemble): close gaps, add API proof tests",
+  "description": "Step 3 of 12 in sklearn parity audit (#240).\n\nScope: sklearn.tree (DecisionTreeClassifier/Regressor, ExtraTreeClassifier/Regressor, export_graphviz, export_text) and sklearn.ensemble (RandomForestClassifier/Regressor, ExtraTreesClassifier/Regressor, GradientBoostingClassifier/Regressor, HistGradientBoostingClassifier/Regressor, AdaBoostClassifier/Regressor, BaggingClassifier/Regressor, VotingClassifier/Regressor, StackingClassifier/Regressor, IsolationForest, RandomTreesEmbedding).\n\nRelated existing issues: #48-55 (tree pruning, splitter, max_leaf_nodes, monotonic_cst, sample_weight, warm_start, oob_score, export_graphviz, export_text)",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "7eb7ab02-78ae-4381-bf5d-cc11173429c5",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T16:22:26.709305003Z",
+  "updated_at": "2026-04-29T16:22:26.709305003Z"
+}
