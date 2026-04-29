@@ -1,0 +1,10 @@
+{
+  "uuid": "cdd68e75-6e27-4999-97e5-a19f63420441",
+  "issue_uuid": "003d3e0c-1ed8-4030-8c7d-6326274233d9",
+  "author": "doll-agent",
+  "content": "Created tests/api_proof.rs for both new crates. Covariance: 5 tests covering empirical, shrunk, ledoit-wolf, OAS, MCD, EllipticEnvelope, all 7 helper functions, GraphicalLasso, GraphicalLassoCV. Neural: 3 tests covering MLPClassifier (4 activations × 2 solvers + early stopping), MLPRegressor (2 solvers), BernoulliRBM (transform + gibbs + Transform-trait dispatch). All 8 api_proof tests pass.",
+  "created_at": "2026-04-29T21:21:20.535625261Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAJ1Cc4jZiCGCQ0yN8WT5F9aFNwZh8tirbABwNbXGN2A5Hb/wb1FjGLTUmPZgoHMBtFVuFvLQumeUEeYGI186uDA=="
+}
