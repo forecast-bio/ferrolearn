@@ -1,0 +1,12 @@
+{
+  "uuid": "e1917949-544e-4c1a-932e-3cce6749b2a8",
+  "display_id": 301,
+  "title": "Add proof-of-API integration test for ferrolearn-preprocess",
+  "description": "Final step of #247. tests/api_proof.rs covering every public estimator (after orphan wiring): all scalers, all encoders (Binarizer, OneHot, Ordinal, Label, MultiLabel, Binary, Target), KBinsDiscretizer, SplineTransformer, PolynomialFeatures, FunctionTransformer, all imputers (Simple, KNN, Iterative), all feature selectors (VarianceThreshold, SelectKBest, SelectPercentile, SelectFpr/Fdr/Fwe, SelectFromModel, RFE, RFECV, SequentialFeatureSelector), text family (CountVectorizer, TfidfTransformer), random projection (Gaussian, Sparse), ColumnTransformer, plus the module-level scoring fns (f_classif, f_regression, chi2).",
+  "status": "open",
+  "priority": "high",
+  "parent_uuid": "4b2313cc-d57f-451f-bf7e-71554a5768fb",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T19:55:55.699341687Z",
+  "updated_at": "2026-04-29T19:55:55.699341687Z"
+}
