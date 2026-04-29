@@ -1,0 +1,10 @@
+{
+  "uuid": "b1aaf4fe-3183-4b2b-a3f8-5d296e6dbdb4",
+  "issue_uuid": "066c7e24-b41d-48a7-950a-ef16dd30e892",
+  "author": "doll-agent",
+  "content": "ferrolearn-bayes audit complete. All 5 sklearn naive_bayes estimators present and now match sklearn 1.9 API. \n\nSub-issues closed:\n- #253 predict_log_proba + predict_joint_log_proba\n- #254 score()\n- #255 fit_prior parameter\n- #256 force_alpha parameter\n- #257 ComplementNB norm parameter  \n- #258 CategoricalNB min_categories parameter\n- #259 CategoricalNB partial_fit\n- #260 proof-of-API integration test\n\nDeferred to existing #71: sample_weight on fit/partial_fit (broader cross-cutting effort).\n\nferrolearn extras over sklearn:\n- conjugate module (posterior_normal_normal) — no sklearn analogue\n- CategoricalNB.partial_fit transparently extends both classes and category lists when new values arrive (sklearn errors)\n\nVerification: 117 tests pass (91 unit + 9 api_proof + 4 oracle + 5 proptest + 1 sklearn_equiv + 7 doctest). Zero regressions.",
+  "created_at": "2026-04-29T16:56:30.144935100Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAS9ueI6+MDq1VLKpgFm674GDBH421nNHVtI91VolTMCjSJhHQHEd1kAfTdq9p527XXkyxn2Djq2sklenFgIE/CQ=="
+}
