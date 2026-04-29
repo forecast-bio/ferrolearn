@@ -1,0 +1,10 @@
+{
+  "uuid": "8d407a53-3941-43a1-a438-dca9049d6e87",
+  "display_id": 237,
+  "title": "Periodic codebase maintenance pass (lint, deps, tests, docs)",
+  "status": "open",
+  "priority": "low",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T12:13:14.993984896Z",
+  "updated_at": "2026-04-29T12:13:14.993984896Z"
+}
