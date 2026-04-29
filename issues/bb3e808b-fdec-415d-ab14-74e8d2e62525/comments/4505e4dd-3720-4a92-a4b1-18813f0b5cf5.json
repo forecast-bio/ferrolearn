@@ -1,0 +1,10 @@
+{
+  "uuid": "4505e4dd-3720-4a92-a4b1-18813f0b5cf5",
+  "issue_uuid": "bb3e808b-fdec-415d-ab14-74e8d2e62525",
+  "author": "doll-agent",
+  "content": "[action] Baseline head-to-head numbers captured for 12 estimators. Real divergences to audit: RandomForestClassifier -16pp at medium_10Kx100, DecisionTreeClassifier -10pp at tiny, LogisticRegression -1.5pp at small. Saved to ferrolearn-bench/reports/baseline_v0.3.0.{json,md}.",
+  "created_at": "2026-04-29T23:40:37.545235235Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABA4YJJcAWdncA9f14RbTXHvHnAbCy2uAi4IqIjjujKyR0TA/+czFcTw4tMH+lyBIYU1AJ/0Z6SOhnuhjhrJRZwDA=="
+}
