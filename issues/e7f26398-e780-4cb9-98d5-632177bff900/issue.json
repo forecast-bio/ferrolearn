@@ -1,0 +1,12 @@
+{
+  "uuid": "e7f26398-e780-4cb9-98d5-632177bff900",
+  "display_id": 264,
+  "title": "Add kneighbors_graph and radius_neighbors_graph (free fns + methods) plus sort_graph_by_row_values",
+  "description": "sklearn module-level functions:\n- kneighbors_graph(X, n_neighbors, mode='connectivity', metric='minkowski', p=2, metric_params=None, include_self=False, n_jobs=None)\n- radius_neighbors_graph(X, radius, mode='connectivity', metric='minkowski', p=2, metric_params=None, include_self=False, n_jobs=None)\n- sort_graph_by_row_values(graph, copy=True, warn_when_not_sorted=True)\n\nPlus methods on every kneighbors-capable estimator:\n- FittedKNeighbors{Classifier,Regressor,...}.kneighbors_graph\n- FittedRadiusNeighbors{...}.radius_neighbors_graph\n\nReturns a sparse CSR-style adjacency matrix. ferrolearn-sparse already has sparse types. mode='connectivity' → 0/1 matrix; mode='distance' → distance values.",
+  "status": "open",
+  "priority": "medium",
+  "parent_uuid": "43dda5a1-03ad-4889-8f1a-33a0a72172e4",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-29T17:10:27.961327610Z",
+  "updated_at": "2026-04-29T17:10:27.961327610Z"
+}
