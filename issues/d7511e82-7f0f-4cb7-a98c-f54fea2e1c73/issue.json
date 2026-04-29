@@ -2,12 +2,13 @@
   "uuid": "d7511e82-7f0f-4cb7-a98c-f54fea2e1c73",
   "display_id": 307,
   "title": "metrics: add ranking edge cases (coverage_error, label_ranking_average_precision_score, label_ranking_loss)",
-  "status": "open",
+  "status": "closed",
   "priority": "low",
   "parent_uuid": "81e3e592-d6c5-4870-ae6a-1b0c0afd8824",
   "created_by": "doll-agent",
   "created_at": "2026-04-29T20:21:58.327250593Z",
-  "updated_at": "2026-04-29T20:21:59.514398988Z",
+  "updated_at": "2026-04-29T22:25:57.352660328Z",
+  "closed_at": "2026-04-29T22:25:57.352660328Z",
   "labels": [
     "ferrolearn-metrics"
   ]
