@@ -2,3 +2,5 @@
 # Format: <principal> <key-type> <base64-key> [comment]
 # approved by human backfill at 2026-04-23
 backfill@crosslink ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKo+flEdaJYO8NPs2cLlm7FqczNhZVbMbKNZfq5/HUnw doll@dollspace
+# approved by doll at 2026-04-29 12:12:52 UTC
+doll-agent@crosslink ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL2AvycaddF3v5i/JPy4mlNO6AJI4ks/zJuQYa61xpFD crosslink-agent:doll-agent@dollspace
