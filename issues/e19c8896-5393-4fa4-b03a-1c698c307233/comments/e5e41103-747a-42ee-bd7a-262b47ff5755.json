@@ -1,0 +1,10 @@
+{
+  "uuid": "e5e41103-747a-42ee-bd7a-262b47ff5755",
+  "issue_uuid": "e19c8896-5393-4fa4-b03a-1c698c307233",
+  "author": "doll-agent",
+  "content": "Added 4 clustering metrics in clustering.rs: contingency_matrix, mutual_info_score, homogeneity_completeness_v_measure, pair_confusion_matrix. All wired via lib.rs flat re-exports. Build clean.",
+  "created_at": "2026-04-29T20:30:46.131338219Z",
+  "kind": "result",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAAvF3kZ5wQ8ojjW2ufhkM1OiurTxRoAItwQDrKVDG1OqvNQUCSQZqPZQVMxLYDGR6ai7iTbllsXFsGqauOXDFBQ=="
+}
