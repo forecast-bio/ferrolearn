@@ -1,0 +1,10 @@
+{
+  "uuid": "9386c336-99d7-4ed5-aa26-3af6937c2b29",
+  "display_id": 332,
+  "title": "QuantileRegressor: scale alpha by n_samples for sklearn parity",
+  "status": "open",
+  "priority": "high",
+  "created_by": "doll-agent",
+  "created_at": "2026-04-30T01:55:39.192909179Z",
+  "updated_at": "2026-04-30T01:55:39.192909179Z"
+}
