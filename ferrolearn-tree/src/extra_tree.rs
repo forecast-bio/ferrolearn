@@ -229,6 +229,36 @@ impl<F: Float + Send + Sync + 'static> FittedExtraTreeClassifier<F> {
         }
         Ok(proba)
     }
+
+    /// Mean accuracy on the given test data and labels.
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::mean_accuracy(&preds, y))
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba). Mirrors
+    /// sklearn's `ClassifierMixin.predict_log_proba`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for ExtraTreeClassifier<F> {
@@ -538,6 +568,25 @@ impl<F: Float + Send + Sync + 'static> FittedExtraTreeRegressor<F> {
     #[must_use]
     pub fn n_features(&self) -> usize {
         self.n_features
+    }
+
+    /// R² coefficient of determination on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::r2_score(&preds, y))
     }
 }
 

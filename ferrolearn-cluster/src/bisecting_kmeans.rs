@@ -44,7 +44,7 @@
 //! ```
 
 use ferrolearn_core::error::FerroError;
-use ferrolearn_core::traits::{Fit, Predict};
+use ferrolearn_core::traits::{Fit, Predict, Transform};
 use ndarray::{Array1, Array2};
 use num_traits::Float;
 use rand::rngs::StdRng;
@@ -505,6 +505,19 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for BisectingKMeans<F>
     }
 }
 
+impl<F: Float + Send + Sync + 'static> BisectingKMeans<F> {
+    /// Fit on `x` and return labels for those samples in one call.
+    /// Equivalent to sklearn `ClusterMixin.fit_predict`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`Fit::fit`] / [`Predict::predict`].
+    pub fn fit_predict(&self, x: &Array2<F>) -> Result<Array1<isize>, FerroError> {
+        let fitted = self.fit(x, &())?;
+        fitted.predict(x)
+    }
+}
+
 impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedBisectingKMeans<F> {
     type Output = Array1<isize>;
     type Error = FerroError;
@@ -549,6 +562,45 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedBisectingKMe
         }
 
         Ok(labels)
+    }
+}
+
+impl<F: Float + Send + Sync + 'static> Transform<Array2<F>> for FittedBisectingKMeans<F> {
+    type Output = Array2<F>;
+    type Error = FerroError;
+
+    /// Compute the Euclidean distance from each sample to each leaf
+    /// cluster centroid. Mirrors sklearn `BisectingKMeans.transform`.
+    ///
+    /// Returns shape `(n_samples, n_clusters)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    fn transform(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features = x.ncols();
+        let expected = self.cluster_centers_.ncols();
+        if n_features != expected {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![expected],
+                actual: vec![n_features],
+                context: "number of features must match fitted BisectingKMeans".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        let k = self.cluster_centers_.nrows();
+        let mut out = Array2::<F>::zeros((n_samples, k));
+        for i in 0..n_samples {
+            let row = x.row(i);
+            let row_slice = row.as_slice().unwrap_or(&[]);
+            for c in 0..k {
+                let center = self.cluster_centers_.row(c);
+                let cs = center.as_slice().unwrap_or(&[]);
+                out[[i, c]] = squared_euclidean(row_slice, cs).sqrt();
+            }
+        }
+        Ok(out)
     }
 }
 

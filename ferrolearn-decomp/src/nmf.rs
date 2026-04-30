@@ -217,6 +217,26 @@ impl<F: Float + Send + Sync + 'static> FittedNMF<F> {
     pub fn n_iter(&self) -> usize {
         self.n_iter_
     }
+
+    /// Reconstruct the original feature space from the latent representation.
+    /// Mirrors sklearn `NMF.inverse_transform`. Returns `W @ H` where `W`
+    /// is the input transformed matrix and `H = self.components_`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `w.ncols()` does not equal
+    /// the number of components.
+    pub fn inverse_transform(&self, w: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_components = self.components_.nrows();
+        if w.ncols() != n_components {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![w.nrows(), n_components],
+                actual: vec![w.nrows(), w.ncols()],
+                context: "FittedNMF::inverse_transform".into(),
+            });
+        }
+        Ok(w.dot(&self.components_))
+    }
 }
 
 // ---------------------------------------------------------------------------

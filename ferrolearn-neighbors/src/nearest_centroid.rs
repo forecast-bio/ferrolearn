@@ -299,6 +299,30 @@ impl<F: Float + Send + Sync + 'static> FittedNearestCentroid<F> {
     pub fn centroids(&self) -> &Array2<F> {
         &self.centroids
     }
+
+    /// Mean accuracy on the given test data and labels.
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        let n = y.len();
+        if n == 0 {
+            return Ok(F::zero());
+        }
+        let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
+        Ok(F::from(correct).unwrap() / F::from(n).unwrap())
+    }
 }
 
 #[cfg(test)]

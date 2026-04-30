@@ -149,11 +149,63 @@ impl<F: Float> FittedLinearSVC<F> {
     }
 }
 
+impl<F: Float + ScalarOperand + Send + Sync + 'static> FittedLinearSVC<F> {
+    /// Raw signed distance from the decision boundary. Mirrors sklearn
+    /// `LinearSVC.decision_function`.
+    ///
+    /// Binary: shape `(n_samples, 1)` containing `X @ w + b`.
+    /// Multiclass: shape `(n_samples, n_classes)` of one-vs-rest scores.
+    /// argmax of each row agrees with [`Predict`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn decision_function(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features = x.ncols();
+        if n_features != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![n_features],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        if self.is_binary {
+            let scores = x.dot(&self.weight_vectors[0]) + self.intercepts[0];
+            let mut out = Array2::<F>::zeros((n_samples, 1));
+            for i in 0..n_samples {
+                out[[i, 0]] = scores[i];
+            }
+            Ok(out)
+        } else {
+            let n_classes = self.classes.len();
+            let mut out = Array2::<F>::zeros((n_samples, n_classes));
+            for c in 0..n_classes {
+                for i in 0..n_samples {
+                    out[[i, c]] = x.row(i).dot(&self.weight_vectors[c]) + self.intercepts[c];
+                }
+            }
+            Ok(out)
+        }
+    }
+}
+
 /// Solve a single binary L2-SVM via coordinate descent on the primal.
 ///
-/// Minimises: `0.5 * ||w||^2 + C * sum_i loss(y_i, w^T x_i + b)`
+/// Minimises `0.5 * ||w||^2 + C * sum_i loss(y_i, w^T x_i + b) / n` where
+/// `y_i ∈ {-1, +1}`. For squared-hinge loss, performs coordinate-wise
+/// Newton updates `w[j] -= f'(w[j]) / f''(w[j])`, which dramatically
+/// outperforms the previous fixed-step (LR=0.01) approach — the prior code
+/// was undertrained by ~30× on 100-D inputs because the Hessian diagonal at
+/// unit-variance features is `1 + 2C` (not 100).
 ///
-/// where `y_i in {-1, +1}`.
+/// For hinge loss (non-differentiable at the kink) we use a clipped Newton
+/// step with the squared-hinge Hessian as a smooth majorant.
+///
+/// We maintain `decision = X w + b` incrementally rather than recomputing
+/// it on every coordinate update; this is what makes the loop O(n_features
+/// × n_samples) per outer iteration instead of O(n_features^2 × n_samples).
 fn solve_binary_primal<F: Float + 'static>(
     x: &Array2<F>,
     y_signed: &Array1<F>,
@@ -167,66 +219,85 @@ fn solve_binary_primal<F: Float + 'static>(
     let mut b = F::zero();
 
     let n_f = F::from(n_samples).unwrap();
+    let two = F::from(2.0).unwrap();
+
+    // decision[i] = X[i, :] @ w + b — maintained incrementally.
+    let mut decision = Array1::<F>::zeros(n_samples);
 
     for _iter in 0..max_iter {
         let mut max_change = F::zero();
 
-        // Update each weight coordinate.
+        // Coordinate-Newton update for each w[j].
         for j in 0..n_features {
-            let mut grad = w[j]; // regularization gradient
+            // Gradient and Hessian-diagonal contributions.
+            let mut grad = w[j]; // regularizer gradient
+            let mut hess = F::one(); // regularizer hessian diagonal
+
             for i in 0..n_samples {
-                let margin = y_signed[i] * (x.row(i).dot(&w) + b);
-                match loss {
-                    LinearSVCLoss::Hinge => {
-                        if margin < F::one() {
-                            grad = grad - c / n_f * y_signed[i] * x[[i, j]];
+                let margin = y_signed[i] * decision[i];
+                if margin < F::one() {
+                    let xij = x[[i, j]];
+                    match loss {
+                        LinearSVCLoss::Hinge => {
+                            // Use squared-hinge Hessian as smooth majorant; the
+                            // hinge gradient is the subgradient -y_i x_{i,j}.
+                            grad = grad - c / n_f * y_signed[i] * xij;
+                            hess = hess + c / n_f * xij * xij;
                         }
-                    }
-                    LinearSVCLoss::SquaredHinge => {
-                        if margin < F::one() {
-                            let two = F::from(2.0).unwrap();
-                            grad = grad
-                                - two * c / n_f * (F::one() - margin) * y_signed[i] * x[[i, j]];
+                        LinearSVCLoss::SquaredHinge => {
+                            grad = grad - two * c / n_f
+                                * (F::one() - margin) * y_signed[i] * xij;
+                            hess = hess + two * c / n_f * xij * xij;
                         }
                     }
                 }
             }
 
-            let step = F::from(0.01).unwrap(); // learning rate
-            let new_w = w[j] - step * grad;
-            let change = (new_w - w[j]).abs();
+            // Newton step: dw = -grad / hess. hess >= 1 since regularizer
+            // contributes 1, so it can never be zero.
+            let dw = -(grad / hess);
+            let new_w = w[j] + dw;
+            let change = dw.abs();
             if change > max_change {
                 max_change = change;
             }
+
+            // Apply update and refresh decision values: decision += dw * X[:, j].
             w[j] = new_w;
+            for i in 0..n_samples {
+                decision[i] = decision[i] + dw * x[[i, j]];
+            }
         }
 
-        // Update intercept (not regularized).
+        // Coordinate-Newton update for the intercept (not regularized).
         {
             let mut grad_b = F::zero();
+            let mut hess_b = F::from(1e-12).unwrap(); // tiny ridge for stability
             for i in 0..n_samples {
-                let margin = y_signed[i] * (x.row(i).dot(&w) + b);
-                match loss {
-                    LinearSVCLoss::Hinge => {
-                        if margin < F::one() {
+                let margin = y_signed[i] * decision[i];
+                if margin < F::one() {
+                    match loss {
+                        LinearSVCLoss::Hinge => {
                             grad_b = grad_b - c / n_f * y_signed[i];
+                            hess_b = hess_b + c / n_f;
                         }
-                    }
-                    LinearSVCLoss::SquaredHinge => {
-                        if margin < F::one() {
-                            let two = F::from(2.0).unwrap();
-                            grad_b = grad_b - two * c / n_f * (F::one() - margin) * y_signed[i];
+                        LinearSVCLoss::SquaredHinge => {
+                            grad_b = grad_b - two * c / n_f
+                                * (F::one() - margin) * y_signed[i];
+                            hess_b = hess_b + two * c / n_f;
                         }
                     }
                 }
             }
-            let step = F::from(0.01).unwrap();
-            let new_b = b - step * grad_b;
-            let change = (new_b - b).abs();
+            let db = -(grad_b / hess_b);
+            let change = db.abs();
             if change > max_change {
                 max_change = change;
             }
-            b = new_b;
+            b = b + db;
+            for i in 0..n_samples {
+                decision[i] = decision[i] + db;
+            }
         }
 
         if max_change < tol {

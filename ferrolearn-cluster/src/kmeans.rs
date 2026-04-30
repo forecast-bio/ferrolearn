@@ -162,52 +162,91 @@ fn squared_euclidean<F: Float>(a: &[F], b: &[F]) -> F {
         .fold(F::zero(), |acc, (&ai, &bi)| acc + (ai - bi) * (ai - bi))
 }
 
-/// k-Means++ initialization: pick `k` initial centroids.
+/// Greedy k-Means++ initialization (Arthur & Vassilvitskii 2007 with the
+/// scikit-learn-style multi-trial improvement). At each pick, sample
+/// `2 + log(k)` candidates with probability proportional to D(x)² and keep
+/// the one minimising the resulting potential.
 fn kmeans_plus_plus<F: Float>(x: &Array2<F>, k: usize, rng: &mut StdRng) -> Array2<F> {
     let n_samples = x.nrows();
     let n_features = x.ncols();
     let mut centers = Array2::zeros((k, n_features));
 
-    // Pick first center uniformly at random.
+    if n_samples == 0 {
+        return centers;
+    }
+
     let first_idx = rng.random_range(0..n_samples);
     centers.row_mut(0).assign(&x.row(first_idx));
 
-    // For each subsequent center, pick proportional to D(x)^2.
+    if k == 1 {
+        return centers;
+    }
+
+    // Distance from each sample to its nearest selected centre.
     let mut min_dists = Array1::from_elem(n_samples, F::max_value());
+    {
+        let center0 = centers.row(0);
+        let center0_slice = center0.as_slice().unwrap_or(&[]);
+        for i in 0..n_samples {
+            min_dists[i] = squared_euclidean(
+                x.row(i).as_slice().unwrap_or(&[]),
+                center0_slice,
+            );
+        }
+    }
+
+    let n_trials = (2 + (k as f64).ln().floor() as usize).max(1);
 
     for c in 1..k {
-        // Update min distances with the most recently added center.
-        let prev_center = centers.row(c - 1);
-        for i in 0..n_samples {
-            let d = squared_euclidean(
-                x.row(i).as_slice().unwrap_or(&[]),
-                prev_center.as_slice().unwrap_or(&[]),
-            );
-            if d < min_dists[i] {
-                min_dists[i] = d;
-            }
-        }
-
-        // Compute cumulative distribution.
         let total: F = min_dists.iter().fold(F::zero(), |acc, &d| acc + d);
-        if total == F::zero() {
-            // All points are identical to existing centers; just pick randomly.
+        if total <= F::zero() {
             let idx = rng.random_range(0..n_samples);
             centers.row_mut(c).assign(&x.row(idx));
             continue;
         }
 
-        let threshold: F = F::from(rng.random::<f64>()).unwrap_or_else(F::zero) * total;
-        let mut cumsum = F::zero();
-        let mut chosen = n_samples - 1;
-        for i in 0..n_samples {
-            cumsum = cumsum + min_dists[i];
-            if cumsum >= threshold {
-                chosen = i;
-                break;
+        let mut best_candidate: usize = 0;
+        let mut best_potential: Option<F> = None;
+        let mut best_new_dists: Option<Array1<F>> = None;
+
+        for _ in 0..n_trials {
+            let threshold: F =
+                F::from(rng.random::<f64>()).unwrap_or_else(F::zero) * total;
+            let mut cumsum = F::zero();
+            let mut candidate = n_samples - 1;
+            for i in 0..n_samples {
+                cumsum = cumsum + min_dists[i];
+                if cumsum >= threshold {
+                    candidate = i;
+                    break;
+                }
+            }
+
+            let cand_slice = x.row(candidate).as_slice().unwrap_or(&[]).to_vec();
+            let mut new_dists = min_dists.clone();
+            let mut potential = F::zero();
+            for i in 0..n_samples {
+                let d = squared_euclidean(
+                    x.row(i).as_slice().unwrap_or(&[]),
+                    &cand_slice,
+                );
+                if d < new_dists[i] {
+                    new_dists[i] = d;
+                }
+                potential = potential + new_dists[i];
+            }
+
+            if best_potential.is_none_or(|bp| potential < bp) {
+                best_potential = Some(potential);
+                best_candidate = candidate;
+                best_new_dists = Some(new_dists);
             }
         }
-        centers.row_mut(c).assign(&x.row(chosen));
+
+        centers.row_mut(c).assign(&x.row(best_candidate));
+        if let Some(d) = best_new_dists {
+            min_dists = d;
+        }
     }
 
     centers
@@ -470,6 +509,19 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for KMeans<F> {
             name: "n_init".into(),
             reason: "internal error: no runs completed".into(),
         })
+    }
+}
+
+impl<F: Float + Send + Sync + 'static> KMeans<F> {
+    /// Fit on `x` and return the cluster labels for those same samples in
+    /// one call. Equivalent to sklearn `ClusterMixin.fit_predict`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`Fit::fit`] / [`Predict::predict`].
+    pub fn fit_predict(&self, x: &Array2<F>) -> Result<Array1<usize>, FerroError> {
+        let fitted = self.fit(x, &())?;
+        fitted.predict(x)
     }
 }
 

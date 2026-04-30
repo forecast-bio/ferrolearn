@@ -1,18 +1,25 @@
 # ferrolearn-tree
 
-Decision tree and ensemble tree models for the [ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework.
+Decision tree and ensemble tree models for the
+[ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework.
+Validated against scikit-learn 1.8.0 head-to-head — see the
+[workspace BENCHMARKS.md](../BENCHMARKS.md) for the full report.
 
 ## Algorithms
 
 | Model | Description |
 |-------|-------------|
-| `DecisionTreeClassifier` | CART classification tree with Gini impurity or entropy splitting |
-| `DecisionTreeRegressor` | CART regression tree with MSE or MAE splitting |
-| `RandomForestClassifier` | Bootstrap-aggregated ensemble with parallel tree building via Rayon |
-| `RandomForestRegressor` | Random forest for regression tasks |
-| `GradientBoostingClassifier` | Sequential gradient boosting with configurable loss functions |
-| `GradientBoostingRegressor` | Gradient boosting for regression (least squares, LAD, Huber) |
-| `AdaBoostClassifier` | Adaptive Boosting with SAMME and SAMME.R algorithms |
+| `DecisionTreeClassifier` / `DecisionTreeRegressor` | CART trees with Gini / entropy / MSE / MAE splitting |
+| `ExtraTreeClassifier` / `ExtraTreeRegressor` | Extremely Randomized single trees |
+| `RandomForestClassifier` / `RandomForestRegressor` | Bagging ensemble with **per-split** random feature sampling (Breiman 2001), parallel via Rayon |
+| `ExtraTreesClassifier` / `ExtraTreesRegressor` | Bagging ensemble of Extra Trees |
+| `GradientBoostingClassifier` / `GradientBoostingRegressor` | Sequential gradient boosting |
+| `HistGradientBoostingClassifier` / `HistGradientBoostingRegressor` | Histogram-based gradient boosting (256-bin) |
+| `AdaBoostClassifier` / `AdaBoostRegressor` | Adaptive Boosting (default `algorithm = SAMME` to match sklearn ≥ 1.4) |
+| `BaggingClassifier` / `BaggingRegressor` | Generic bagging meta-estimator |
+| `VotingClassifier` / `VotingRegressor` | Hard / soft voting ensembles |
+| `IsolationForest` | Outlier / anomaly detection |
+| `RandomTreesEmbedding` | Tree-based feature transformation |
 
 ## Example
 
@@ -34,8 +41,20 @@ let fitted = model.fit(&x, &y).unwrap();
 let predictions = fitted.predict(&x).unwrap();
 ```
 
-All tree hyperparameters (max depth, min samples split, min samples leaf, etc.) are configurable via builder methods.
+All tree hyperparameters (`max_depth`, `min_samples_split`,
+`min_samples_leaf`, `max_features`, `criterion`, `random_state`, …) are
+configurable via builder methods.
+
+## sklearn parity highlights (0.3.0)
+
+- `RandomForest{Classifier,Regressor}` were fixed to do **per-split** feature
+  sampling (Breiman 2001) instead of a fixed per-tree subset — closed a
+  -16pp accuracy gap at medium scale.
+- `AdaBoostClassifier` default changed from `SAMME.R` to `SAMME` to match
+  scikit-learn ≥ 1.4 (which deprecated `SAMME.R` in 1.6) — closed a -19pp
+  gap at small scale.
 
 ## License
 
-Licensed under either of [Apache License, Version 2.0](../LICENSE-APACHE) or [MIT License](../LICENSE-MIT) at your option.
+Licensed under either of [Apache License, Version 2.0](../LICENSE-APACHE) or
+[MIT License](../LICENSE-MIT) at your option.

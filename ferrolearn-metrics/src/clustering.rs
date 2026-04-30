@@ -1590,6 +1590,196 @@ pub fn fowlkes_mallows_score(
 }
 
 // ---------------------------------------------------------------------------
+// Mutual information / contingency / homogeneity_completeness_v_measure /
+// pair_confusion_matrix
+// ---------------------------------------------------------------------------
+
+/// Build the contingency matrix between two clusterings.
+///
+/// Returns a 2-D array of shape `(n_classes_true, n_classes_pred)` where
+/// entry `(i, j)` counts the samples assigned to true class `i` and
+/// predicted class `j`.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+pub fn contingency_matrix(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+) -> Result<Array2<u64>, FerroError> {
+    check_labels_same_length(
+        labels_true.len(),
+        labels_pred.len(),
+        "contingency_matrix: labels_true vs labels_pred",
+    )?;
+    if labels_true.is_empty() {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "contingency_matrix".into(),
+        });
+    }
+    let (_ct, _cp, table) = build_contingency_table(labels_true, labels_pred);
+    let r = table.len();
+    let s = if r == 0 { 0 } else { table[0].len() };
+    let mut out = Array2::<u64>::zeros((r, s));
+    for i in 0..r {
+        for j in 0..s {
+            out[[i, j]] = table[i][j];
+        }
+    }
+    Ok(out)
+}
+
+/// Compute the (raw, unnormalised) mutual information score between two
+/// clusterings.
+///
+/// `MI(U, V) = sum_{i,j} (n_ij / n) * log(n * n_ij / (a_i * b_j))`
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+pub fn mutual_info_score(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+) -> Result<f64, FerroError> {
+    check_labels_same_length(
+        labels_true.len(),
+        labels_pred.len(),
+        "mutual_info_score: labels_true vs labels_pred",
+    )?;
+    if labels_true.is_empty() {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "mutual_info_score".into(),
+        });
+    }
+    let (_ct, _cp, contingency) = build_contingency_table(labels_true, labels_pred);
+    let r = contingency.len();
+    let s = if r == 0 { 0 } else { contingency[0].len() };
+
+    let mut row_sum = vec![0u64; r];
+    let mut col_sum = vec![0u64; s];
+    let mut total: u64 = 0;
+    for i in 0..r {
+        for j in 0..s {
+            row_sum[i] += contingency[i][j];
+            col_sum[j] += contingency[i][j];
+            total += contingency[i][j];
+        }
+    }
+    if total == 0 {
+        return Ok(0.0);
+    }
+    let n = total as f64;
+    let mut mi = 0.0_f64;
+    for i in 0..r {
+        for j in 0..s {
+            let nij = contingency[i][j] as f64;
+            if nij > 0.0 {
+                let ai = row_sum[i] as f64;
+                let bj = col_sum[j] as f64;
+                mi += (nij / n) * ((n * nij) / (ai * bj)).ln();
+            }
+        }
+    }
+    Ok(mi)
+}
+
+/// Compute homogeneity, completeness, and V-measure together.
+///
+/// Returns `(homogeneity, completeness, v_measure)`. `beta` controls the
+/// weight of homogeneity in the V-measure: `beta < 1` favours homogeneity,
+/// `beta > 1` favours completeness.
+///
+/// # Errors
+///
+/// Returns [`FerroError::InvalidParameter`] if `beta <= 0`.
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+pub fn homogeneity_completeness_v_measure(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+    beta: f64,
+) -> Result<(f64, f64, f64), FerroError> {
+    if !(beta > 0.0 && beta.is_finite()) {
+        return Err(FerroError::InvalidParameter {
+            name: "beta".into(),
+            reason: format!("homogeneity_completeness_v_measure: beta must be > 0, got {beta}"),
+        });
+    }
+    let h = homogeneity_score(labels_true, labels_pred)?;
+    let c = completeness_score(labels_true, labels_pred)?;
+    let v = if h + c == 0.0 {
+        0.0
+    } else {
+        (1.0 + beta) * h * c / (beta * h + c)
+    };
+    Ok((h, c, v))
+}
+
+/// Compute the pair-confusion matrix between two clusterings.
+///
+/// Returns a 2x2 matrix `[[C00, C01], [C10, C11]]` over all `(n choose 2)`
+/// sample pairs:
+/// - `C00` — pairs in different clusters in both clusterings
+/// - `C11` — pairs in the same cluster in both clusterings
+/// - `C01` — pairs in different clusters in true, same in pred
+/// - `C10` — pairs in same cluster in true, different in pred
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if the arrays have different lengths.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+pub fn pair_confusion_matrix(
+    labels_true: &Array1<isize>,
+    labels_pred: &Array1<isize>,
+) -> Result<Array2<u64>, FerroError> {
+    let n = labels_true.len();
+    check_labels_same_length(n, labels_pred.len(), "pair_confusion_matrix")?;
+    if n == 0 {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: "pair_confusion_matrix".into(),
+        });
+    }
+    let (_ct, _cp, contingency) = build_contingency_table(labels_true, labels_pred);
+    let r = contingency.len();
+    let s = if r == 0 { 0 } else { contingency[0].len() };
+
+    let mut row_sum = vec![0u64; r];
+    let mut col_sum = vec![0u64; s];
+    let mut sum_nij_sq: u64 = 0;
+    for i in 0..r {
+        for j in 0..s {
+            let nij = contingency[i][j];
+            row_sum[i] += nij;
+            col_sum[j] += nij;
+            sum_nij_sq += nij * nij;
+        }
+    }
+    let sum_a_sq: u64 = row_sum.iter().map(|x| x * x).sum();
+    let sum_b_sq: u64 = col_sum.iter().map(|x| x * x).sum();
+    let total = n as u64;
+    let total_sq = total * total;
+
+    let c11 = sum_nij_sq.saturating_sub(total);
+    let c10 = sum_a_sq.saturating_sub(sum_nij_sq);
+    let c01 = sum_b_sq.saturating_sub(sum_nij_sq);
+    let c00 = total_sq + sum_nij_sq - sum_a_sq - sum_b_sq;
+    let mut out = Array2::<u64>::zeros((2, 2));
+    out[[0, 0]] = c00;
+    out[[0, 1]] = c01;
+    out[[1, 0]] = c10;
+    out[[1, 1]] = c11;
+    Ok(out)
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 

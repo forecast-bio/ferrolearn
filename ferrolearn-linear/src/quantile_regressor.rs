@@ -248,10 +248,16 @@ fn gaussian_solve<F: Float>(
 
 /// Solve the weighted least-squares problem with L1 penalty approximation.
 ///
-/// `(X^T W X + alpha * diag) w = X^T W y`
+/// `(X^T W X + n_samples * alpha * diag) w = X^T W y`
 ///
 /// For the quantile regression IRLS, the L1 penalty is linearised around
-/// the current coefficients.
+/// the current coefficients. The penalty is scaled by `n_samples` so that
+/// `alpha` has the same meaning as in scikit-learn — sklearn's
+/// `QuantileRegressor` averages the data-fit term by `1/n` and adds an
+/// unscaled `alpha * ||w||_1`, which is mathematically equivalent to our
+/// unaveraged data fit plus `n_samples * alpha * ||w||_1`. Without this
+/// factor, `alpha = 1.0` in ferrolearn would be roughly `n_samples` times
+/// weaker than the same value in sklearn.
 fn weighted_l1_solve<F: Float + FromPrimitive>(
     x: &Array2<F>,
     y: &Array1<F>,
@@ -261,6 +267,8 @@ fn weighted_l1_solve<F: Float + FromPrimitive>(
 ) -> Result<Array1<F>, FerroError> {
     let (n_samples, n_features) = x.dim();
     let eps = F::from(1e-8).unwrap();
+    let n_f = F::from(n_samples).unwrap_or_else(F::one);
+    let scaled_alpha = alpha * n_f;
 
     let mut xtwx = Array2::<F>::zeros((n_features, n_features));
     let mut xtwy = Array1::<F>::zeros(n_features);
@@ -276,9 +284,12 @@ fn weighted_l1_solve<F: Float + FromPrimitive>(
         }
     }
 
-    // Add L1 penalty via IRLS approximation: penalise with alpha / max(|w_j|, eps).
+    // Add L1 penalty via IRLS approximation: penalise with
+    // (n_samples * alpha) / max(|w_j|, eps). The n_samples factor keeps
+    // `alpha` numerically equivalent to scikit-learn's `alpha` parameter
+    // (see function-level docstring).
     for j in 0..n_features {
-        let pen = alpha / prev_coef[j].abs().max(eps);
+        let pen = scaled_alpha / prev_coef[j].abs().max(eps);
         xtwx[[j, j]] = xtwx[[j, j]] + pen;
     }
 

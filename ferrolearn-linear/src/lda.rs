@@ -140,6 +140,93 @@ impl<F: Float + Send + Sync + 'static> FittedLDA<F> {
     pub fn classes(&self) -> &[usize] {
         &self.classes
     }
+
+    /// Predict per-class probabilities. Mirrors sklearn
+    /// `LinearDiscriminantAnalysis.predict_proba`.
+    ///
+    /// Computes softmax over `-½ ‖z - μ_c‖²` in the projected space (an
+    /// equal-priors approximation; ferrolearn's FittedLDA does not store
+    /// the per-class priors, so the full sklearn formula reduces to this
+    /// when priors are uniform). Returns shape `(n_samples, n_classes)`;
+    /// rows sum to 1.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the model.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let projected = self.transform(x)?;
+        let n_samples = projected.nrows();
+        let n_comp = projected.ncols();
+        let n_classes = self.classes.len();
+        let neg_half = F::from(-0.5).unwrap();
+        let mut proba = Array2::<F>::zeros((n_samples, n_classes));
+        for i in 0..n_samples {
+            let mut logits = vec![F::zero(); n_classes];
+            for ci in 0..n_classes {
+                let mut dist_sq = F::zero();
+                for k in 0..n_comp {
+                    let d = projected[[i, k]] - self.means[[ci, k]];
+                    dist_sq = dist_sq + d * d;
+                }
+                logits[ci] = neg_half * dist_sq;
+            }
+            let max_l = logits
+                .iter()
+                .copied()
+                .fold(F::neg_infinity(), |a, b| if b > a { b } else { a });
+            let mut sum_exp = F::zero();
+            for ci in 0..n_classes {
+                let e = (logits[ci] - max_l).exp();
+                proba[[i, ci]] = e;
+                sum_exp = sum_exp + e;
+            }
+            for ci in 0..n_classes {
+                proba[[i, ci]] = proba[[i, ci]] / sum_exp;
+            }
+        }
+        Ok(proba)
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba).
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
+
+    /// Per-class discriminant scores. Mirrors sklearn
+    /// `LinearDiscriminantAnalysis.decision_function`.
+    ///
+    /// Returns shape `(n_samples, n_classes)` with `-½ ‖z - μ_c‖²` in
+    /// the projected space. argmax of each row agrees with [`Predict`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn decision_function(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let projected = self.transform(x)?;
+        let n_samples = projected.nrows();
+        let n_comp = projected.ncols();
+        let n_classes = self.classes.len();
+        let neg_half = F::from(-0.5).unwrap();
+        let mut out = Array2::<F>::zeros((n_samples, n_classes));
+        for i in 0..n_samples {
+            for ci in 0..n_classes {
+                let mut dist_sq = F::zero();
+                for k in 0..n_comp {
+                    let d = projected[[i, k]] - self.means[[ci, k]];
+                    dist_sq = dist_sq + d * d;
+                }
+                out[[i, ci]] = neg_half * dist_sq;
+            }
+        }
+        Ok(out)
+    }
 }
 
 // ---------------------------------------------------------------------------

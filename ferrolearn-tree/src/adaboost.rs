@@ -33,7 +33,7 @@ use crate::decision_tree::{
     self, ClassificationCriterion, Node, build_classification_tree_with_feature_subset,
 };
 use ferrolearn_core::error::FerroError;
-use ferrolearn_core::introspection::HasClasses;
+use ferrolearn_core::introspection::{HasClasses, HasFeatureImportances};
 use ferrolearn_core::pipeline::{FittedPipelineEstimator, PipelineEstimator};
 use ferrolearn_core::traits::{Fit, Predict};
 use ndarray::{Array1, Array2};
@@ -87,13 +87,16 @@ impl<F: Float> AdaBoostClassifier<F> {
     /// Create a new `AdaBoostClassifier` with default settings.
     ///
     /// Defaults: `n_estimators = 50`, `learning_rate = 1.0`,
-    /// `algorithm = SAMME.R`, `random_state = None`.
+    /// `algorithm = SAMME`, `random_state = None`.
+    ///
+    /// The default algorithm is `SAMME` to match scikit-learn ≥ 1.4,
+    /// which removed `SAMME.R` in 1.6 and made `SAMME` the only option.
     #[must_use]
     pub fn new() -> Self {
         Self {
             n_estimators: 50,
             learning_rate: 1.0,
-            algorithm: AdaBoostAlgorithm::SammeR,
+            algorithm: AdaBoostAlgorithm::Samme,
             random_state: None,
             _marker: std::marker::PhantomData,
         }
@@ -157,6 +160,15 @@ pub struct FittedAdaBoostClassifier<F> {
     n_classes: usize,
     /// Algorithm used.
     algorithm: AdaBoostAlgorithm,
+    /// Per-feature importance scores aggregated across the boosted stumps,
+    /// weighted by `estimator_weights` (normalized to sum to 1).
+    feature_importances: Array1<F>,
+}
+
+impl<F: Float + Send + Sync + 'static> HasFeatureImportances<F> for FittedAdaBoostClassifier<F> {
+    fn feature_importances(&self) -> &Array1<F> {
+        &self.feature_importances
+    }
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for AdaBoostClassifier<F> {
@@ -332,6 +344,13 @@ impl<F: Float + Send + Sync + 'static> AdaBoostClassifier<F> {
             estimator_weights.push(alpha);
         }
 
+        let feature_importances = decision_tree::aggregate_tree_importances(
+            &estimators,
+            None,
+            Some(&estimator_weights),
+            n_features,
+        );
+
         Ok(FittedAdaBoostClassifier {
             classes: classes.to_vec(),
             estimators,
@@ -339,6 +358,7 @@ impl<F: Float + Send + Sync + 'static> AdaBoostClassifier<F> {
             n_features,
             n_classes,
             algorithm: AdaBoostAlgorithm::Samme,
+            feature_importances,
         })
     }
 
@@ -443,6 +463,13 @@ impl<F: Float + Send + Sync + 'static> AdaBoostClassifier<F> {
             }
         }
 
+        let feature_importances = decision_tree::aggregate_tree_importances(
+            &estimators,
+            None,
+            Some(&estimator_weights),
+            n_features,
+        );
+
         Ok(FittedAdaBoostClassifier {
             classes: classes.to_vec(),
             estimators,
@@ -450,6 +477,7 @@ impl<F: Float + Send + Sync + 'static> AdaBoostClassifier<F> {
             n_features,
             n_classes,
             algorithm: AdaBoostAlgorithm::SammeR,
+            feature_importances,
         })
     }
 }
@@ -566,6 +594,215 @@ impl<F: Float + Send + Sync + 'static> FittedAdaBoostClassifier<F> {
         }
 
         Ok(predictions)
+    }
+
+    /// Mean accuracy on the given test data and labels.
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::mean_accuracy(&preds, y))
+    }
+
+    /// Predict class probabilities for each sample. Mirrors sklearn's
+    /// `AdaBoostClassifier.predict_proba`.
+    ///
+    /// SAMME: normalizes the weighted-vote vector per row.
+    /// SAMME.R: applies softmax to the accumulated `(K-1)*(log p_k - mean)`
+    /// scores per row.
+    ///
+    /// Returns shape `(n_samples, n_classes)`; rows sum to 1.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        if x.ncols() != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        let n_classes = self.n_classes;
+        let mut proba = Array2::<F>::zeros((n_samples, n_classes));
+
+        match self.algorithm {
+            AdaBoostAlgorithm::Samme => {
+                for i in 0..n_samples {
+                    let row = x.row(i);
+                    let mut scores = vec![F::zero(); n_classes];
+                    for (t, tree_nodes) in self.estimators.iter().enumerate() {
+                        let leaf_idx = decision_tree::traverse(tree_nodes, &row);
+                        if let Node::Leaf { value, .. } = tree_nodes[leaf_idx] {
+                            let class_idx = value.to_f64().map_or(0, |f| f.round() as usize);
+                            if class_idx < n_classes {
+                                scores[class_idx] = scores[class_idx] + self.estimator_weights[t];
+                            }
+                        }
+                    }
+                    let total: F = scores.iter().copied().fold(F::zero(), |a, b| a + b);
+                    if total > F::zero() {
+                        for k in 0..n_classes {
+                            proba[[i, k]] = scores[k] / total;
+                        }
+                    } else {
+                        let u = F::one() / F::from(n_classes).unwrap();
+                        for k in 0..n_classes {
+                            proba[[i, k]] = u;
+                        }
+                    }
+                }
+            }
+            AdaBoostAlgorithm::SammeR => {
+                let eps = F::from(1e-10).unwrap();
+                let k_f = F::from(n_classes).unwrap();
+                let k_minus_1 = k_f - F::one();
+                for i in 0..n_samples {
+                    let row = x.row(i);
+                    let mut accumulated = vec![F::zero(); n_classes];
+                    for tree_nodes in &self.estimators {
+                        let leaf_idx = decision_tree::traverse(tree_nodes, &row);
+                        if let Node::Leaf {
+                            class_distribution: Some(ref dist),
+                            ..
+                        } = tree_nodes[leaf_idx]
+                        {
+                            let log_probs: Vec<F> =
+                                dist.iter().map(|&p| p.max(eps).ln()).collect();
+                            let mean_log: F =
+                                log_probs.iter().copied().fold(F::zero(), |a, b| a + b) / k_f;
+                            for k in 0..n_classes {
+                                accumulated[k] =
+                                    accumulated[k] + k_minus_1 * (log_probs[k] - mean_log);
+                            }
+                        } else if let Node::Leaf { value, .. } = tree_nodes[leaf_idx] {
+                            let class_idx = value.to_f64().map_or(0, |f| f.round() as usize);
+                            if class_idx < n_classes {
+                                accumulated[class_idx] = accumulated[class_idx] + F::one();
+                            }
+                        }
+                    }
+                    // Softmax of accumulated.
+                    let max_score = accumulated
+                        .iter()
+                        .copied()
+                        .fold(F::neg_infinity(), |a, b| if b > a { b } else { a });
+                    let mut sum_exp = F::zero();
+                    for k in 0..n_classes {
+                        let e = (accumulated[k] - max_score).exp();
+                        proba[[i, k]] = e;
+                        sum_exp = sum_exp + e;
+                    }
+                    if sum_exp > F::zero() {
+                        for k in 0..n_classes {
+                            proba[[i, k]] = proba[[i, k]] / sum_exp;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(proba)
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba). Mirrors
+    /// sklearn's `ClassifierMixin.predict_log_proba`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
+
+    /// Per-class raw scores. Mirrors sklearn's
+    /// `AdaBoostClassifier.decision_function`.
+    ///
+    /// SAMME: returns the cumulative weighted vote per class (unnormalized).
+    /// SAMME.R: returns the accumulated `(K-1)*(log p_k - mean log p)`
+    /// scores.
+    ///
+    /// Returns shape `(n_samples, n_classes)`. The argmax of each row
+    /// agrees with [`Predict::predict`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn decision_function(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        if x.ncols() != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        let n_classes = self.n_classes;
+        let mut out = Array2::<F>::zeros((n_samples, n_classes));
+
+        match self.algorithm {
+            AdaBoostAlgorithm::Samme => {
+                for i in 0..n_samples {
+                    let row = x.row(i);
+                    for (t, tree_nodes) in self.estimators.iter().enumerate() {
+                        let leaf_idx = decision_tree::traverse(tree_nodes, &row);
+                        if let Node::Leaf { value, .. } = tree_nodes[leaf_idx] {
+                            let class_idx = value.to_f64().map_or(0, |f| f.round() as usize);
+                            if class_idx < n_classes {
+                                out[[i, class_idx]] =
+                                    out[[i, class_idx]] + self.estimator_weights[t];
+                            }
+                        }
+                    }
+                }
+            }
+            AdaBoostAlgorithm::SammeR => {
+                let eps = F::from(1e-10).unwrap();
+                let k_f = F::from(n_classes).unwrap();
+                let k_minus_1 = k_f - F::one();
+                for i in 0..n_samples {
+                    let row = x.row(i);
+                    for tree_nodes in &self.estimators {
+                        let leaf_idx = decision_tree::traverse(tree_nodes, &row);
+                        if let Node::Leaf {
+                            class_distribution: Some(ref dist),
+                            ..
+                        } = tree_nodes[leaf_idx]
+                        {
+                            let log_probs: Vec<F> =
+                                dist.iter().map(|&p| p.max(eps).ln()).collect();
+                            let mean_log: F =
+                                log_probs.iter().copied().fold(F::zero(), |a, b| a + b) / k_f;
+                            for k in 0..n_classes {
+                                out[[i, k]] =
+                                    out[[i, k]] + k_minus_1 * (log_probs[k] - mean_log);
+                            }
+                        } else if let Node::Leaf { value, .. } = tree_nodes[leaf_idx] {
+                            let class_idx = value.to_f64().map_or(0, |f| f.round() as usize);
+                            if class_idx < n_classes {
+                                out[[i, class_idx]] = out[[i, class_idx]] + F::one();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok(out)
     }
 }
 
@@ -888,7 +1125,7 @@ mod tests {
         let model = AdaBoostClassifier::<f64>::default();
         assert_eq!(model.n_estimators, 50);
         assert!((model.learning_rate - 1.0).abs() < 1e-10);
-        assert_eq!(model.algorithm, AdaBoostAlgorithm::SammeR);
+        assert_eq!(model.algorithm, AdaBoostAlgorithm::Samme);
     }
 
     #[test]

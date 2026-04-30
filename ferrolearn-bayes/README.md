@@ -1,6 +1,9 @@
 # ferrolearn-bayes
 
-Naive Bayes classifiers for the [ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework.
+Naive Bayes classifiers for the [ferrolearn](https://crates.io/crates/ferrolearn)
+machine learning framework. Validated against scikit-learn 1.8.0 head-to-head:
+exact accuracy parity on every dataset size — see the
+[workspace BENCHMARKS.md](../BENCHMARKS.md).
 
 ## Algorithms
 
@@ -10,8 +13,16 @@ Naive Bayes classifiers for the [ferrolearn](https://crates.io/crates/ferrolearn
 | `MultinomialNB` | Discrete count data (e.g., word counts in text classification) |
 | `BernoulliNB` | Binary/boolean features with optional binarization threshold |
 | `ComplementNB` | Imbalanced datasets (complement-class variant of Multinomial NB) |
+| `CategoricalNB` | Discrete categorical features |
 
-All classifiers support `predict_proba` for class probability estimates.
+All classifiers support `predict_proba` for class probability estimates and
+match scikit-learn defaults (`alpha = 1.0`, `fit_prior = True`).
+
+## Conjugate priors module
+
+The crate also exposes a `conjugate` module with closed-form Bayesian updates
+for Beta-Bernoulli, Dirichlet-Categorical, Normal-Inverse-Gamma, and
+Gamma-Poisson distributions.
 
 ## Example
 
@@ -36,4 +47,5 @@ let probas = fitted.predict_proba(&x).unwrap();
 
 ## License
 
-Licensed under either of [Apache License, Version 2.0](../LICENSE-APACHE) or [MIT License](../LICENSE-MIT) at your option.
+Licensed under either of [Apache License, Version 2.0](../LICENSE-APACHE) or
+[MIT License](../LICENSE-MIT) at your option.

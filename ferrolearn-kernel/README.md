@@ -1,6 +1,10 @@
 # ferrolearn-kernel
 
-Kernel methods for the [ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework: nonparametric regression, Gaussian processes, kernel ridge, and kernel approximations.
+Kernel methods for the [ferrolearn](https://crates.io/crates/ferrolearn)
+machine learning framework: nonparametric regression, Gaussian processes,
+kernel ridge, and kernel approximations. Validated against scikit-learn
+1.8.0 head-to-head — see the [workspace BENCHMARKS.md](../BENCHMARKS.md).
+Default `KernelRidge` kernel is `Linear` to match scikit-learn.
 
 ## Algorithms
 

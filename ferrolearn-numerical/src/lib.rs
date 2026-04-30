@@ -25,3 +25,4 @@ pub mod interpolate;
 pub mod optimize;
 pub mod sparse_eig;
 pub mod sparse_graph;
+pub mod special;

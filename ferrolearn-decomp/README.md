@@ -1,6 +1,9 @@
 # ferrolearn-decomp
 
-Dimensionality reduction and matrix decomposition for the [ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework.
+Dimensionality reduction and matrix decomposition for the
+[ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework.
+Validated against scikit-learn 1.8.0 head-to-head — see the
+[workspace BENCHMARKS.md](../BENCHMARKS.md).
 
 ## Algorithms
 
@@ -8,12 +11,16 @@ Dimensionality reduction and matrix decomposition for the [ferrolearn](https://c
 
 | Model | Description |
 |-------|-------------|
-| `PCA` | Principal Component Analysis — project onto directions of maximum variance |
-| `IncrementalPCA` | Incremental PCA for large datasets that don't fit in memory |
+| `PCA` | Principal Component Analysis via faer self-adjoint eigensolver |
+| `IncrementalPCA` | Out-of-core PCA for large datasets |
 | `TruncatedSVD` | Randomized SVD (Halko algorithm) — works on uncentered/sparse data |
-| `NMF` | Non-negative Matrix Factorization (coordinate descent and multiplicative update solvers) |
+| `NMF` / `MiniBatchNMF` | Non-negative Matrix Factorization (coordinate descent and multiplicative update solvers) |
+| `SparsePCA` | Sparse PCA via online dictionary learning |
 | `FactorAnalysis` | Factor Analysis via EM algorithm |
-| `FastICA` | Independent Component Analysis |
+| `FastICA` | Independent Component Analysis (parallel + deflation) |
+| `DictionaryLearning` | Dictionary learning for sparse coding |
+| `LDATopic` | Latent Dirichlet Allocation for topic modelling |
+| `CCA` (cross_decomposition) | Canonical Correlation Analysis & PLS variants |
 
 ### Manifold learning
 
@@ -21,9 +28,11 @@ Dimensionality reduction and matrix decomposition for the [ferrolearn](https://c
 |-------|-------------|
 | `KernelPCA` | Non-linear PCA via RBF, polynomial, or sigmoid kernels |
 | `Isomap` | Isometric mapping via geodesic distances on a kNN graph |
-| `MDS` | Classical Multidimensional Scaling |
+| `MDS` | Classical and metric Multidimensional Scaling |
 | `SpectralEmbedding` | Laplacian Eigenmaps |
-| `LLE` | Locally Linear Embedding |
+| `LLE` | Locally Linear Embedding (standard + modified) |
+| `Tsne` | t-distributed Stochastic Neighbor Embedding |
+| `Umap` | Uniform Manifold Approximation and Projection |
 
 ## Example
 
@@ -43,6 +52,13 @@ assert_eq!(projected.ncols(), 2);
 let variance_ratio = fitted.explained_variance_ratio();
 ```
 
+## sklearn parity note
+
+`PCA`, `IncrementalPCA`, `TruncatedSVD`, and `FactorAnalysis` produce
+reconstruction errors numerically identical to scikit-learn (`recon_rel`
+ratio = 1.000× across all measured dataset sizes).
+
 ## License
 
-Licensed under either of [Apache License, Version 2.0](../LICENSE-APACHE) or [MIT License](../LICENSE-MIT) at your option.
+Licensed under either of [Apache License, Version 2.0](../LICENSE-APACHE) or
+[MIT License](../LICENSE-MIT) at your option.

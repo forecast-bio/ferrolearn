@@ -32,8 +32,6 @@
 //! assert_eq!(preds.len(), 6);
 //! ```
 
-use std::collections::HashMap;
-
 use ferrolearn_core::error::FerroError;
 use ferrolearn_core::pipeline::{FittedPipelineEstimator, PipelineEstimator};
 use ferrolearn_core::traits::{Fit, Predict};
@@ -48,8 +46,13 @@ use crate::knn::{Algorithm, Weights};
 // Shared spatial index
 // ---------------------------------------------------------------------------
 
+/// Per-query jagged neighbor list as `(distances_per_query, indices_per_query)`.
+/// Used as the public return type of every `radius_neighbors` method since
+/// each query may match a different number of training points.
+pub type RadiusNeighborsResult<F> = (Vec<Vec<F>>, Vec<Vec<usize>>);
+
 /// Which spatial index was built during fit.
-enum SpatialIndex {
+pub(crate) enum SpatialIndex {
     None,
     KdTree(KdTree),
     BallTree(BallTree),
@@ -381,48 +384,168 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedRadiusNeighb
 }
 
 impl<F: Float + Send + Sync + 'static> FittedRadiusNeighborsClassifier<F> {
-    /// Perform a (possibly weighted) majority vote among neighbors.
-    fn weighted_vote(&self, neighbors: &[(usize, F)]) -> usize {
-        let mut class_weights: HashMap<usize, F> = HashMap::new();
+    /// Per-class weighted vote sums in `self.classes` order.
+    fn class_score_vec(&self, neighbors: &[(usize, F)]) -> Vec<F> {
+        let mut scores = vec![F::zero(); self.classes.len()];
         let eps = F::from(1e-15).unwrap();
+        let class_idx = |label: usize| -> usize {
+            self.classes
+                .binary_search(&label)
+                .expect("label not in fitted classes")
+        };
 
         match self.weights {
             Weights::Uniform => {
                 for &(idx, _) in neighbors {
-                    let label = self.y_train[idx];
-                    *class_weights.entry(label).or_insert_with(F::zero) =
-                        *class_weights.entry(label).or_insert_with(F::zero) + F::one();
+                    let ci = class_idx(self.y_train[idx]);
+                    scores[ci] = scores[ci] + F::one();
                 }
             }
             Weights::Distance => {
                 let has_zero_dist = neighbors.iter().any(|&(_, d)| d < eps);
-
                 if has_zero_dist {
                     for &(idx, d) in neighbors {
                         if d < eps {
-                            let label = self.y_train[idx];
-                            *class_weights.entry(label).or_insert_with(F::zero) =
-                                *class_weights.entry(label).or_insert_with(F::zero) + F::one();
+                            let ci = class_idx(self.y_train[idx]);
+                            scores[ci] = scores[ci] + F::one();
                         }
                     }
                 } else {
                     for &(idx, d) in neighbors {
-                        let label = self.y_train[idx];
-                        let w = F::one() / d;
-                        *class_weights.entry(label).or_insert_with(F::zero) =
-                            *class_weights.entry(label).or_insert_with(F::zero) + w;
+                        let ci = class_idx(self.y_train[idx]);
+                        scores[ci] = scores[ci] + F::one() / d;
                     }
                 }
             }
         }
+        scores
+    }
 
-        // Find the class with the maximum weight. Tie-break: smallest label.
-        class_weights
-            .into_iter()
-            .max_by(|(label_a, w_a), (label_b, w_b)| {
-                w_a.partial_cmp(w_b).unwrap().then(label_b.cmp(label_a))
-            })
-            .map_or(0, |(label, _)| label)
+    /// Perform a (possibly weighted) majority vote among neighbors.
+    /// Tie-break by smallest class label (sklearn parity).
+    fn weighted_vote(&self, neighbors: &[(usize, F)]) -> usize {
+        let scores = self.class_score_vec(neighbors);
+        let mut best_idx = 0usize;
+        let mut best_score = scores[0];
+        for (i, &s) in scores.iter().enumerate().skip(1) {
+            if s > best_score {
+                best_score = s;
+                best_idx = i;
+            }
+        }
+        self.classes[best_idx]
+    }
+
+    /// Predict class probabilities for the given feature matrix.
+    ///
+    /// For each sample, finds all training points within `radius` and
+    /// returns the normalized (weighted) class vote shares. Query points
+    /// with no neighbors fall back to the `outlier_label` (one-hot) when
+    /// set, else uniform `1 / n_classes` per row.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features does
+    /// not match the training data.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features = x.ncols();
+        let train_features = self.x_train.ncols();
+        if n_features != train_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![train_features],
+                actual: vec![n_features],
+                context: "number of features must match training data".into(),
+            });
+        }
+
+        let n_samples = x.nrows();
+        let n_classes = self.classes.len();
+        let mut proba = Array2::<F>::zeros((n_samples, n_classes));
+
+        for i in 0..n_samples {
+            let query: Vec<F> = (0..n_features).map(|j| x[[i, j]]).collect();
+            let neighbors =
+                find_radius_neighbors(&self.x_train, &query, self.radius, &self.spatial_index);
+
+            if neighbors.is_empty() {
+                if let Some(label) = self.outlier_label
+                    && let Ok(ci) = self.classes.binary_search(&label)
+                {
+                    proba[[i, ci]] = F::one();
+                } else {
+                    let u = F::one() / F::from(n_classes).unwrap();
+                    for ci in 0..n_classes {
+                        proba[[i, ci]] = u;
+                    }
+                }
+            } else {
+                let scores = self.class_score_vec(&neighbors);
+                let total: F = scores.iter().copied().fold(F::zero(), |a, b| a + b);
+                if total > F::zero() {
+                    for ci in 0..n_classes {
+                        proba[[i, ci]] = scores[ci] / total;
+                    }
+                }
+            }
+        }
+        Ok(proba)
+    }
+
+    /// Mean accuracy on the given test data and labels. Equivalent to
+    /// sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        let n = y.len();
+        if n == 0 {
+            return Ok(F::zero());
+        }
+        let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
+        Ok(F::from(correct).unwrap() / F::from(n).unwrap())
+    }
+
+    /// Find all neighbors within `radius` of each query sample. Mirrors
+    /// sklearn `RadiusNeighborsMixin.radius_neighbors`.
+    ///
+    /// Returns `(distances, indices)` where each is `Vec<Vec<…>>`
+    /// because the per-query neighbor counts are jagged. Rows are sorted
+    /// by distance ascending.
+    ///
+    /// `radius` overrides the value set at construction; `None` uses
+    /// `self.radius`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the query feature count
+    /// does not match the training data.
+    pub fn radius_neighbors(
+        &self,
+        x: &Array2<F>,
+        radius: Option<F>,
+    ) -> Result<RadiusNeighborsResult<F>, FerroError> {
+        radius_neighbors_impl(
+            &self.x_train,
+            &self.spatial_index,
+            x,
+            radius.unwrap_or(self.radius),
+        )
+    }
+
+    /// Number of training samples seen during `fit()`.
+    #[must_use]
+    pub fn n_samples_fit(&self) -> usize {
+        self.x_train.nrows()
     }
 
     /// Return the unique class labels found during fitting.
@@ -436,6 +559,44 @@ impl<F: Float + Send + Sync + 'static> FittedRadiusNeighborsClassifier<F> {
     pub fn n_classes(&self) -> usize {
         self.classes.len()
     }
+}
+
+/// Shared `radius_neighbors` implementation used by every fitted radius-
+/// based estimator. Validates feature count and `radius`, then walks each
+/// query and returns `(distances, indices)` jagged Vec<Vec<…>>.
+pub(crate) fn radius_neighbors_impl<F: Float + Send + Sync + 'static>(
+    x_train: &Array2<F>,
+    spatial_index: &SpatialIndex,
+    x: &Array2<F>,
+    radius: F,
+) -> Result<RadiusNeighborsResult<F>, FerroError> {
+    let n_features = x.ncols();
+    let train_features = x_train.ncols();
+    if n_features != train_features {
+        return Err(FerroError::ShapeMismatch {
+            expected: vec![train_features],
+            actual: vec![n_features],
+            context: "number of features must match training data".into(),
+        });
+    }
+    if radius <= F::zero() {
+        return Err(FerroError::InvalidParameter {
+            name: "radius".into(),
+            reason: "must be positive".into(),
+        });
+    }
+
+    let n_queries = x.nrows();
+    let mut distances: Vec<Vec<F>> = Vec::with_capacity(n_queries);
+    let mut indices: Vec<Vec<usize>> = Vec::with_capacity(n_queries);
+    for i in 0..n_queries {
+        let query: Vec<F> = (0..n_features).map(|j| x[[i, j]]).collect();
+        let neighbors = find_radius_neighbors(x_train, &query, radius, spatial_index);
+        let (idxs, dists): (Vec<usize>, Vec<F>) = neighbors.into_iter().unzip();
+        indices.push(idxs);
+        distances.push(dists);
+    }
+    Ok((distances, indices))
 }
 
 // Pipeline integration for classifier.
@@ -677,6 +838,52 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedRadiusNeighb
 }
 
 impl<F: Float + Send + Sync + 'static> FittedRadiusNeighborsRegressor<F> {
+    /// Coefficient of determination R² on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data, or
+    /// [`FerroError::InvalidParameter`] if any query has no neighbors.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::knn::r2_score(&preds, y))
+    }
+
+    /// Find all neighbors within `radius` of each query sample. See
+    /// [`FittedRadiusNeighborsClassifier::radius_neighbors`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the query feature count
+    /// does not match training data.
+    pub fn radius_neighbors(
+        &self,
+        x: &Array2<F>,
+        radius: Option<F>,
+    ) -> Result<RadiusNeighborsResult<F>, FerroError> {
+        radius_neighbors_impl(
+            &self.x_train,
+            &self.spatial_index,
+            x,
+            radius.unwrap_or(self.radius),
+        )
+    }
+
+    /// Number of training samples seen during `fit()`.
+    #[must_use]
+    pub fn n_samples_fit(&self) -> usize {
+        self.x_train.nrows()
+    }
+
     /// Compute the (possibly weighted) mean of neighbor targets.
     fn weighted_mean(&self, neighbors: &[(usize, F)]) -> F {
         let eps = F::from(1e-15).unwrap();

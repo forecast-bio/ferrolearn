@@ -30,6 +30,45 @@ pub enum Metric {
     Chebyshev,
 }
 
+/// Trait for computing pairwise distances between two matrices.
+///
+/// This is the dyn-friendly equivalent of scikit-learn's `DistanceMetric`
+/// class. Implementors take two `(n_a, d) × (n_b, d)` matrices and return
+/// the `(n_a, n_b)` distance matrix.
+pub trait DistanceMetric<F>: Send + Sync
+where
+    F: Float + Send + Sync + 'static,
+{
+    /// Compute the pairwise distance matrix between every row of `x` and
+    /// every row of `y`.
+    fn pairwise(&self, x: &Array2<F>, y: &Array2<F>) -> Result<Array2<F>, FerroError>;
+
+    /// Convenience: compute the distance from a single point `a` to a single
+    /// point `b`. Default implementation calls [`pairwise`] on `1 × d`
+    /// matrices and returns the single entry.
+    fn distance(&self, a: &ndarray::Array1<F>, b: &ndarray::Array1<F>) -> Result<F, FerroError> {
+        let mut x = Array2::<F>::zeros((1, a.len()));
+        let mut y = Array2::<F>::zeros((1, b.len()));
+        for i in 0..a.len() {
+            x[[0, i]] = a[i];
+        }
+        for i in 0..b.len() {
+            y[[0, i]] = b[i];
+        }
+        let m = self.pairwise(&x, &y)?;
+        Ok(m[[0, 0]])
+    }
+}
+
+impl<F> DistanceMetric<F> for Metric
+where
+    F: Float + Send + Sync + 'static,
+{
+    fn pairwise(&self, x: &Array2<F>, y: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        pairwise_distances(x, y, *self)
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -475,6 +514,197 @@ where
     }
 
     Ok(result)
+}
+
+// ---------------------------------------------------------------------------
+// pairwise_distances_argmin / argmin_min / pairwise_kernels
+// ---------------------------------------------------------------------------
+
+/// Kernel function for [`pairwise_kernels`].
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PairwiseKernel<F> {
+    /// `K(x, y) = x . y`
+    Linear,
+    /// `K(x, y) = (gamma * x . y + coef0)^degree`
+    Polynomial {
+        /// Degree of the polynomial.
+        degree: u32,
+        /// Multiplier on the dot product (default `1 / n_features`).
+        gamma: F,
+        /// Additive bias term.
+        coef0: F,
+    },
+    /// `K(x, y) = exp(-gamma * ||x - y||^2)`
+    Rbf {
+        /// Bandwidth parameter (default `1 / n_features`).
+        gamma: F,
+    },
+    /// `K(x, y) = tanh(gamma * x . y + coef0)`
+    Sigmoid {
+        /// Multiplier on the dot product.
+        gamma: F,
+        /// Additive bias term.
+        coef0: F,
+    },
+    /// `K(x, y) = exp(-gamma * ||x - y||_1)`
+    Laplacian {
+        /// Bandwidth parameter.
+        gamma: F,
+    },
+}
+
+/// For each row in `X`, return the index of the closest row in `Y` under the
+/// given metric.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if `X` and `Y` have different feature
+/// dimensions.
+/// Returns [`FerroError::InsufficientSamples`] if either matrix is empty.
+pub fn pairwise_distances_argmin<F>(
+    x: &Array2<F>,
+    y: &Array2<F>,
+    metric: Metric,
+) -> Result<ndarray::Array1<usize>, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    let d = pairwise_distances(x, y, metric)?;
+    let n = d.nrows();
+    let mut out = ndarray::Array1::<usize>::zeros(n);
+    for i in 0..n {
+        let row = d.row(i);
+        let mut best_idx = 0usize;
+        let mut best_val = row[0];
+        for (j, &v) in row.iter().enumerate().skip(1) {
+            if v < best_val {
+                best_val = v;
+                best_idx = j;
+            }
+        }
+        out[i] = best_idx;
+    }
+    Ok(out)
+}
+
+/// Like [`pairwise_distances_argmin`] but also returns the minimum distance
+/// for each row.
+///
+/// # Errors
+///
+/// Returns the same errors as [`pairwise_distances_argmin`].
+pub fn pairwise_distances_argmin_min<F>(
+    x: &Array2<F>,
+    y: &Array2<F>,
+    metric: Metric,
+) -> Result<(ndarray::Array1<usize>, ndarray::Array1<F>), FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    let d = pairwise_distances(x, y, metric)?;
+    let n = d.nrows();
+    let mut idx = ndarray::Array1::<usize>::zeros(n);
+    let mut mins = ndarray::Array1::<F>::from_elem(n, F::zero());
+    for i in 0..n {
+        let row = d.row(i);
+        let mut best_idx = 0usize;
+        let mut best_val = row[0];
+        for (j, &v) in row.iter().enumerate().skip(1) {
+            if v < best_val {
+                best_val = v;
+                best_idx = j;
+            }
+        }
+        idx[i] = best_idx;
+        mins[i] = best_val;
+    }
+    Ok((idx, mins))
+}
+
+/// Compute the pairwise kernel matrix between rows of `X` and rows of `Y`.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if `X` and `Y` have different feature
+/// dimensions.
+/// Returns [`FerroError::InsufficientSamples`] if either matrix is empty.
+pub fn pairwise_kernels<F>(
+    x: &Array2<F>,
+    y: &Array2<F>,
+    kernel: PairwiseKernel<F>,
+) -> Result<Array2<F>, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_feature_dim(x, y, "pairwise_kernels")?;
+    check_non_empty(x, y, "pairwise_kernels")?;
+    let n = x.nrows();
+    let m = y.nrows();
+    let mut out = Array2::<F>::zeros((n, m));
+    match kernel {
+        PairwiseKernel::Linear => {
+            for i in 0..n {
+                for j in 0..m {
+                    let mut s = F::zero();
+                    for k in 0..x.ncols() {
+                        s = s + x[[i, k]] * y[[j, k]];
+                    }
+                    out[[i, j]] = s;
+                }
+            }
+        }
+        PairwiseKernel::Polynomial {
+            degree,
+            gamma,
+            coef0,
+        } => {
+            for i in 0..n {
+                for j in 0..m {
+                    let mut s = F::zero();
+                    for k in 0..x.ncols() {
+                        s = s + x[[i, k]] * y[[j, k]];
+                    }
+                    let v = gamma * s + coef0;
+                    out[[i, j]] = v.powi(degree as i32);
+                }
+            }
+        }
+        PairwiseKernel::Rbf { gamma } => {
+            for i in 0..n {
+                for j in 0..m {
+                    let mut s = F::zero();
+                    for k in 0..x.ncols() {
+                        let d = x[[i, k]] - y[[j, k]];
+                        s = s + d * d;
+                    }
+                    out[[i, j]] = (-gamma * s).exp();
+                }
+            }
+        }
+        PairwiseKernel::Sigmoid { gamma, coef0 } => {
+            for i in 0..n {
+                for j in 0..m {
+                    let mut s = F::zero();
+                    for k in 0..x.ncols() {
+                        s = s + x[[i, k]] * y[[j, k]];
+                    }
+                    out[[i, j]] = (gamma * s + coef0).tanh();
+                }
+            }
+        }
+        PairwiseKernel::Laplacian { gamma } => {
+            for i in 0..n {
+                for j in 0..m {
+                    let mut s = F::zero();
+                    for k in 0..x.ncols() {
+                        s = s + (x[[i, k]] - y[[j, k]]).abs();
+                    }
+                    out[[i, j]] = (-gamma * s).exp();
+                }
+            }
+        }
+    }
+    Ok(out)
 }
 
 // ---------------------------------------------------------------------------

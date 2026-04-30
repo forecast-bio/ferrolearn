@@ -146,6 +146,67 @@ impl<F: Float + Send + Sync + 'static> FittedVotingClassifier<F> {
     pub fn n_estimators(&self) -> usize {
         self.trees.len()
     }
+
+    /// Mean accuracy on the given test data and labels.
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::mean_accuracy(&preds, y))
+    }
+
+    /// Predict class probabilities by averaging the per-tree
+    /// `predict_proba` outputs (sklearn's `voting='soft'` semantics).
+    ///
+    /// Returns shape `(n_samples, n_classes)`. Each row sums to 1.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_samples = x.nrows();
+        let n_classes = self.classes.len();
+        let n_trees_f = F::from(self.trees.len()).unwrap();
+        let mut proba = Array2::<F>::zeros((n_samples, n_classes));
+
+        for tree in &self.trees {
+            let tree_proba = tree.predict_proba(x)?;
+            for i in 0..n_samples {
+                for j in 0..n_classes {
+                    proba[[i, j]] = proba[[i, j]] + tree_proba[[i, j]];
+                }
+            }
+        }
+        for i in 0..n_samples {
+            for j in 0..n_classes {
+                proba[[i, j]] = proba[[i, j]] / n_trees_f;
+            }
+        }
+        Ok(proba)
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba). Mirrors
+    /// sklearn's `ClassifierMixin.predict_log_proba`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for VotingClassifier<F> {
@@ -398,6 +459,25 @@ impl<F: Float + Send + Sync + 'static> FittedVotingRegressor<F> {
     #[must_use]
     pub fn n_estimators(&self) -> usize {
         self.trees.len()
+    }
+
+    /// R² coefficient of determination on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::r2_score(&preds, y))
     }
 }
 

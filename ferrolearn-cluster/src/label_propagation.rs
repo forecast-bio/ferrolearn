@@ -169,6 +169,86 @@ impl<F: Float> FittedLabelPropagation<F> {
     }
 }
 
+impl<F: Float + Send + Sync + 'static> FittedLabelPropagation<F> {
+    /// Per-class probability for each query sample. Mirrors sklearn
+    /// `LabelPropagation.predict_proba`. For each query the result is the
+    /// nearest training point's label distribution row.
+    ///
+    /// Returns shape `(n_samples, n_classes)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the feature count does not
+    /// match the training data.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features = x.ncols();
+        let expected = self.x_train_.ncols();
+        if n_features != expected {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![expected],
+                actual: vec![n_features],
+                context: "number of features must match the training data".into(),
+            });
+        }
+        let n_new = x.nrows();
+        let n_train = self.x_train_.nrows();
+        let mut out = Array2::<F>::zeros((n_new, self.n_classes_));
+        for i in 0..n_new {
+            let ri = x.row(i);
+            let si = ri.as_slice().unwrap_or(&[]);
+            let mut best_j = 0;
+            let mut best_dist = F::max_value();
+            for j in 0..n_train {
+                let rj = self.x_train_.row(j);
+                let sj = rj.as_slice().unwrap_or(&[]);
+                let d = sq_euclidean(si, sj);
+                if d < best_dist {
+                    best_dist = d;
+                    best_j = j;
+                }
+            }
+            for c in 0..self.n_classes_ {
+                out[[i, c]] = self.label_distributions_[[best_j, c]];
+            }
+        }
+        Ok(out)
+    }
+
+    /// Mean accuracy on the given test data and labels. Mirrors sklearn
+    /// `ClassifierMixin.score`. Test samples with `y == -1` (unlabeled
+    /// sentinel) are skipped from the denominator.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<isize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        let mut total = 0usize;
+        let mut correct = 0usize;
+        for (p, t) in preds.iter().zip(y.iter()) {
+            if *t == -1 {
+                continue;
+            }
+            total += 1;
+            if p == t {
+                correct += 1;
+            }
+        }
+        if total == 0 {
+            return Ok(F::zero());
+        }
+        Ok(F::from(correct).unwrap() / F::from(total).unwrap())
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Internal helpers
 // ─────────────────────────────────────────────────────────────────────────────

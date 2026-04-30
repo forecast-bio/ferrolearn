@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+"""Join the ferrolearn harness JSON with the sklearn benchmark JSON and
+render a markdown comparison report grouped by family.
+
+Usage:
+    cargo run --release --bin harness > ferrolearn_bench.json
+    python sklearn_bench.py > sklearn_bench.json
+    python compare.py ferrolearn_bench.json sklearn_bench.json > REPORT.md
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import sys
+from collections import defaultdict
+from pathlib import Path
+
+
+def fmt_time(us: float | None) -> str:
+    if us is None:
+        return "—"
+    if us < 1:
+        return f"{us * 1000:.0f} ns"
+    if us < 1000:
+        return f"{us:.1f} us"
+    if us < 1_000_000:
+        return f"{us / 1000:.1f} ms"
+    return f"{us / 1e6:.2f} s"
+
+
+def fmt_speedup(sk_us: float | None, fl_us: float | None) -> str:
+    if sk_us is None or fl_us is None or fl_us <= 0:
+        return "—"
+    s = sk_us / fl_us
+    if s >= 2:
+        return f"**{s:.1f}x**"
+    return f"{s:.2f}x"
+
+
+def fmt_score(score: float | None, metric: str | None) -> str:
+    if score is None:
+        return "—"
+    if metric == "accuracy":
+        return f"{score * 100:.1f}%"
+    if metric == "recon_rel":
+        return f"{score:.3e}"
+    return f"{score:.3f}"
+
+
+def render_table(family: str, fl_records: dict, sk_records: dict) -> str:
+    """Render one family's table; missing-side cells use '—'."""
+    keys = sorted(set(fl_records.keys()) | set(sk_records.keys()))
+    if not keys:
+        return ""
+
+    out = [f"### {family.title()}\n"]
+
+    has_quality = any(
+        (fl_records.get(k, {}).get("metric") or sk_records.get(k, {}).get("metric"))
+        for k in keys
+    )
+
+    if has_quality:
+        out.append(
+            "| Algorithm | Dataset | sklearn fit | ferrolearn fit | fit speedup "
+            "| sklearn predict | ferrolearn predict | predict speedup "
+            "| metric | sklearn score | ferrolearn score |"
+        )
+        out.append("|" + "|".join(["---"] * 11) + "|")
+    else:
+        out.append(
+            "| Algorithm | Dataset | sklearn fit | ferrolearn fit | fit speedup "
+            "| sklearn predict | ferrolearn predict | predict speedup |"
+        )
+        out.append("|" + "|".join(["---"] * 8) + "|")
+
+    for algo, dataset in keys:
+        fl = fl_records.get((algo, dataset), {})
+        sk = sk_records.get((algo, dataset), {})
+        fl_fit, sk_fit = fl.get("fit_us"), sk.get("fit_us")
+        fl_pred, sk_pred = fl.get("predict_us"), sk.get("predict_us")
+        fl_score, sk_score = fl.get("score"), sk.get("score")
+        metric = fl.get("metric") or sk.get("metric") or ""
+
+        row = (
+            f"| {algo} | {dataset} | "
+            f"{fmt_time(sk_fit)} | {fmt_time(fl_fit)} | {fmt_speedup(sk_fit, fl_fit)} | "
+            f"{fmt_time(sk_pred)} | {fmt_time(fl_pred)} | {fmt_speedup(sk_pred, fl_pred)} |"
+        )
+        if has_quality:
+            row += (
+                f" {metric or '—'} | "
+                f"{fmt_score(sk_score, metric)} | {fmt_score(fl_score, metric)} |"
+            )
+        out.append(row)
+
+    out.append("")
+    return "\n".join(out)
+
+
+def render_geomean(families, by_fl, by_sk) -> str:
+    """Family-level geomean speedup summary."""
+    rows = ["## Geometric mean speedup per family\n",
+            "| Family | algorithms compared | fit geomean | predict geomean |",
+            "|---|---:|---:|---:|"]
+    for fam in families:
+        fls, sks = by_fl[fam], by_sk[fam]
+        common = set(fls) & set(sks)
+        if not common:
+            continue
+
+        def ratios(field):
+            return [
+                sks[k][field] / fls[k][field]
+                for k in common
+                if fls[k].get(field) and sks[k].get(field) and fls[k][field] > 0
+            ]
+
+        def gm(xs):
+            return math.exp(sum(math.log(x) for x in xs) / len(xs)) if xs else None
+
+        fg = gm(ratios("fit_us"))
+        pg = gm(ratios("predict_us"))
+        fg_s = f"{fg:.2f}x" if fg is not None else "—"
+        pg_s = f"{pg:.2f}x" if pg is not None else "—"
+        rows.append(f"| {fam} | {len(common)} | {fg_s} | {pg_s} |")
+    return "\n".join(rows)
+
+
+def main():
+    if len(sys.argv) != 3:
+        print("Usage: compare.py <ferrolearn.json> <sklearn.json>", file=sys.stderr)
+        sys.exit(1)
+
+    fl = json.loads(Path(sys.argv[1]).read_text())
+    sk = json.loads(Path(sys.argv[2]).read_text())
+
+    by_fl: dict[str, dict[tuple[str, str], dict]] = defaultdict(dict)
+    by_sk: dict[str, dict[tuple[str, str], dict]] = defaultdict(dict)
+    for r in fl:
+        by_fl[r["family"]][(r["algorithm"], r["dataset"])] = r
+    for r in sk:
+        by_sk[r["family"]][(r["algorithm"], r["dataset"])] = r
+
+    families = sorted(set(by_fl) | set(by_sk))
+
+    parts = [
+        "# ferrolearn vs scikit-learn — Speed and Accuracy Report\n",
+        "Generated by `compare.py` from two paired benchmark runs.\n",
+        "Each row reports a single (algorithm, dataset) pair. Fit and predict\n"
+        "times are medians over multiple iterations (or single runs for slow\n"
+        "algorithms). Quality is the algorithm's canonical scalar metric:\n"
+        "R² for regressors, accuracy for classifiers, ARI for clusterers,\n"
+        "relative Frobenius reconstruction error for decomposition. Speedup\n"
+        "is `sklearn_time / ferrolearn_time`.\n",
+    ]
+    for fam in families:
+        parts.append(render_table(fam, by_fl[fam], by_sk[fam]))
+    parts.append(render_geomean(families, by_fl, by_sk))
+    parts.append("")
+
+    print("\n".join(parts))
+
+
+if __name__ == "__main__":
+    main()

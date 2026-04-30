@@ -72,9 +72,7 @@ impl<F: Float + Send + Sync + 'static> TransformedTargetRegressor<F> {
     }
 }
 
-impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>>
-    for TransformedTargetRegressor<F>
-{
+impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for TransformedTargetRegressor<F> {
     type Fitted = FittedTransformedTargetRegressor<F>;
     type Error = FerroError;
 
@@ -120,15 +118,12 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>>
 /// by the inner fitted pipeline, then `inverse_func` is applied element-wise.
 pub struct FittedTransformedTargetRegressor<F: Float + Send + Sync + 'static> {
     /// The fitted inner pipeline.
-    pipeline:
-        <Pipeline<F> as Fit<Array2<F>, Array1<F>>>::Fitted,
+    pipeline: <Pipeline<F> as Fit<Array2<F>, Array1<F>>>::Fitted,
     /// Inverse transform to apply to predictions.
     inverse_func: fn(F) -> F,
 }
 
-impl<F: Float + Send + Sync + 'static> Predict<Array2<F>>
-    for FittedTransformedTargetRegressor<F>
-{
+impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedTransformedTargetRegressor<F> {
     type Output = Array1<F>;
     type Error = FerroError;
 
@@ -235,11 +230,8 @@ mod tests {
     fn test_doubling_transform() {
         // func doubles y → mean estimator sees [20, 40, 60] → mean=40
         // inverse_func halves predictions → 40/2 = 20
-        let ttr = TransformedTargetRegressor::new(
-            make_pipeline(),
-            |y: f64| y * 2.0,
-            |y: f64| y / 2.0,
-        );
+        let ttr =
+            TransformedTargetRegressor::new(make_pipeline(), |y: f64| y * 2.0, |y: f64| y / 2.0);
 
         let x = array![[1.0], [2.0], [3.0]];
         let y = array![10.0, 20.0, 30.0];
@@ -253,11 +245,8 @@ mod tests {
     #[test]
     fn test_log_exp_transform() {
         // func = ln, inverse = exp
-        let ttr = TransformedTargetRegressor::new(
-            make_pipeline(),
-            |y: f64| y.ln(),
-            |y: f64| y.exp(),
-        );
+        let ttr =
+            TransformedTargetRegressor::new(make_pipeline(), |y: f64| y.ln(), |y: f64| y.exp());
 
         let x = array![[1.0], [2.0]];
         let y = array![1.0_f64.exp(), (2.0_f64).exp()]; // e^1, e^2
@@ -292,11 +281,7 @@ mod tests {
     #[test]
     fn test_nan_func_error() {
         // func produces NaN
-        let ttr = TransformedTargetRegressor::new(
-            make_pipeline(),
-            |_y: f64| f64::NAN,
-            |y: f64| y,
-        );
+        let ttr = TransformedTargetRegressor::new(make_pipeline(), |_y: f64| f64::NAN, |y: f64| y);
 
         let x = array![[1.0]];
         let y = array![1.0];
@@ -314,11 +299,8 @@ mod tests {
     #[test]
     fn test_square_sqrt_transform() {
         // func = square, inverse = sqrt
-        let ttr = TransformedTargetRegressor::new(
-            make_pipeline(),
-            |y: f64| y * y,
-            |y: f64| y.sqrt(),
-        );
+        let ttr =
+            TransformedTargetRegressor::new(make_pipeline(), |y: f64| y * y, |y: f64| y.sqrt());
 
         let x = array![[1.0], [2.0]];
         let y = array![3.0, 5.0];

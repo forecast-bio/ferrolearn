@@ -1,6 +1,6 @@
 [package]
 name = "ferrolearn-neighbors"
-version = "0.2.2"
+version = "0.3.0"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
@@ -12,6 +12,7 @@ categories = ["science", "algorithms"]
 
 [dependencies]
 ferrolearn-core.workspace = true
+ferrolearn-sparse.workspace = true
 ndarray.workspace = true
 num-traits.workspace = true
 rayon.workspace = true

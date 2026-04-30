@@ -13,9 +13,13 @@ pub use ferrolearn_cluster as cluster;
 #[doc(inline)]
 pub use ferrolearn_core as core;
 #[doc(inline)]
+pub use ferrolearn_covariance as covariance;
+#[doc(inline)]
 pub use ferrolearn_datasets as datasets;
 #[doc(inline)]
 pub use ferrolearn_decomp as decomp;
+#[doc(inline)]
+pub use ferrolearn_fetch as fetch;
 #[doc(inline)]
 pub use ferrolearn_io as io;
 #[doc(inline)]
@@ -26,6 +30,8 @@ pub use ferrolearn_metrics as metrics;
 pub use ferrolearn_model_sel as model_selection;
 #[doc(inline)]
 pub use ferrolearn_neighbors as neighbors;
+#[doc(inline)]
+pub use ferrolearn_neural as neural;
 #[doc(inline)]
 pub use ferrolearn_preprocess as preprocess;
 #[doc(inline)]

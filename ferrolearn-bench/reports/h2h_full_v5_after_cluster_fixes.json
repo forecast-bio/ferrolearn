@@ -1,0 +1,2882 @@
+[
+  {
+    "family": "regressor",
+    "algorithm": "LinearRegression",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 177.54700093064457,
+      "predict_us": 17.712998669594526,
+      "score": 0.9999990704313437,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 33.50700717419386,
+      "predict_us": 16.41499693505466,
+      "score": 0.9999990704313437,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "Ridge",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 252.6640018913895,
+      "predict_us": 17.25299807731062,
+      "score": 0.9988259240358294,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 33.688003895804286,
+      "predict_us": 18.55001028161496,
+      "score": 0.9988259240358294,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "Lasso",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 173.54299779981375,
+      "predict_us": 18.430990166962147,
+      "score": 0.9994904514998914,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 36.35900793597102,
+      "predict_us": 18.045000615529716,
+      "score": 0.9994906437867523,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "ElasticNet",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 183.0789988161996,
+      "predict_us": 18.88700353447348,
+      "score": 0.8193301162252872,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 35.14499985612929,
+      "predict_us": 17.086000298149884,
+      "score": 0.8193290714425108,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "BayesianRidge",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 358.0490010790527,
+      "predict_us": 17.919010133482516,
+      "score": 0.9999990704201899,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 5.690002581104636,
+      "predict_us": 0.4890025593340397,
+      "score": 0.9999990704191534,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "ARDRegression",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 768.1549905100837,
+      "predict_us": 18.203994841314852,
+      "score": 0.999999070524784,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 5.06000651512295,
+      "predict_us": 0.4879984771832824,
+      "score": 0.999999070524784,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "HuberRegressor",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 5373.559004510753,
+      "predict_us": 18.29900429584086,
+      "score": 0.9999989792052469,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 4.504996468313038,
+      "predict_us": 0.7700000423938036,
+      "score": 0.9999990700580774,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "QuantileRegressor",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 2150.493994122371,
+      "predict_us": 18.565013306215405,
+      "score": -0.04880111949526511,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 3.3520045690238476,
+      "predict_us": 0.47699722927063704,
+      "score": -0.07173998682702565,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "DecisionTreeRegressor",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 259.4889956526458,
+      "predict_us": 23.78100180067122,
+      "score": -2.285888022083492,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 22.553009330295026,
+      "predict_us": 0.4940084181725979,
+      "score": -2.1070679304866133,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "RandomForestRegressor",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 66051.19199957699,
+      "predict_us": 14627.89899960626,
+      "score": -0.7389925082974098,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1591.260006534867,
+      "predict_us": 16.83599839452654,
+      "score": -0.8136633848851769,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "ExtraTreesRegressor",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 38896.55199600384,
+      "predict_us": 14323.258001240902,
+      "score": 0.25405293160366904,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 2602.18299808912,
+      "predict_us": 34.57500133663416,
+      "score": 0.18025572748816743,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "HistGradientBoostingRegressor",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 22676.719003356993,
+      "predict_us": 525.8490127744153,
+      "score": -0.25709615966051147,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 174.0099978633225,
+      "predict_us": 2.658998710103333,
+      "score": -0.25709615860521406,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "KNeighborsRegressor",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 100.00700422096997,
+      "predict_us": 14116.302991169505,
+      "score": 0.6307269588344289,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 6.266011041589081,
+      "predict_us": 12.266988051123917,
+      "score": 0.6307269588344289,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "GradientBoostingRegressor",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 16151.620002347045,
+      "predict_us": 69.15400444995612,
+      "score": -0.1345853056710693,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1039.8300073575228,
+      "predict_us": 4.572008037939668,
+      "score": -0.1404717511030591,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "KernelRidge",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 179.54999930225313,
+      "predict_us": 103.44899783376604,
+      "score": 0.9988419391170132,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 11.836993508040905,
+      "predict_us": 2.119995770044625,
+      "score": 0.9988419391170132,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "LinearRegression",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 225.2039994345978,
+      "predict_us": 22.86100061610341,
+      "score": 0.9999994362016347,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 55.91400258708745,
+      "predict_us": 17.5909954123199,
+      "score": 0.9999994362016347,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "Ridge",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 257.523002801463,
+      "predict_us": 18.96700996439904,
+      "score": 0.9999977734710536,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 57.766999816522,
+      "predict_us": 17.78799924068153,
+      "score": 0.9999977734710536,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "Lasso",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 188.3530057966709,
+      "predict_us": 20.489009330049157,
+      "score": 0.999424797871616,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 94.4889907259494,
+      "predict_us": 18.145001376979053,
+      "score": 0.9994247850658612,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "ElasticNet",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 195.0349978869781,
+      "predict_us": 20.472012693062425,
+      "score": 0.8761049075409629,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 97.49499440658838,
+      "predict_us": 19.05798853840679,
+      "score": 0.876104889887738,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "BayesianRidge",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 385.3739908663556,
+      "predict_us": 18.544000340625644,
+      "score": 0.9999994362021023,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 61.37099990155548,
+      "predict_us": 1.2359960237517953,
+      "score": 0.9999994362021057,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "ARDRegression",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 707.6809997670352,
+      "predict_us": 19.351995433680713,
+      "score": 0.9999994361971475,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 53.16099850460887,
+      "predict_us": 1.186999725177884,
+      "score": 0.9999994361971475,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "HuberRegressor",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 3673.9250062964857,
+      "predict_us": 28.306007152423263,
+      "score": 0.999999439011233,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 111.96700506843626,
+      "predict_us": 2.0220031728968024,
+      "score": 0.9999994362106867,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "QuantileRegressor",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 18702.499000937678,
+      "predict_us": 19.28099663928151,
+      "score": -0.011235181658239668,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 2472.2239904804155,
+      "predict_us": 1.3230019249022007,
+      "score": 0.9999994476455737,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "DecisionTreeRegressor",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 3174.3510044179857,
+      "predict_us": 34.652999602258205,
+      "score": 0.6235920065402036,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1654.4200043426827,
+      "predict_us": 6.109010428190231,
+      "score": 0.6145563483513994,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "RandomForestRegressor",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 76022.25999289658,
+      "predict_us": 25306.337003712542,
+      "score": 0.8445988311470158,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 13768.70900276117,
+      "predict_us": 1513.7630107346922,
+      "score": 0.8414977424633454,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "ExtraTreesRegressor",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 47679.33599941898,
+      "predict_us": 25157.97699743416,
+      "score": 0.8793096432529772,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 6143.186998087913,
+      "predict_us": 2106.625004671514,
+      "score": 0.8874640133887577,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "HistGradientBoostingRegressor",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 121947.43499276228,
+      "predict_us": 565.1029932778329,
+      "score": 0.9393594684763024,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 41497.15500534512,
+      "predict_us": 1167.541995528154,
+      "score": 0.9405368687679555,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "KNeighborsRegressor",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 316.1759959766641,
+      "predict_us": 14127.949005342089,
+      "score": 0.77901038453659,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 370.70599501021206,
+      "predict_us": 7373.688000370748,
+      "score": 0.77901038453659,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "GradientBoostingRegressor",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 122186.38599733822,
+      "predict_us": 258.5300098871812,
+      "score": 0.9268126639292507,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 53129.5830005547,
+      "predict_us": 81.95999544113874,
+      "score": 0.92688293532486,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "KernelRidge",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 32814.57599950954,
+      "predict_us": 270.28498880099505,
+      "score": 0.9999977906208622,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 33619.48500969447,
+      "predict_us": 1062.7699957694858,
+      "score": 0.9999977906208622,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "LinearRegression",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 96964.11598997656,
+      "predict_us": 99.74600106943399,
+      "score": 0.9999999657464315,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 5565.596991800703,
+      "predict_us": 166.27700824756175,
+      "score": 0.9999999657464315,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "Ridge",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 26075.33900300041,
+      "predict_us": 104.0700008161366,
+      "score": 0.9999999510578853,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 15256.874001352116,
+      "predict_us": 211.71299158595502,
+      "score": 0.9999999510578853,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "Lasso",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 36822.03400239814,
+      "predict_us": 89.6660058060661,
+      "score": 0.9996847844701768,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 12636.265993933193,
+      "predict_us": 172.35599807463586,
+      "score": 0.9996847847072237,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "ElasticNet",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 4193.034998024814,
+      "predict_us": 89.60400009527802,
+      "score": 0.8870386477853139,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 10659.419000148773,
+      "predict_us": 180.848001036793,
+      "score": 0.8870386455723599,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "BayesianRidge",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 201443.35900840815,
+      "predict_us": 105.23501259740442,
+      "score": 0.9999999657464341,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 15900.70201200433,
+      "predict_us": 122.36300972290337,
+      "score": 0.9999999657464341,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "ARDRegression",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 770017.0059979428,
+      "predict_us": 119.13699563592672,
+      "score": 0.999999965746397,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 49155.257001984864,
+      "predict_us": 72.59698759298772,
+      "score": 0.999999965746397,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "HuberRegressor",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 613887.4190073693,
+      "predict_us": 101.24698746949434,
+      "score": 0.9999999657911615,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 40595.71499237791,
+      "predict_us": 68.47099575679749,
+      "score": 0.9999999657465074,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "QuantileRegressor",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 1459639.6629931405,
+      "predict_us": 73.28799983952194,
+      "score": -0.0017490039439660432,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1348098.9130039234,
+      "predict_us": 71.05199620127678,
+      "score": 0.9999999656067623,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "DecisionTreeRegressor",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 431197.81200948637,
+      "predict_us": 315.9750049235299,
+      "score": -0.5324109383524651,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 241944.7290012613,
+      "predict_us": 240.1020028628409,
+      "score": -0.5520662239565304,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "RandomForestRegressor",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 1575125.2449990716,
+      "predict_us": 25026.754999998957,
+      "score": 0.37586092639853064,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1638059.456992778,
+      "predict_us": 47888.5760094272,
+      "score": 0.3809575335244051,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "ExtraTreesRegressor",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 538660.1240024902,
+      "predict_us": 24806.039000395685,
+      "score": 0.37241017487671835,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 403124.47100586724,
+      "predict_us": 66532.80499449465,
+      "score": 0.3689933162170116,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "HistGradientBoostingRegressor",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 275421.05299653485,
+      "predict_us": 1455.5139932781458,
+      "score": 0.6348577401381661,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 982865.7190082595,
+      "predict_us": 12936.811006511562,
+      "score": 0.6348796331503523,
+      "notes": null
+    }
+  },
+  {
+    "family": "regressor",
+    "algorithm": "KNeighborsRegressor",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "r2",
+    "sklearn": {
+      "fit_us": 645.7280105678365,
+      "predict_us": 17641.867001657374,
+      "score": 0.3172581188459265,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 13876.5629963018,
+      "predict_us": 46740.54899078328,
+      "score": 0.3172581188459265,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "LogisticRegression",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 567.687995499,
+      "predict_us": 27.28500112425536,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 91.63700451608747,
+      "predict_us": 18.463993910700083,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "RidgeClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 688.7199997436255,
+      "predict_us": 28.57600338757038,
+      "score": 0.9,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 6.011003279127181,
+      "predict_us": 0.833999365568161,
+      "score": 0.9,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "LinearSVC",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 233.20999753195792,
+      "predict_us": 25.383997126482427,
+      "score": 0.9,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 6.752001354470849,
+      "predict_us": 0.7850030669942498,
+      "score": 0.9,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "QDA",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": null,
+      "predict_us": null,
+      "score": null,
+      "notes": "LinAlgError: The covariance matrix of class 0 is not full rank. Increase the value of `reg_param` to reduce the collinearity."
+    },
+    "ferrolearn": {
+      "fit_us": null,
+      "predict_us": null,
+      "score": null,
+      "notes": "ValueError: Numerical instability: covariance matrix is not positive definite"
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "GaussianNB",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 250.59800827875733,
+      "predict_us": 37.591002183035016,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 75.20300277974457,
+      "predict_us": 17.31699740048498,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "DecisionTreeClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 275.41899180505425,
+      "predict_us": 33.11599721200764,
+      "score": 0.9,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 80.96700184978545,
+      "predict_us": 16.770005458965898,
+      "score": 0.8,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "ExtraTreeClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 270.3589998418465,
+      "predict_us": 33.396994695067406,
+      "score": 0.9,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 11.598996934480965,
+      "predict_us": 0.6929913070052862,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "RandomForestClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 79318.36400530301,
+      "predict_us": 14373.184996657073,
+      "score": 0.8,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1827.1650042152032,
+      "predict_us": 24.850989575497806,
+      "score": 0.9,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "ExtraTreesClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 60006.18799589574,
+      "predict_us": 14061.415000469424,
+      "score": 0.9,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1937.606997671537,
+      "predict_us": 12.231001164764166,
+      "score": 0.9,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "HistGradientBoostingClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 24535.921998904087,
+      "predict_us": 1087.965996703133,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 385.1159999612719,
+      "predict_us": 3.3480027923360467,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "KNeighborsClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 167.21499559935182,
+      "predict_us": 15126.164988032542,
+      "score": 0.9,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 100.87300324812531,
+      "predict_us": 28.830007067881525,
+      "score": 0.9,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "NearestCentroid",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 219.5859997300431,
+      "predict_us": 181.71400006394833,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 13.61500471830368,
+      "predict_us": 1.8139980966225266,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "AdaBoostClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 25381.375991855748,
+      "predict_us": 1342.1539915725589,
+      "score": 0.9,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 209.4550000037998,
+      "predict_us": 2.882006810978055,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "BaggingClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 11444.349001976661,
+      "predict_us": 10999.97000710573,
+      "score": 0.8,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 420.8169993944466,
+      "predict_us": 2.28799763135612,
+      "score": 0.9,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "GradientBoostingClassifier",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 22087.86598930601,
+      "predict_us": 75.74500341434032,
+      "score": 0.8,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 489.69600175041705,
+      "predict_us": 3.4149998100474477,
+      "score": 0.8,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "MultinomialNB",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 356.41300200950354,
+      "predict_us": 26.023000827990472,
+      "score": 0.3,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 4.963992978446186,
+      "predict_us": 0.7259950507432222,
+      "score": 0.3,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "ComplementNB",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 371.5109924087301,
+      "predict_us": 19.744009478017688,
+      "score": 0.3,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 4.169996827840805,
+      "predict_us": 0.6890040822327137,
+      "score": 0.3,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "BernoulliNB",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 397.16099854558706,
+      "predict_us": 83.49200652446598,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 5.1009992603212595,
+      "predict_us": 0.7460039341822267,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "LogisticRegression",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 881.3120075501502,
+      "predict_us": 35.478995414450765,
+      "score": 0.835,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 376.3140121009201,
+      "predict_us": 51.57898704055697,
+      "score": 0.82,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "RidgeClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 954.1479957988486,
+      "predict_us": 35.94000008888543,
+      "score": 0.83,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 55.262004025280476,
+      "predict_us": 3.3380056265741587,
+      "score": 0.83,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "LinearSVC",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 685.6589898234233,
+      "predict_us": 35.04200140014291,
+      "score": 0.835,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 332.79698982369155,
+      "predict_us": 2.921995474025607,
+      "score": 0.835,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "QDA",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": null,
+      "predict_us": null,
+      "score": null,
+      "notes": "LinAlgError: The covariance matrix of class 0 is not full rank. Increase the value of `reg_param` to reduce the collinearity."
+    },
+    "ferrolearn": {
+      "fit_us": null,
+      "predict_us": null,
+      "score": null,
+      "notes": "ValueError: Numerical instability: covariance matrix is not positive definite"
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "GaussianNB",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 441.58598757348955,
+      "predict_us": 68.85699986014515,
+      "score": 0.89,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 218.36200903635472,
+      "predict_us": 46.54000804293901,
+      "score": 0.89,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "DecisionTreeClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 2970.3290056204423,
+      "predict_us": 41.59199306741357,
+      "score": 0.895,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1783.6390034062788,
+      "predict_us": 29.490998713299632,
+      "score": 0.9,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "ExtraTreeClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 862.3239991720766,
+      "predict_us": 33.181990147568285,
+      "score": 0.81,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 273.72900513000786,
+      "predict_us": 8.468996384181082,
+      "score": 0.82,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "RandomForestClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 124371.95000529755,
+      "predict_us": 25906.41300776042,
+      "score": 0.945,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 5132.585996761918,
+      "predict_us": 874.5119994273409,
+      "score": 0.96,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "ExtraTreesClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 91565.47799648251,
+      "predict_us": 25471.55499632936,
+      "score": 0.97,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 3365.3639984549955,
+      "predict_us": 1487.517001805827,
+      "score": 0.96,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "HistGradientBoostingClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 114477.79499576427,
+      "predict_us": 1146.744005382061,
+      "score": 0.96,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 40626.39200128615,
+      "predict_us": 945.2280064579099,
+      "score": 0.94,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "KNeighborsClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 399.15200613904744,
+      "predict_us": 15365.220999228768,
+      "score": 0.915,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 585.6959905941039,
+      "predict_us": 6502.634001662955,
+      "score": 0.915,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "NearestCentroid",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 322.90699891746044,
+      "predict_us": 238.39999630581588,
+      "score": 0.775,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 27.602000045590103,
+      "predict_us": 3.6480050766840577,
+      "score": 0.775,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "AdaBoostClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 51783.470989903435,
+      "predict_us": 1553.1270037172362,
+      "score": 0.915,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 11057.594994781539,
+      "predict_us": 44.653002987615764,
+      "score": 0.92,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "BaggingClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 11298.490993794985,
+      "predict_us": 10795.237991260365,
+      "score": 0.95,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 2532.105994760059,
+      "predict_us": 66.19100167881697,
+      "score": 0.96,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "GradientBoostingClassifier",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 135772.70999667235,
+      "predict_us": 249.1080085746944,
+      "score": 0.96,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 51229.110002168454,
+      "predict_us": 78.84600199759007,
+      "score": 0.94,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "MultinomialNB",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 461.64200466591865,
+      "predict_us": 25.671994080767035,
+      "score": 0.705,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 23.11200660187751,
+      "predict_us": 2.806991687975824,
+      "score": 0.705,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "ComplementNB",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 447.4629968171939,
+      "predict_us": 22.330990759655833,
+      "score": 0.71,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 25.20201087463647,
+      "predict_us": 2.6439956855028868,
+      "score": 0.71,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "BernoulliNB",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 539.5770131144673,
+      "predict_us": 99.54800771083683,
+      "score": 0.775,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 24.730994482524693,
+      "predict_us": 3.602996002882719,
+      "score": 0.775,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "LogisticRegression",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 798050.6760068238,
+      "predict_us": 158.15200458746403,
+      "score": 0.835,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 47014.34301387053,
+      "predict_us": 149.58599058445543,
+      "score": 0.8345,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "RidgeClassifier",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 6321.863998891786,
+      "predict_us": 100.07400123868138,
+      "score": 0.8335,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 4630.839001038112,
+      "predict_us": 121.37599696870893,
+      "score": 0.8335,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "LinearSVC",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 44324.65499849059,
+      "predict_us": 84.56000068690628,
+      "score": 0.836,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 21396.292999270372,
+      "predict_us": 75.02500375267118,
+      "score": 0.837,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "QDA",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": null,
+      "predict_us": null,
+      "score": null,
+      "notes": "LinAlgError: The covariance matrix of class 0 is not full rank. Increase the value of `reg_param` to reduce the collinearity."
+    },
+    "ferrolearn": {
+      "fit_us": null,
+      "predict_us": null,
+      "score": null,
+      "notes": "ValueError: Numerical instability: covariance matrix is not positive definite"
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "GaussianNB",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 4306.258997530676,
+      "predict_us": 653.8500019814819,
+      "score": 0.8155,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 2433.7369977729395,
+      "predict_us": 1553.9040032308549,
+      "score": 0.8155,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "DecisionTreeClassifier",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 597629.7320012236,
+      "predict_us": 274.0240015555173,
+      "score": 0.7365,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 291946.4500009781,
+      "predict_us": 336.10599348321557,
+      "score": 0.7195,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "ExtraTreeClassifier",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 8628.085008240305,
+      "predict_us": 300.9569918503985,
+      "score": 0.642,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 10459.043012815528,
+      "predict_us": 243.1399916531518,
+      "score": 0.642,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "RandomForestClassifier",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 277930.80400442705,
+      "predict_us": 24827.800996717997,
+      "score": 0.9425,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 192714.9019902572,
+      "predict_us": 30152.103005093522,
+      "score": 0.9305,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "ExtraTreesClassifier",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 128004.51800285373,
+      "predict_us": 24793.614007649012,
+      "score": 0.939,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 63502.49999377411,
+      "predict_us": 51448.01900314633,
+      "score": 0.9375,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "HistGradientBoostingClassifier",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 280677.8240046697,
+      "predict_us": 1493.509000283666,
+      "score": 0.958,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 940840.1760010747,
+      "predict_us": 13914.258001022972,
+      "score": 0.958,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "KNeighborsClassifier",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 828.1440095743164,
+      "predict_us": 17153.036998934112,
+      "score": 0.966,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 15124.89099695813,
+      "predict_us": 44937.476006452926,
+      "score": 0.966,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "NearestCentroid",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 3838.534001260996,
+      "predict_us": 862.6509952591732,
+      "score": 0.6915,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1728.7520022364333,
+      "predict_us": 189.51100355479866,
+      "score": 0.6915,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "MultinomialNB",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 2079.736004816368,
+      "predict_us": 171.08098836615682,
+      "score": 0.612,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1247.8760036174208,
+      "predict_us": 151.29699022509158,
+      "score": 0.612,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "ComplementNB",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 1840.7710012979805,
+      "predict_us": 140.2140042046085,
+      "score": 0.612,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1043.2049894006923,
+      "predict_us": 146.15000691264868,
+      "score": 0.612,
+      "notes": null
+    }
+  },
+  {
+    "family": "classifier",
+    "algorithm": "BernoulliNB",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "accuracy",
+    "sklearn": {
+      "fit_us": 7283.927989192307,
+      "predict_us": 1652.1340003237128,
+      "score": 0.75,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1759.1280047781765,
+      "predict_us": 345.1950033195317,
+      "score": 0.75,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "KMeans",
+    "dataset": "tiny_200x5",
+    "n_samples": 200,
+    "n_features": 5,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 4568.08099988848,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 385.06899727508426,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "MiniBatchKMeans",
+    "dataset": "tiny_200x5",
+    "n_samples": 200,
+    "n_features": 5,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 2590.83800483495,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 6102.377999923192,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "GaussianMixture",
+    "dataset": "tiny_200x5",
+    "n_samples": 200,
+    "n_features": 5,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 1867.6729960134253,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 482.92201245203614,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "AgglomerativeClustering",
+    "dataset": "tiny_200x5",
+    "n_samples": 200,
+    "n_features": 5,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 501.6080103814602,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1100.465000490658,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "DBSCAN",
+    "dataset": "tiny_200x5",
+    "n_samples": 200,
+    "n_features": 5,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 531.3779984135181,
+      "predict_us": null,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 71.70200115069747,
+      "predict_us": null,
+      "score": 0.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "Birch",
+    "dataset": "tiny_200x5",
+    "n_samples": 200,
+    "n_features": 5,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 3395.2030062209815,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 825.6200089817867,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "KMeans",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 9367.637991090305,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 2301.966000231914,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "MiniBatchKMeans",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 16043.230003560893,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 19198.416004655883,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "GaussianMixture",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 6331.929995212704,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 6388.526991941035,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "AgglomerativeClustering",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 6516.755995107815,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 132033.00200984813,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "DBSCAN",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 3066.175995627418,
+      "predict_us": null,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 2234.4509925460443,
+      "predict_us": null,
+      "score": 0.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "Birch",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 23643.708002055064,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 5192.9110049968585,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "KMeans",
+    "dataset": "medium_5Kx20",
+    "n_samples": 5000,
+    "n_features": 20,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 45636.63899898529,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 32511.390003492124,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "MiniBatchKMeans",
+    "dataset": "medium_5Kx20",
+    "n_samples": 5000,
+    "n_features": 20,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 12736.739008687437,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 34182.16700083576,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "cluster",
+    "algorithm": "GaussianMixture",
+    "dataset": "medium_5Kx20",
+    "n_samples": 5000,
+    "n_features": 20,
+    "metric": "ari",
+    "sklearn": {
+      "fit_us": 66142.07099482883,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 180644.52000544406,
+      "predict_us": null,
+      "score": 1.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "PCA",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 141.93198876455426,
+      "predict_us": 23.564003640785813,
+      "score": 0.33941515673211364,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 22.495994926430285,
+      "predict_us": 19.364990293979645,
+      "score": 0.33941515673211364,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "IncrementalPCA",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 324.4809922762215,
+      "predict_us": 23.65000545978546,
+      "score": 0.3483094660749367,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 3.9279984775930643,
+      "predict_us": 1.644002622924745,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "TruncatedSVD",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 399.1679986938834,
+      "predict_us": 21.329004084691405,
+      "score": 0.3405769177298592,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 5.763999070040882,
+      "predict_us": 1.3749959180131555,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "FactorAnalysis",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 1626.8860053969547,
+      "predict_us": 35.500997910276055,
+      "score": null,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 166.39899695292115,
+      "predict_us": 2.2599997464567423,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "FastICA",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 8460.67898964975,
+      "predict_us": 22.131993318907917,
+      "score": 0.33941515673211364,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 119.85900346189737,
+      "predict_us": 2.0080042304471135,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "SparsePCA",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 9541.689010802656,
+      "predict_us": 188.9039995148778,
+      "score": 0.3540909151100003,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1296.4639900019392,
+      "predict_us": 1.6459962353110313,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "PCA",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 181.5690047806129,
+      "predict_us": 35.42100603226572,
+      "score": 0.6787100730969853,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 49.94499613530934,
+      "predict_us": 32.82100078649819,
+      "score": 0.6787100730969854,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "IncrementalPCA",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 2374.0600008750334,
+      "predict_us": 37.55399666260928,
+      "score": 0.6968975555722396,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 49.40599319525063,
+      "predict_us": 10.080999345518649,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "TruncatedSVD",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 706.5690006129444,
+      "predict_us": 26.043999241665006,
+      "score": 0.6789715857808386,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 191.97900837752968,
+      "predict_us": 7.219001417979598,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "FactorAnalysis",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 9493.314995779656,
+      "predict_us": 50.98400288261473,
+      "score": null,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 33704.37400008086,
+      "predict_us": 18.86900281533599,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "FastICA",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 61751.32100179326,
+      "predict_us": 103.08300261385739,
+      "score": 0.6787100730969853,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 7808.121008565649,
+      "predict_us": 18.876991816796362,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "SparsePCA",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 246542.44400153402,
+      "predict_us": 483.5800064029172,
+      "score": 0.6874762711577396,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 422979.65100442525,
+      "predict_us": 11.173993698321283,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "PCA",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 33636.07700157445,
+      "predict_us": 637.1990020852536,
+      "score": 0.9697597692281623,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 15306.86100886669,
+      "predict_us": 2013.6469975113869,
+      "score": 0.9697597692281625,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "IncrementalPCA",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 214245.47099741176,
+      "predict_us": 11966.192003455944,
+      "score": 0.9721960408792621,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 134701.47900807206,
+      "predict_us": 1272.9729933198541,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "decomp",
+    "algorithm": "TruncatedSVD",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "recon_rel",
+    "sklearn": {
+      "fit_us": 26163.93800417427,
+      "predict_us": 424.2169961798936,
+      "score": 0.9712830278423774,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 14898.756999173202,
+      "predict_us": 1630.3750016959384,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "StandardScaler",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 280.17800650559366,
+      "predict_us": 75.03600500058383,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 49.91699825040996,
+      "predict_us": 53.602998377755284,
+      "score": 0.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "MinMaxScaler",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 154.87299242522568,
+      "predict_us": 59.98999404255301,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 2.3129978217184544,
+      "predict_us": 4.385001375339925,
+      "score": 8.444148536989692e-17,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "MaxAbsScaler",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 120.24999887216836,
+      "predict_us": 57.05899093300104,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1.9860017346218228,
+      "predict_us": 4.354005795903504,
+      "score": 0.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "RobustScaler",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 787.7859898144379,
+      "predict_us": 67.4479961162433,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 4.727000487037003,
+      "predict_us": 4.351997631601989,
+      "score": 2.450002496201562e-17,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "PowerTransformer",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 14939.638000214472,
+      "predict_us": 105.40199582464993,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 41.84800491202623,
+      "predict_us": 3.6290002753958106,
+      "score": 0.41890795350448085,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "StandardScaler",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 215.94999998342246,
+      "predict_us": 44.49499829206616,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 29.20500992331654,
+      "predict_us": 31.796997063793242,
+      "score": 0.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "MinMaxScaler",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 107.97599679790437,
+      "predict_us": 36.79200017359108,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 15.197001630440354,
+      "predict_us": 11.925003491342068,
+      "score": 1.0879723610929821e-16,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "MaxAbsScaler",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 71.89498865045607,
+      "predict_us": 32.12099545635283,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 8.52800440043211,
+      "predict_us": 11.940996046178043,
+      "score": 0.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "RobustScaler",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 626.8490105867386,
+      "predict_us": 36.910001654177904,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 115.33100041560829,
+      "predict_us": 11.961004929617047,
+      "score": 4.2505511726260467e-20,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "PowerTransformer",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 30066.936000366695,
+      "predict_us": 403.92999653704464,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1715.2449872810394,
+      "predict_us": 114.92200428619981,
+      "score": 0.4202802051831903,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "StandardScaler",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 2687.4589966610074,
+      "predict_us": 1383.1760006723925,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1924.7359887231141,
+      "predict_us": 3326.5149977523834,
+      "score": 0.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "MinMaxScaler",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 998.3089985325933,
+      "predict_us": 1141.8710055295378,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 2148.16999505274,
+      "predict_us": 2239.103996544145,
+      "score": 1.1457231621217174e-16,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "MaxAbsScaler",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 1210.1229949621484,
+      "predict_us": 1038.1749889347702,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 1137.7079936210066,
+      "predict_us": 2466.3400108693168,
+      "score": 0.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "preprocess",
+    "algorithm": "RobustScaler",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "rel_diff_vs_sklearn",
+    "sklearn": {
+      "fit_us": 24665.089003974572,
+      "predict_us": 1562.1519996784627,
+      "score": 0.0,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 14865.18200545106,
+      "predict_us": 2218.330992036499,
+      "score": 0.0,
+      "notes": null
+    }
+  },
+  {
+    "family": "kernel",
+    "algorithm": "Nystroem",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "timing_only",
+    "sklearn": {
+      "fit_us": 1242.835001903586,
+      "predict_us": 377.95100070070475,
+      "score": null,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 353.0750109348446,
+      "predict_us": 109.65699038933963,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "kernel",
+    "algorithm": "RBFSampler",
+    "dataset": "tiny_50x5",
+    "n_samples": 50,
+    "n_features": 5,
+    "metric": "timing_only",
+    "sklearn": {
+      "fit_us": 284.81999470386654,
+      "predict_us": 125.01698802225292,
+      "score": null,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 3.987996024079621,
+      "predict_us": 50.45499710831791,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "kernel",
+    "algorithm": "Nystroem",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "timing_only",
+    "sklearn": {
+      "fit_us": 72165.97600199748,
+      "predict_us": 10609.404009301215,
+      "score": null,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 3736.6769975051284,
+      "predict_us": 3586.9429993908852,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "kernel",
+    "algorithm": "RBFSampler",
+    "dataset": "small_1Kx10",
+    "n_samples": 1000,
+    "n_features": 10,
+    "metric": "timing_only",
+    "sklearn": {
+      "fit_us": 200.56300854776055,
+      "predict_us": 1266.8209965340793,
+      "score": null,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 5.1109964260831475,
+      "predict_us": 1069.3779913708568,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "kernel",
+    "algorithm": "Nystroem",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "timing_only",
+    "sklearn": {
+      "fit_us": 16011.589003028348,
+      "predict_us": 18102.471993188374,
+      "score": null,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 4075.314005604014,
+      "predict_us": 63360.69000826683,
+      "score": null,
+      "notes": null
+    }
+  },
+  {
+    "family": "kernel",
+    "algorithm": "RBFSampler",
+    "dataset": "medium_10Kx100",
+    "n_samples": 10000,
+    "n_features": 100,
+    "metric": "timing_only",
+    "sklearn": {
+      "fit_us": 514.6399926161394,
+      "predict_us": 14986.128997406922,
+      "score": null,
+      "notes": null
+    },
+    "ferrolearn": {
+      "fit_us": 290.8470050897449,
+      "predict_us": 16375.503997551277,
+      "score": null,
+      "notes": null
+    }
+  }
+]

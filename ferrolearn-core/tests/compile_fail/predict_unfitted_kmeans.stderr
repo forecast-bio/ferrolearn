@@ -2,4 +2,9 @@ error[E0599]: no method named `predict` found for struct `KMeans<F>` in the curr
   --> tests/compile_fail/predict_unfitted_kmeans.rs:12:19
    |
 12 |     let _ = model.predict(&x);
-   |                   ^^^^^^^ method not found in `KMeans<f64>`
+   |                   ^^^^^^^
+   |
+help: there is a method `fit_predict` with a similar name
+   |
+12 |     let _ = model.fit_predict(&x);
+   |                   ++++

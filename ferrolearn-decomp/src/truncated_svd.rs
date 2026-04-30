@@ -143,6 +143,27 @@ impl<F: Float + Send + Sync + 'static> FittedTruncatedSVD<F> {
     pub fn explained_variance_ratio(&self) -> &Array1<F> {
         &self.explained_variance_ratio_
     }
+
+    /// Map reduced data back to the original feature space. Mirrors
+    /// sklearn `TruncatedSVD.inverse_transform`. Returns
+    /// `X_reduced @ components` (no mean centering — TruncatedSVD does not
+    /// center).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x_reduced.ncols()` does
+    /// not equal the number of components.
+    pub fn inverse_transform(&self, x_reduced: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_components = self.components_.nrows();
+        if x_reduced.ncols() != n_components {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x_reduced.nrows(), n_components],
+                actual: vec![x_reduced.nrows(), x_reduced.ncols()],
+                context: "FittedTruncatedSVD::inverse_transform".into(),
+            });
+        }
+        Ok(x_reduced.dot(&self.components_))
+    }
 }
 
 // ---------------------------------------------------------------------------

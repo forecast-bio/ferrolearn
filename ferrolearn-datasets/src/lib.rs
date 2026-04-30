@@ -16,7 +16,13 @@
 //! `Result<T, ferrolearn_core::FerroError>`.
 
 pub mod generators;
+pub mod svmlight;
 pub mod toy;
+
+// Re-export svmlight + load_files at the crate root.
+pub use svmlight::{
+    dump_svmlight_file, load_files, load_svmlight_file, load_svmlight_files, load_svmlight_str,
+};
 
 // Re-export toy loaders at the crate root.
 pub use toy::{
@@ -26,6 +32,8 @@ pub use toy::{
 
 // Re-export synthetic generators at the crate root.
 pub use generators::{
-    make_blobs, make_circles, make_classification, make_moons, make_regression, make_s_curve,
-    make_sparse_uncorrelated, make_swiss_roll,
+    make_blobs, make_circles, make_classification, make_friedman1, make_friedman2, make_friedman3,
+    make_gaussian_quantiles, make_hastie_10_2, make_low_rank_matrix, make_moons,
+    make_multilabel_classification, make_regression, make_s_curve, make_sparse_spd_matrix,
+    make_sparse_uncorrelated, make_spd_matrix, make_swiss_roll,
 };

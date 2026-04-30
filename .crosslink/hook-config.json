@@ -1,4 +1,25 @@
 {
+  "agent_overrides": {
+    "agent_lint_commands": [
+      "cargo clippy -- -D warnings",
+      "cargo fmt --check"
+    ],
+    "agent_test_commands": [
+      "cargo test"
+    ],
+    "blocked_git_commands": [
+      "git push --force",
+      "git push -f",
+      "git reset --hard",
+      "git clean -f",
+      "git clean -fd",
+      "git clean -fdx",
+      "git checkout .",
+      "git restore ."
+    ],
+    "gated_git_commands": [],
+    "tracking_mode": "relaxed"
+  },
   "allowed_bash_prefixes": [
     "crosslink ",
     "git status",
@@ -6,6 +27,11 @@
     "git log",
     "git branch",
     "git show",
+    "jj log",
+    "jj diff",
+    "jj status",
+    "jj show",
+    "jj bookmark list",
     "cargo test",
     "cargo build",
     "cargo check",
@@ -22,7 +48,7 @@
     "pwd",
     "echo"
   ],
-  "auto_steal_stale_locks": false,
+  "auto_steal_stale_locks": "3",
   "blocked_git_commands": [
     "git push",
     "git merge",
@@ -40,14 +66,47 @@
     "git branch -D",
     "git branch -m"
   ],
-  "comment_discipline": "encouraged",
+  "comment_discipline": "required",
   "cpitd_auto_install": true,
   "gated_git_commands": [
     "git commit"
   ],
   "intervention_tracking": true,
-  "kickoff_verification": "local",
-  "reminder_drift_threshold": 5,
-  "signing_enforcement": "audit",
+  "kickoff_verification": "ci",
+  "reminder_drift_threshold": "0",
+  "sentinel": {
+    "default_agent": {
+      "model": "claude-sonnet-4-6",
+      "timeout_minutes": 30,
+      "verify": "local"
+    },
+    "enabled": false,
+    "escalation": {
+      "cooldown_minutes": 30,
+      "enabled": true,
+      "max_attempts": 2,
+      "model": "claude-opus-4-6",
+      "timeout_multiplier_pct": 150
+    },
+    "interval_minutes": 10,
+    "max_concurrent_agents": 3,
+    "sources": {
+      "github_labels": {
+        "enabled": true,
+        "labels": [
+          "agent-todo: replicate",
+          "agent-todo: fix"
+        ]
+      }
+    }
+  },
+  "sentinel.default_agent.model": "(text)",
+  "sentinel.default_agent.verify": "local",
+  "sentinel.enabled": false,
+  "sentinel.escalation.enabled": false,
+  "sentinel.escalation.model": "(text)",
+  "sentinel.sources.github_labels.enabled": false,
+  "signing_enforcement": "enforced",
+  "tracker_remote": "origin",
   "tracking_mode": "strict"
 }

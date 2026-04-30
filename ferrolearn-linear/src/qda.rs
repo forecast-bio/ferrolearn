@@ -117,6 +117,100 @@ impl<F: Float> FittedQDA<F> {
     }
 }
 
+impl<F: Float + ndarray::ScalarOperand + Send + Sync + 'static> FittedQDA<F> {
+    /// Predict per-class probabilities. Mirrors sklearn
+    /// `QuadraticDiscriminantAnalysis.predict_proba`.
+    ///
+    /// Computes softmax over the per-class quadratic discriminants
+    /// `δ_c(x) = -½ log|Σ_c| - ½ (x-μ_c)ᵀ Σ_c⁻¹ (x-μ_c) + log π_c`.
+    /// Returns shape `(n_samples, n_classes)`; rows sum to 1.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features = x.ncols();
+        if n_features != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![n_features],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        let n_classes = self.classes.len();
+        let half = F::from(0.5).unwrap();
+        let mut proba = Array2::<F>::zeros((n_samples, n_classes));
+        for i in 0..n_samples {
+            let xi = x.row(i);
+            let mut logits = vec![F::neg_infinity(); n_classes];
+            for (c, model) in self.class_models.iter().enumerate() {
+                let diff: Array1<F> = xi.to_owned() - &model.mean;
+                let mahal = diff.dot(&model.cov_inv.dot(&diff));
+                logits[c] = -half * model.log_det - half * mahal + model.log_prior;
+            }
+            let max_l = logits
+                .iter()
+                .copied()
+                .fold(F::neg_infinity(), |a, b| if b > a { b } else { a });
+            let mut sum_exp = F::zero();
+            for c in 0..n_classes {
+                let e = (logits[c] - max_l).exp();
+                proba[[i, c]] = e;
+                sum_exp = sum_exp + e;
+            }
+            for c in 0..n_classes {
+                proba[[i, c]] = proba[[i, c]] / sum_exp;
+            }
+        }
+        Ok(proba)
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba).
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
+
+    /// Per-class quadratic discriminant scores. Mirrors sklearn
+    /// `QuadraticDiscriminantAnalysis.decision_function`. Returns shape
+    /// `(n_samples, n_classes)` with `δ_c(x) = -½ log|Σ_c| - ½ (x-μ_c)ᵀ
+    /// Σ_c⁻¹ (x-μ_c) + log π_c`. argmax of each row agrees with [`Predict`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn decision_function(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features = x.ncols();
+        if n_features != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![n_features],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        let n_classes = self.classes.len();
+        let half = F::from(0.5).unwrap();
+        let mut out = Array2::<F>::zeros((n_samples, n_classes));
+        for i in 0..n_samples {
+            let xi = x.row(i);
+            for (c, model) in self.class_models.iter().enumerate() {
+                let diff: Array1<F> = xi.to_owned() - &model.mean;
+                let mahal = diff.dot(&model.cov_inv.dot(&diff));
+                out[[i, c]] = -half * model.log_det - half * mahal + model.log_prior;
+            }
+        }
+        Ok(out)
+    }
+}
+
 /// Compute the inverse and log-determinant of a symmetric positive-definite
 /// matrix via Cholesky decomposition.
 fn cholesky_inv_and_logdet<F: Float + 'static>(

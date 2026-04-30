@@ -73,15 +73,18 @@ pub mod binarizer;
 pub mod binary_encoder;
 pub mod column_transformer;
 pub mod count_vectorizer;
+pub mod feature_scoring;
 pub mod feature_selection;
 pub mod function_transformer;
 pub mod imputer;
 pub mod iterative_imputer;
 pub mod kbins_discretizer;
 pub mod knn_imputer;
+pub mod label_binarizer;
 pub mod label_encoder;
 pub mod max_abs_scaler;
 pub mod min_max_scaler;
+pub mod multi_label_binarizer;
 pub mod normalizer;
 pub mod one_hot_encoder;
 pub mod ordinal_encoder;
@@ -92,8 +95,10 @@ pub mod random_projection;
 pub mod rfe;
 pub mod robust_scaler;
 pub mod select_percentile;
+pub mod sequential_feature_selector;
 pub mod spline_transformer;
 pub mod standard_scaler;
+pub mod stat_selectors;
 pub mod target_encoder;
 pub mod tfidf;
 
@@ -140,4 +145,15 @@ pub use tfidf::{FittedTfidfTransformer, TfidfNorm, TfidfTransformer};
 pub use random_projection::{
     FittedGaussianRandomProjection, FittedSparseRandomProjection, GaussianRandomProjection,
     SparseRandomProjection,
+};
+
+// Newly wired (previously orphaned) re-exports
+pub use feature_scoring::{chi2, compute_scores_classif, compute_scores_regression, f_classif, f_regression};
+pub use label_binarizer::{FittedLabelBinarizer, LabelBinarizer};
+pub use multi_label_binarizer::{FittedMultiLabelBinarizer, MultiLabelBinarizer};
+pub use sequential_feature_selector::{
+    Direction, FittedSequentialFeatureSelector, SequentialFeatureSelector,
+};
+pub use stat_selectors::{
+    FittedSelectFdr, FittedSelectFpr, FittedSelectFwe, SelectFdr, SelectFpr, SelectFwe,
 };

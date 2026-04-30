@@ -295,6 +295,19 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for SpectralClustering
     }
 }
 
+impl<F: Float + Send + Sync + 'static> SpectralClustering<F> {
+    /// Fit on `x` and return the cluster labels for those samples in one
+    /// call. Equivalent to sklearn `ClusterMixin.fit_predict`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`Fit::fit`].
+    pub fn fit_predict(&self, x: &Array2<F>) -> Result<Array1<usize>, FerroError> {
+        let fitted = self.fit(x, &())?;
+        Ok(fitted.labels().clone())
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────────────────────

@@ -38,8 +38,6 @@
 //! let preds = fitted.predict(&x).unwrap();
 //! ```
 
-use std::collections::HashMap;
-
 use ferrolearn_core::error::FerroError;
 use ferrolearn_core::introspection::HasClasses;
 use ferrolearn_core::pipeline::{FittedPipelineEstimator, PipelineEstimator};
@@ -85,7 +83,7 @@ pub enum Weights {
 // ---------------------------------------------------------------------------
 
 /// Which spatial index was built during fit.
-enum SpatialIndex {
+pub(crate) enum SpatialIndex {
     None,
     KdTree(KdTree),
     BallTree(BallTree),
@@ -385,50 +383,131 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedKNeighborsCl
 }
 
 impl<F: Float + Send + Sync + 'static> FittedKNeighborsClassifier<F> {
-    /// Perform a (possibly weighted) majority vote among neighbors.
-    fn weighted_vote(&self, neighbors: &[(usize, F)]) -> usize {
-        let mut class_weights: HashMap<usize, F> = HashMap::new();
+    /// Per-class weighted vote sums for one set of neighbors. Returned in
+    /// `self.classes` order so the caller can normalize, argmax, etc.
+    fn class_score_vec(&self, neighbors: &[(usize, F)]) -> Vec<F> {
+        let mut scores = vec![F::zero(); self.classes.len()];
         let eps = F::from(1e-15).unwrap();
+        // Map class label → position in self.classes for O(log n) lookup.
+        let class_idx = |label: usize| -> usize {
+            self.classes
+                .binary_search(&label)
+                .expect("label not in fitted classes")
+        };
 
         match self.weights {
             Weights::Uniform => {
                 for &(idx, _) in neighbors {
-                    let label = self.y_train[idx];
-                    *class_weights.entry(label).or_insert_with(F::zero) =
-                        *class_weights.entry(label).or_insert_with(F::zero) + F::one();
+                    let ci = class_idx(self.y_train[idx]);
+                    scores[ci] = scores[ci] + F::one();
                 }
             }
             Weights::Distance => {
-                // Check if any neighbor has zero distance.
                 let has_zero_dist = neighbors.iter().any(|&(_, d)| d < eps);
-
                 if has_zero_dist {
-                    // Give all weight to zero-distance neighbors.
                     for &(idx, d) in neighbors {
                         if d < eps {
-                            let label = self.y_train[idx];
-                            *class_weights.entry(label).or_insert_with(F::zero) =
-                                *class_weights.entry(label).or_insert_with(F::zero) + F::one();
+                            let ci = class_idx(self.y_train[idx]);
+                            scores[ci] = scores[ci] + F::one();
                         }
                     }
                 } else {
                     for &(idx, d) in neighbors {
-                        let label = self.y_train[idx];
-                        let w = F::one() / d;
-                        *class_weights.entry(label).or_insert_with(F::zero) =
-                            *class_weights.entry(label).or_insert_with(F::zero) + w;
+                        let ci = class_idx(self.y_train[idx]);
+                        scores[ci] = scores[ci] + F::one() / d;
                     }
                 }
             }
         }
+        scores
+    }
 
-        // Find the class with the maximum weight. Break ties by smallest class label.
-        class_weights
-            .into_iter()
-            .max_by(|(label_a, w_a), (label_b, w_b)| {
-                w_a.partial_cmp(w_b).unwrap().then(label_b.cmp(label_a))
-            })
-            .map_or(0, |(label, _)| label)
+    /// Perform a (possibly weighted) majority vote among neighbors.
+    /// Tie-break by smallest class label (sklearn parity).
+    fn weighted_vote(&self, neighbors: &[(usize, F)]) -> usize {
+        let scores = self.class_score_vec(neighbors);
+        let mut best_idx = 0usize;
+        let mut best_score = scores[0];
+        for (i, &s) in scores.iter().enumerate().skip(1) {
+            if s > best_score {
+                best_score = s;
+                best_idx = i;
+            }
+            // Equal scores → prefer the smaller class label (= earlier
+            // index in self.classes since classes is sorted).
+        }
+        self.classes[best_idx]
+    }
+
+    /// Predict class probabilities for the given feature matrix.
+    ///
+    /// For each sample, finds the `k` nearest neighbors and returns the
+    /// normalized (weighted) class vote shares, with classes laid out in
+    /// the order of [`HasClasses::classes`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features does
+    /// not match the training data.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features = x.ncols();
+        let train_features = self.x_train.ncols();
+        if n_features != train_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![train_features],
+                actual: vec![n_features],
+                context: "number of features must match training data".into(),
+            });
+        }
+
+        let n_samples = x.nrows();
+        let n_classes = self.classes.len();
+        let mut proba = Array2::<F>::zeros((n_samples, n_classes));
+
+        for i in 0..n_samples {
+            let query: Vec<F> = (0..n_features).map(|j| x[[i, j]]).collect();
+            let neighbors =
+                find_neighbors(&self.x_train, &query, self.n_neighbors, &self.spatial_index);
+            let scores = self.class_score_vec(&neighbors);
+            let total: F = scores.iter().copied().fold(F::zero(), |a, b| a + b);
+            if total > F::zero() {
+                for ci in 0..n_classes {
+                    proba[[i, ci]] = scores[ci] / total;
+                }
+            } else {
+                // No neighbors / all zero weights — fall back to uniform.
+                let u = F::one() / F::from(n_classes).unwrap();
+                for ci in 0..n_classes {
+                    proba[[i, ci]] = u;
+                }
+            }
+        }
+        Ok(proba)
+    }
+
+    /// Mean accuracy on the given test data and labels.
+    ///
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        let n = y.len();
+        if n == 0 {
+            return Ok(F::zero());
+        }
+        let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
+        Ok(F::from(correct).unwrap() / F::from(n).unwrap())
     }
 }
 
@@ -698,6 +777,173 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedKNeighborsRe
         };
 
         Ok(Array1::from_vec(predictions_vec))
+    }
+}
+
+impl<F: Float + Send + Sync + 'static> FittedKNeighborsRegressor<F> {
+    /// Coefficient of determination R² on the given test data.
+    ///
+    /// Equivalent to sklearn's `RegressorMixin.score`. Returns
+    /// `1 - SSres/SStot`, with the convention that constant-y returns 0
+    /// when residuals are also zero, else `F::neg_infinity()` (sklearn
+    /// returns 1.0 / -inf depending on residuals — we follow the latter
+    /// for the genuine miss case).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(r2_score(&preds, y))
+    }
+
+    /// Find the k nearest neighbors of each query sample in the training
+    /// data. Mirrors sklearn `KNeighborsMixin.kneighbors`.
+    ///
+    /// Returns `(distances, indices)` where each is shape
+    /// `(n_query_samples, n_neighbors_used)`.
+    ///
+    /// `n_neighbors` overrides the value set at construction; if `None`,
+    /// uses `self.n_neighbors`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the query feature count
+    /// does not match the training data, or
+    /// [`FerroError::InsufficientSamples`] if `n_neighbors` exceeds the
+    /// number of training samples.
+    pub fn kneighbors(
+        &self,
+        x: &Array2<F>,
+        n_neighbors: Option<usize>,
+    ) -> Result<(Array2<F>, Array2<usize>), FerroError> {
+        kneighbors_impl(
+            &self.x_train,
+            &self.spatial_index,
+            x,
+            n_neighbors.unwrap_or(self.n_neighbors),
+        )
+    }
+
+    /// Number of training samples seen during `fit()`. Mirrors sklearn's
+    /// `n_samples_fit_` attribute.
+    #[must_use]
+    pub fn n_samples_fit(&self) -> usize {
+        self.x_train.nrows()
+    }
+}
+
+/// R² coefficient of determination, used by both KNeighborsRegressor and
+/// RadiusNeighborsRegressor.
+pub(crate) fn r2_score<F: Float>(y_pred: &Array1<F>, y_true: &Array1<F>) -> F {
+    let n = y_true.len();
+    if n == 0 {
+        return F::zero();
+    }
+    let mean = y_true.iter().copied().fold(F::zero(), |a, b| a + b) / F::from(n).unwrap();
+    let mut ss_res = F::zero();
+    let mut ss_tot = F::zero();
+    for i in 0..n {
+        let r = y_true[i] - y_pred[i];
+        let t = y_true[i] - mean;
+        ss_res = ss_res + r * r;
+        ss_tot = ss_tot + t * t;
+    }
+    if ss_tot == F::zero() {
+        // Constant target. sklearn returns 1.0 if perfect, else -inf.
+        if ss_res == F::zero() {
+            F::one()
+        } else {
+            F::neg_infinity()
+        }
+    } else {
+        F::one() - ss_res / ss_tot
+    }
+}
+
+/// Shared kneighbors implementation used by every fitted KNN-style
+/// estimator. Validates feature count and `k`, then walks every query row
+/// and returns aligned distance + index matrices.
+pub(crate) fn kneighbors_impl<F: Float + Send + Sync + 'static>(
+    x_train: &Array2<F>,
+    spatial_index: &SpatialIndex,
+    x: &Array2<F>,
+    n_neighbors: usize,
+) -> Result<(Array2<F>, Array2<usize>), FerroError> {
+    let n_features = x.ncols();
+    let train_features = x_train.ncols();
+    if n_features != train_features {
+        return Err(FerroError::ShapeMismatch {
+            expected: vec![train_features],
+            actual: vec![n_features],
+            context: "number of features must match training data".into(),
+        });
+    }
+    if n_neighbors == 0 {
+        return Err(FerroError::InvalidParameter {
+            name: "n_neighbors".into(),
+            reason: "must be at least 1".into(),
+        });
+    }
+    if n_neighbors > x_train.nrows() {
+        return Err(FerroError::InsufficientSamples {
+            required: n_neighbors,
+            actual: x_train.nrows(),
+            context: "n_neighbors exceeds number of training samples".into(),
+        });
+    }
+
+    let n_queries = x.nrows();
+    let mut distances = Array2::<F>::zeros((n_queries, n_neighbors));
+    let mut indices = Array2::<usize>::zeros((n_queries, n_neighbors));
+
+    for i in 0..n_queries {
+        let query: Vec<F> = (0..n_features).map(|j| x[[i, j]]).collect();
+        let neighbors = find_neighbors(x_train, &query, n_neighbors, spatial_index);
+        for (k, &(idx, dist)) in neighbors.iter().enumerate() {
+            indices[[i, k]] = idx;
+            distances[[i, k]] = dist;
+        }
+    }
+    Ok((distances, indices))
+}
+
+impl<F: Float + Send + Sync + 'static> FittedKNeighborsClassifier<F> {
+    /// Find the k nearest neighbors of each query sample in the training
+    /// data. Mirrors sklearn `KNeighborsMixin.kneighbors`.
+    ///
+    /// Returns `(distances, indices)` of shape
+    /// `(n_query_samples, n_neighbors_used)`.
+    ///
+    /// # Errors
+    ///
+    /// As [`kneighbors_impl`].
+    pub fn kneighbors(
+        &self,
+        x: &Array2<F>,
+        n_neighbors: Option<usize>,
+    ) -> Result<(Array2<F>, Array2<usize>), FerroError> {
+        kneighbors_impl(
+            &self.x_train,
+            &self.spatial_index,
+            x,
+            n_neighbors.unwrap_or(self.n_neighbors),
+        )
+    }
+
+    /// Number of training samples seen during `fit()`. Mirrors sklearn's
+    /// `n_samples_fit_` attribute.
+    #[must_use]
+    pub fn n_samples_fit(&self) -> usize {
+        self.x_train.nrows()
     }
 }
 

@@ -32,13 +32,12 @@ use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive, ToPrimitive};
 use rand::SeedableRng;
 use rand::rngs::StdRng;
-use rand::seq::index::sample as rand_sample_indices;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::decision_tree::{
-    self, ClassificationCriterion, Node, build_classification_tree_with_feature_subset,
-    build_regression_tree_with_feature_subset, compute_feature_importances,
+    self, ClassificationCriterion, Node, build_classification_tree_per_split_features,
+    build_regression_tree_per_split_features, compute_feature_importances,
 };
 
 // ---------------------------------------------------------------------------
@@ -298,31 +297,41 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for RandomF
         };
 
         // Build trees in parallel.
+        //
+        // Each tree gets:
+        //   - a bootstrap sample of rows (Breiman bagging),
+        //   - per-split random feature sampling of size `max_features_n`
+        //     drawn afresh at every split node (Breiman 2001 RF, sklearn
+        //     parity). The previous implementation pre-sampled a single
+        //     `max_features_n` feature subset per tree which severely
+        //     limited each tree's capacity at large p.
         let trees: Vec<Vec<Node<F>>> = tree_seeds
             .par_iter()
             .map(|&seed| {
-                let mut rng = StdRng::seed_from_u64(seed);
+                let mut bootstrap_rng = StdRng::seed_from_u64(seed);
 
-                // Bootstrap sample (with replacement).
                 let bootstrap_indices: Vec<usize> = (0..n_samples)
                     .map(|_| {
                         use rand::RngCore;
-                        (rng.next_u64() as usize) % n_samples
+                        (bootstrap_rng.next_u64() as usize) % n_samples
                     })
                     .collect();
 
-                // Random feature subset.
-                let feature_indices: Vec<usize> =
-                    rand_sample_indices(&mut rng, n_features, max_features_n).into_vec();
+                // Use a separate, derived seed for the per-split feature
+                // RNG so that bootstrap sampling and feature sampling are
+                // statistically independent.
+                use rand::RngCore;
+                let split_seed = bootstrap_rng.next_u64();
 
-                build_classification_tree_with_feature_subset(
+                build_classification_tree_per_split_features(
                     x,
                     &y_mapped,
                     n_classes,
                     &bootstrap_indices,
-                    &feature_indices,
+                    max_features_n,
                     &params,
                     criterion,
+                    split_seed,
                 )
             })
             .collect();
@@ -361,6 +370,90 @@ impl<F: Float + Send + Sync + 'static> FittedRandomForestClassifier<F> {
     #[must_use]
     pub fn n_features(&self) -> usize {
         self.n_features
+    }
+
+    /// Mean accuracy on the given test data and labels.
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::mean_accuracy(&preds, y))
+    }
+
+    /// Predict class probabilities for each sample by averaging per-tree
+    /// class distributions across the forest. Equivalent to sklearn's
+    /// `RandomForestClassifier.predict_proba`.
+    ///
+    /// Returns an `(n_samples, n_classes)` array. Each row sums to 1.
+    /// When a leaf does not carry a class distribution, it contributes a
+    /// one-hot vote at the leaf's predicted class.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the training data.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        if x.ncols() != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        let n_classes = self.classes.len();
+        let n_trees_f = F::from(self.trees.len()).unwrap();
+        let mut proba = Array2::<F>::zeros((n_samples, n_classes));
+
+        for i in 0..n_samples {
+            let row = x.row(i);
+            for tree_nodes in &self.trees {
+                let leaf_idx = decision_tree::traverse(tree_nodes, &row);
+                match &tree_nodes[leaf_idx] {
+                    Node::Leaf {
+                        class_distribution: Some(dist),
+                        ..
+                    } => {
+                        for (j, &p) in dist.iter().enumerate().take(n_classes) {
+                            proba[[i, j]] = proba[[i, j]] + p;
+                        }
+                    }
+                    Node::Leaf { value, .. } => {
+                        let class_idx = value.to_f64().map_or(0, |f| f.round() as usize);
+                        if class_idx < n_classes {
+                            proba[[i, class_idx]] = proba[[i, class_idx]] + F::one();
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            for j in 0..n_classes {
+                proba[[i, j]] = proba[[i, j]] / n_trees_f;
+            }
+        }
+        Ok(proba)
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba). Mirrors
+    /// sklearn's `ClassifierMixin.predict_log_proba`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
     }
 }
 
@@ -641,28 +734,30 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for RandomFores
                 .collect()
         };
 
-        // Build trees in parallel.
+        // Build trees in parallel — per-split feature sampling (Breiman RF,
+        // sklearn parity); see RandomForestClassifier::fit for full notes.
         let trees: Vec<Vec<Node<F>>> = tree_seeds
             .par_iter()
             .map(|&seed| {
-                let mut rng = StdRng::seed_from_u64(seed);
+                let mut bootstrap_rng = StdRng::seed_from_u64(seed);
 
                 let bootstrap_indices: Vec<usize> = (0..n_samples)
                     .map(|_| {
                         use rand::RngCore;
-                        (rng.next_u64() as usize) % n_samples
+                        (bootstrap_rng.next_u64() as usize) % n_samples
                     })
                     .collect();
 
-                let feature_indices: Vec<usize> =
-                    rand_sample_indices(&mut rng, n_features, max_features_n).into_vec();
+                use rand::RngCore;
+                let split_seed = bootstrap_rng.next_u64();
 
-                build_regression_tree_with_feature_subset(
+                build_regression_tree_per_split_features(
                     x,
                     y,
                     &bootstrap_indices,
-                    &feature_indices,
+                    max_features_n,
                     &params,
+                    split_seed,
                 )
             })
             .collect();
@@ -700,6 +795,25 @@ impl<F: Float + Send + Sync + 'static> FittedRandomForestRegressor<F> {
     #[must_use]
     pub fn n_features(&self) -> usize {
         self.n_features
+    }
+
+    /// R² coefficient of determination on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::r2_score(&preds, y))
     }
 }
 

@@ -124,6 +124,30 @@ impl<F: Float> FittedRidgeClassifier<F> {
     }
 }
 
+impl<F: Float + ndarray::ScalarOperand + Send + Sync + 'static> FittedRidgeClassifier<F> {
+    /// Raw `X @ coef + intercept` per class. Mirrors sklearn
+    /// `RidgeClassifier.decision_function`.
+    ///
+    /// Returns shape `(n_samples, n_classes)`. argmax of each row agrees
+    /// with [`Predict`].
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn decision_function(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features = x.ncols();
+        if n_features != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![n_features],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        Ok(x.dot(&self.coef_matrix) + &self.intercept_vec)
+    }
+}
+
 impl<F: Float + Send + Sync + ScalarOperand + FromPrimitive + 'static>
     Fit<Array2<F>, Array1<usize>> for RidgeClassifier<F>
 {

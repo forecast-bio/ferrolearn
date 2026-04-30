@@ -999,6 +999,197 @@ where
 }
 
 // ---------------------------------------------------------------------------
+// D² scores: generalised "fraction of deviance explained" (R²-style)
+// ---------------------------------------------------------------------------
+
+/// D² score generalisation of R² for an arbitrary deviance.
+///
+/// `D² = 1 - dev(y_true, y_pred) / dev(y_true, y_const)` where `y_const`
+/// is the constant predictor that minimises the deviance over `y_true`.
+///
+/// This helper takes the per-sample deviance contribution as a callback so
+/// the `d2_*` wrappers can reuse it.
+fn d2_score_with<F, D>(
+    y_true: &Array1<F>,
+    y_pred: &Array1<F>,
+    constant: F,
+    deviance: D,
+    context: &str,
+) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+    D: Fn(F, F) -> F,
+{
+    check_same_length(y_true, y_pred, context)?;
+    let n = y_true.len();
+    check_non_empty(n, context)?;
+    let mut num = F::zero();
+    let mut den = F::zero();
+    for (&t, &p) in y_true.iter().zip(y_pred.iter()) {
+        num = num + deviance(t, p);
+        den = den + deviance(t, constant);
+    }
+    if den == F::zero() {
+        return Ok(F::zero());
+    }
+    Ok(F::one() - num / den)
+}
+
+/// Sort `y_true` and pick the empirical `q`-quantile (linear interpolation).
+fn quantile<F: Float>(y: &Array1<F>, q: F) -> F {
+    let mut v: Vec<F> = y.iter().copied().collect();
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let n = v.len();
+    if n == 0 {
+        return F::zero();
+    }
+    if n == 1 {
+        return v[0];
+    }
+    let pos = q * F::from(n - 1).unwrap();
+    let lo = pos.to_usize().unwrap_or(0).min(n - 1);
+    let hi = (lo + 1).min(n - 1);
+    let frac = pos - F::from(lo).unwrap();
+    v[lo] + (v[hi] - v[lo]) * frac
+}
+
+/// Mean of an array (helper).
+fn mean<F: Float>(y: &Array1<F>) -> F {
+    let n = F::from(y.len()).unwrap();
+    let s = y.iter().fold(F::zero(), |acc, &v| acc + v);
+    s / n
+}
+
+/// Compute the D² regression score with the absolute-error deviance.
+///
+/// `1 - MAE(y_pred) / MAE(median(y_true))`. Higher is better; perfect
+/// prediction returns `1.0`.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+pub fn d2_absolute_error_score<F>(y_true: &Array1<F>, y_pred: &Array1<F>) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    let median = quantile(y_true, F::from(0.5).unwrap());
+    d2_score_with(
+        y_true,
+        y_pred,
+        median,
+        |t, p| (t - p).abs(),
+        "d2_absolute_error_score",
+    )
+}
+
+/// Compute the D² regression score with the pinball (quantile) deviance.
+///
+/// Generalises [`d2_absolute_error_score`] (which corresponds to `alpha = 0.5`)
+/// to arbitrary quantiles `alpha ∈ [0, 1]`.
+///
+/// # Errors
+///
+/// Returns [`FerroError::InvalidParameter`] if `alpha` is outside `[0, 1]`.
+/// Returns [`FerroError::ShapeMismatch`] if array lengths differ.
+/// Returns [`FerroError::InsufficientSamples`] if the arrays are empty.
+pub fn d2_pinball_score<F>(
+    y_true: &Array1<F>,
+    y_pred: &Array1<F>,
+    alpha: F,
+) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    if alpha < F::zero() || alpha > F::one() {
+        return Err(FerroError::InvalidParameter {
+            name: "alpha".into(),
+            reason: "alpha must be in [0, 1]".into(),
+        });
+    }
+    let constant = quantile(y_true, alpha);
+    let one_minus_alpha = F::one() - alpha;
+    d2_score_with(
+        y_true,
+        y_pred,
+        constant,
+        |t, p| {
+            let d = t - p;
+            if d >= F::zero() {
+                alpha * d
+            } else {
+                one_minus_alpha * (-d)
+            }
+        },
+        "d2_pinball_score",
+    )
+}
+
+/// Compute the D² regression score with the Tweedie deviance of `power`.
+///
+/// `power = 0` → squared error (classic R²);
+/// `power = 1` → Poisson deviance;
+/// `power = 2` → Gamma deviance.
+///
+/// # Errors
+///
+/// Returns [`FerroError::InvalidParameter`] if any `y_pred <= 0` for
+/// `power >= 1`, or any `y_true < 0` for `power == 1`.
+pub fn d2_tweedie_score<F>(
+    y_true: &Array1<F>,
+    y_pred: &Array1<F>,
+    power: F,
+) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_same_length(y_true, y_pred, "d2_tweedie_score")?;
+    let n = y_true.len();
+    check_non_empty(n, "d2_tweedie_score")?;
+
+    let constant = mean(y_true);
+
+    let dev = |t: F, p: F| -> F {
+        if power == F::zero() {
+            // squared loss
+            let d = t - p;
+            d * d
+        } else if power == F::one() {
+            // Poisson deviance
+            if t == F::zero() {
+                p
+            } else {
+                t * (t / p).ln() + p - t
+            }
+        } else if power == F::from(2.0).unwrap() {
+            // Gamma deviance
+            (t / p).ln() * F::from(-1.0).unwrap() + (t - p) / p
+        } else {
+            // General Tweedie
+            let two = F::from(2.0).unwrap();
+            let one_minus_p = F::one() - power;
+            let two_minus_p = two - power;
+            t.powf(two_minus_p) / (one_minus_p * two_minus_p)
+                - t * p.powf(one_minus_p) / one_minus_p
+                + p.powf(two_minus_p) / two_minus_p
+        }
+    };
+
+    let mut num = F::zero();
+    let mut den = F::zero();
+    for (&t, &p) in y_true.iter().zip(y_pred.iter()) {
+        num = num + dev(t, p);
+        den = den + dev(t, constant);
+    }
+    if den == F::zero() {
+        return Ok(F::zero());
+    }
+    let two = F::from(2.0).unwrap();
+    let n_f = F::from(n).unwrap();
+    Ok(F::one() - (two * num / n_f) / (two * den / n_f))
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 

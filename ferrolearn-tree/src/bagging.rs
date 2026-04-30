@@ -35,7 +35,7 @@ use crate::decision_tree::{
     build_regression_tree_with_feature_subset,
 };
 use ferrolearn_core::error::FerroError;
-use ferrolearn_core::introspection::HasClasses;
+use ferrolearn_core::introspection::{HasClasses, HasFeatureImportances};
 use ferrolearn_core::pipeline::{FittedPipelineEstimator, PipelineEstimator};
 use ferrolearn_core::traits::{Fit, Predict};
 use ndarray::{Array1, Array2};
@@ -172,6 +172,9 @@ pub struct FittedBaggingClassifier<F> {
     classes: Vec<usize>,
     /// Number of features in the original data.
     n_features: usize,
+    /// Per-feature importance scores aggregated across the ensemble
+    /// (normalized to sum to 1).
+    feature_importances: Array1<F>,
 }
 
 impl<F: Float + Send + Sync + 'static> FittedBaggingClassifier<F> {
@@ -185,6 +188,94 @@ impl<F: Float + Send + Sync + 'static> FittedBaggingClassifier<F> {
     #[must_use]
     pub fn n_features(&self) -> usize {
         self.n_features
+    }
+
+    /// Mean accuracy on the given test data and labels.
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::mean_accuracy(&preds, y))
+    }
+
+    /// Predict class probabilities by averaging per-tree class
+    /// distributions across the bagged ensemble. Mirrors sklearn's
+    /// `BaggingClassifier.predict_proba`.
+    ///
+    /// Returns an `(n_samples, n_classes)` array. Each tree contributes
+    /// either its leaf's full class distribution or a one-hot vote based
+    /// on the leaf's predicted class. Each tree gets a row sub-set
+    /// according to the `feature_indices` it was trained on.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        if x.ncols() != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        let n_classes = self.classes.len();
+        let n_trees_f = F::from(self.trees.len()).unwrap();
+        let mut proba = Array2::<F>::zeros((n_samples, n_classes));
+
+        for i in 0..n_samples {
+            let row = x.row(i);
+            for (t, tree_nodes) in self.trees.iter().enumerate() {
+                let feat_idx = &self.feature_indices[t];
+                let sub_row: Vec<F> = feat_idx.iter().map(|&fi| row[fi]).collect();
+                let sub_view = ndarray::Array1::from(sub_row);
+                let leaf_idx = decision_tree::traverse(tree_nodes, &sub_view.view());
+                match &tree_nodes[leaf_idx] {
+                    Node::Leaf {
+                        class_distribution: Some(dist),
+                        ..
+                    } => {
+                        for (j, &p) in dist.iter().enumerate().take(n_classes) {
+                            proba[[i, j]] = proba[[i, j]] + p;
+                        }
+                    }
+                    Node::Leaf { value, .. } => {
+                        let class_idx = value.to_f64().map_or(0, |f| f.round() as usize);
+                        if class_idx < n_classes {
+                            proba[[i, class_idx]] = proba[[i, class_idx]] + F::one();
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            for j in 0..n_classes {
+                proba[[i, j]] = proba[[i, j]] / n_trees_f;
+            }
+        }
+        Ok(proba)
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba). Mirrors
+    /// sklearn's `ClassifierMixin.predict_log_proba`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
     }
 }
 
@@ -334,13 +425,26 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Bagging
             .collect();
 
         let (trees, feature_indices): (Vec<_>, Vec<_>) = results.into_iter().unzip();
+        let feature_importances = decision_tree::aggregate_tree_importances(
+            &trees,
+            Some(&feature_indices),
+            None,
+            n_features,
+        );
 
         Ok(FittedBaggingClassifier {
             trees,
             feature_indices,
             classes,
             n_features,
+            feature_importances,
         })
+    }
+}
+
+impl<F: Float + Send + Sync + 'static> HasFeatureImportances<F> for FittedBaggingClassifier<F> {
+    fn feature_importances(&self) -> &Array1<F> {
+        &self.feature_importances
     }
 }
 
@@ -582,6 +686,15 @@ pub struct FittedBaggingRegressor<F> {
     feature_indices: Vec<Vec<usize>>,
     /// Number of features in the original data.
     n_features: usize,
+    /// Per-feature importance scores aggregated across the ensemble
+    /// (normalized to sum to 1).
+    feature_importances: Array1<F>,
+}
+
+impl<F: Float + Send + Sync + 'static> HasFeatureImportances<F> for FittedBaggingRegressor<F> {
+    fn feature_importances(&self) -> &Array1<F> {
+        &self.feature_importances
+    }
 }
 
 impl<F: Float + Send + Sync + 'static> FittedBaggingRegressor<F> {
@@ -595,6 +708,25 @@ impl<F: Float + Send + Sync + 'static> FittedBaggingRegressor<F> {
     #[must_use]
     pub fn n_features(&self) -> usize {
         self.n_features
+    }
+
+    /// R² coefficient of determination on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::r2_score(&preds, y))
     }
 }
 
@@ -721,11 +853,18 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for BaggingRegr
             .collect();
 
         let (trees, feature_indices): (Vec<_>, Vec<_>) = results.into_iter().unzip();
+        let feature_importances = decision_tree::aggregate_tree_importances(
+            &trees,
+            Some(&feature_indices),
+            None,
+            n_features,
+        );
 
         Ok(FittedBaggingRegressor {
             trees,
             feature_indices,
             n_features,
+            feature_importances,
         })
     }
 }

@@ -45,31 +45,75 @@
 //! ```
 
 pub mod calibration;
+pub mod chain;
 pub mod cross_validation;
 pub mod distributions;
+pub mod dummy;
+pub mod feature_union;
 pub mod grid_search;
+pub mod group_splitters;
 pub mod halving_grid_search;
 pub mod halving_random_search;
+pub mod helpers;
+pub mod inspection;
 pub mod learning_curve;
+pub mod multiclass;
+pub mod multioutput;
 pub mod param_grid;
 pub mod random_search;
 pub mod self_training;
 pub mod split;
+pub mod splitters;
+pub mod threshold;
 pub mod time_series_split;
+pub mod transformed_target;
 pub mod validation_curve;
 
 pub use calibration::{CalibratedClassifierCV, CalibrationMethod, FittedCalibratedClassifierCV};
+pub use chain::{
+    ClassifierChain, FittedClassifierChain, FittedOutputCodeClassifier, FittedRegressorChain,
+    OutputCodeClassifier, RegressorChain,
+};
 pub use cross_validation::{
     CrossValidateResult, CrossValidator, KFold, StratifiedKFold, cross_val_predict,
     cross_val_score, cross_validate, permutation_test_score,
 };
+pub use dummy::{
+    DummyClassifier, DummyClassifierStrategy, DummyRegressor, DummyRegressorStrategy,
+    FittedDummyClassifier, FittedDummyRegressor,
+};
+pub use feature_union::{FeatureUnion, FittedFeatureUnion};
 pub use grid_search::{CvResults, GridSearchCV};
+pub use group_splitters::{
+    GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, LeavePGroupsOut, StratifiedGroupKFold,
+};
 pub use halving_grid_search::HalvingGridSearchCV;
 pub use halving_random_search::HalvingRandomSearchCV;
+pub use helpers::{make_pipeline, make_union};
+pub use inspection::{
+    PartialDependenceResult, PermutationImportanceResult, partial_dependence,
+    permutation_importance,
+};
 pub use learning_curve::{LearningCurveResult, learning_curve};
+pub use multiclass::{
+    FittedOneVsOneClassifier, FittedOneVsRestClassifier, OneVsOneClassifier, OneVsRestClassifier,
+};
+pub use multioutput::{
+    FittedMultiOutputClassifier, FittedMultiOutputRegressor, MultiOutputClassifier,
+    MultiOutputRegressor,
+};
 pub use param_grid::{ParamSet, ParamValue};
 pub use random_search::RandomizedSearchCV;
 pub use self_training::{FittedSelfTrainingClassifier, SelfTrainingClassifier, UNLABELED};
 pub use split::train_test_split;
+pub use splitters::{
+    LeaveOneOut, LeavePOut, PredefinedSplit, RepeatedKFold, RepeatedStratifiedKFold, ShuffleSplit,
+    StratifiedShuffleSplit,
+};
+pub use threshold::{
+    FitScoreFn, FittedFixedThresholdClassifier, FittedTunedThresholdClassifierCV,
+    FixedThresholdClassifier, ThresholdScoring, TunedThresholdClassifierCV,
+};
 pub use time_series_split::TimeSeriesSplit;
+pub use transformed_target::{FittedTransformedTargetRegressor, TransformedTargetRegressor};
 pub use validation_curve::{ValidationCurveResult, validation_curve};

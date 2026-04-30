@@ -1369,6 +1369,27 @@ impl<F: Float + Send + Sync + 'static> FittedPipelineEstimator<F>
     }
 }
 
+impl<F: Float + Send + Sync + 'static> FittedHistGradientBoostingRegressor<F> {
+    /// R² coefficient of determination on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::r2_score(&preds, y))
+    }
+}
+
 // ---------------------------------------------------------------------------
 // HistGradientBoostingClassifier
 // ---------------------------------------------------------------------------
@@ -1919,6 +1940,164 @@ impl<F: Float + Send + Sync + 'static> HasClasses for FittedHistGradientBoosting
 
     fn n_classes(&self) -> usize {
         self.classes.len()
+    }
+}
+
+impl<F: Float + Send + Sync + 'static> FittedHistGradientBoostingClassifier<F> {
+    /// Mean accuracy on the given test data and labels.
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::mean_accuracy(&preds, y))
+    }
+
+    /// Predict class probabilities. Mirrors sklearn's
+    /// `HistGradientBoostingClassifier.predict_proba`.
+    ///
+    /// Binary: logistic link of the cumulative log-odds.
+    /// Multiclass: softmax over K cumulative scores.
+    ///
+    /// Returns shape `(n_samples, n_classes)`; rows sum to 1.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        if x.ncols() != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        let n_classes = self.classes.len();
+        let binned = bin_data(x, &self.bin_infos);
+        let mut proba = Array2::<F>::zeros((n_samples, n_classes));
+
+        if n_classes == 2 {
+            let init = self.init[0];
+            for i in 0..n_samples {
+                let mut f_val = init;
+                for tree_nodes in &self.trees[0] {
+                    let leaf_idx = traverse_hist_tree(tree_nodes, &binned[i]);
+                    if let HistNode::Leaf { value, .. } = tree_nodes[leaf_idx] {
+                        f_val = f_val + self.learning_rate * value;
+                    }
+                }
+                let p1 = sigmoid(f_val);
+                proba[[i, 0]] = F::one() - p1;
+                proba[[i, 1]] = p1;
+            }
+        } else {
+            for i in 0..n_samples {
+                let mut scores = vec![F::zero(); n_classes];
+                for k in 0..n_classes {
+                    let mut f_val = self.init[k];
+                    for tree_nodes in &self.trees[k] {
+                        let leaf_idx = traverse_hist_tree(tree_nodes, &binned[i]);
+                        if let HistNode::Leaf { value, .. } = tree_nodes[leaf_idx] {
+                            f_val = f_val + self.learning_rate * value;
+                        }
+                    }
+                    scores[k] = f_val;
+                }
+                let max_s = scores
+                    .iter()
+                    .copied()
+                    .fold(F::neg_infinity(), |a, b| if b > a { b } else { a });
+                let mut sum_exp = F::zero();
+                for k in 0..n_classes {
+                    let e = (scores[k] - max_s).exp();
+                    proba[[i, k]] = e;
+                    sum_exp = sum_exp + e;
+                }
+                if sum_exp > F::zero() {
+                    for k in 0..n_classes {
+                        proba[[i, k]] = proba[[i, k]] / sum_exp;
+                    }
+                }
+            }
+        }
+        Ok(proba)
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba). Mirrors
+    /// sklearn's `ClassifierMixin.predict_log_proba`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
+
+    /// Cumulative raw scores per sample (pre-link). Mirrors sklearn's
+    /// `HistGradientBoostingClassifier.decision_function`.
+    ///
+    /// Binary: shape `(n_samples, 1)`. Multiclass: shape
+    /// `(n_samples, n_classes)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn decision_function(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        if x.ncols() != self.n_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        let n_samples = x.nrows();
+        let n_classes = self.classes.len();
+        let binned = bin_data(x, &self.bin_infos);
+
+        if n_classes == 2 {
+            let init = self.init[0];
+            let mut out = Array2::<F>::zeros((n_samples, 1));
+            for i in 0..n_samples {
+                let mut f_val = init;
+                for tree_nodes in &self.trees[0] {
+                    let leaf_idx = traverse_hist_tree(tree_nodes, &binned[i]);
+                    if let HistNode::Leaf { value, .. } = tree_nodes[leaf_idx] {
+                        f_val = f_val + self.learning_rate * value;
+                    }
+                }
+                out[[i, 0]] = f_val;
+            }
+            Ok(out)
+        } else {
+            let mut out = Array2::<F>::zeros((n_samples, n_classes));
+            for i in 0..n_samples {
+                for k in 0..n_classes {
+                    let mut f_val = self.init[k];
+                    for tree_nodes in &self.trees[k] {
+                        let leaf_idx = traverse_hist_tree(tree_nodes, &binned[i]);
+                        if let HistNode::Leaf { value, .. } = tree_nodes[leaf_idx] {
+                            f_val = f_val + self.learning_rate * value;
+                        }
+                    }
+                    out[[i, k]] = f_val;
+                }
+            }
+            Ok(out)
+        }
     }
 }
 

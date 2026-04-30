@@ -56,7 +56,6 @@
 //! assert_eq!(projected.ncols(), 1);
 //! ```
 
-pub mod covariance;
 pub mod cross_decomposition;
 pub mod dictionary_learning;
 pub mod factor_analysis;
@@ -67,18 +66,16 @@ pub mod kernel_pca;
 pub mod lda_topic;
 pub mod lle;
 pub mod mds;
+pub mod minibatch_nmf;
 pub mod nmf;
 pub mod pca;
+pub mod sparse_pca;
 pub mod spectral_embedding;
 pub mod truncated_svd;
 pub mod tsne;
 pub mod umap;
 
 // Re-exports
-pub use covariance::{
-    EllipticEnvelope, EmpiricalCovariance, FittedCovariance, FittedEllipticEnvelope,
-    FittedLedoitWolf, FittedMinCovDet, FittedOAS, LedoitWolf, MinCovDet, OAS, ShrunkCovariance,
-};
 pub use cross_decomposition::{
     CCA, FittedCCA, FittedPLSCanonical, FittedPLSRegression, FittedPLSSVD, PLSCanonical,
     PLSRegression, PLSSVD,
@@ -96,8 +93,10 @@ pub use lda_topic::{
 };
 pub use lle::{FittedLLE, LLE};
 pub use mds::{Dissimilarity, FittedMDS, MDS};
+pub use minibatch_nmf::{FittedMiniBatchNMF, MiniBatchNMF, MiniBatchNMFInit};
 pub use nmf::{FittedNMF, NMF, NMFInit, NMFSolver};
 pub use pca::{FittedPCA, PCA};
+pub use sparse_pca::{FittedSparsePCA, SparsePCA};
 pub use spectral_embedding::{Affinity, FittedSpectralEmbedding, SpectralEmbedding};
 pub use truncated_svd::{FittedTruncatedSVD, TruncatedSVD};
 pub use tsne::{FittedTsne, Tsne};

@@ -543,6 +543,54 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> FittedLogisticRegression<
             Ok(softmax_2d(&logits))
         }
     }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba). Mirrors
+    /// sklearn `LogisticRegression.predict_log_proba`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
+
+    /// Raw signed distance from the decision boundary (binary) or per-class
+    /// scores (multiclass). Mirrors sklearn
+    /// `LogisticRegression.decision_function`.
+    ///
+    /// Binary: shape `(n_samples, 1)` containing `X @ coef + intercept`.
+    /// Multiclass: shape `(n_samples, n_classes)` containing the raw
+    /// pre-softmax scores. (sklearn returns `(n_samples,)` for binary;
+    /// ferrolearn keeps a 2-D shape for type uniformity, matching the
+    /// tree-crate convention.)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features
+    /// does not match the fitted model.
+    pub fn decision_function(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features = x.ncols();
+        let expected = self.weight_matrix.ncols();
+        if n_features != expected {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![expected],
+                actual: vec![n_features],
+                context: "number of features must match fitted model".into(),
+            });
+        }
+        if self.is_binary {
+            let logits = x.dot(&self.coefficients) + self.intercept;
+            let n = logits.len();
+            let mut out = Array2::<F>::zeros((n, 1));
+            for i in 0..n {
+                out[[i, 0]] = logits[i];
+            }
+            Ok(out)
+        } else {
+            Ok(x.dot(&self.weight_matrix.t()) + &self.intercept_vec)
+        }
+    }
 }
 
 impl<F: Float + Send + Sync + ScalarOperand + 'static> Predict<Array2<F>>

@@ -37,7 +37,9 @@
 pub mod coo;
 pub mod csc;
 pub mod csr;
+pub mod helpers;
 
 pub use coo::CooMatrix;
 pub use csc::CscMatrix;
 pub use csr::CsrMatrix;
+pub use helpers::{diags, eye, hstack, vstack};

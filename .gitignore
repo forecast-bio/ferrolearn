@@ -8,12 +8,16 @@
 .crosslink/daemon.pid
 .crosslink/daemon.log
 .crosslink/last_test_run
+.crosslink/.active-issue
 .crosslink/keys/
 .crosslink/.hub-cache/
 .crosslink/.knowledge-cache/
 .crosslink/.cache/
+.crosslink/init-manifest.json
+.crosslink/init-manifest.json.tmp
 .crosslink/hook-config.local.json
 .crosslink/integrations/
+.crosslink/rules.local/
 
 # .crosslink/ — DO track these (project-level policy):
 #   .crosslink/hook-config.json   — shared team configuration
@@ -43,3 +47,4 @@ __pycache__/
 
 # Reference implementations (not project source)
 .reference/
+.sklearn-ref/

@@ -30,7 +30,7 @@
 //! ```
 
 use ferrolearn_core::pipeline::{FittedPipeline, Pipeline};
-use ferrolearn_core::{Fit, FerroError, Predict};
+use ferrolearn_core::{FerroError, Fit, Predict};
 use ndarray::{Array1, Array2};
 
 // ---------------------------------------------------------------------------
@@ -170,8 +170,11 @@ impl OneVsRestClassifier {
 
         for &cls in &classes {
             // Create binary labels: 1.0 for class `cls`, 0.0 otherwise.
-            let y_binary =
-                Array1::from_vec(y.iter().map(|&l| if l == cls { 1.0 } else { 0.0 }).collect());
+            let y_binary = Array1::from_vec(
+                y.iter()
+                    .map(|&l| if l == cls { 1.0 } else { 0.0 })
+                    .collect(),
+            );
 
             let pipeline = (self.make_pipeline)();
             let fitted = pipeline.fit(x, &y_binary)?;
@@ -581,11 +584,7 @@ mod tests {
 
     #[test]
     fn test_ovr_decision_function_shape() {
-        let x = Array2::from_shape_vec(
-            (6, 1),
-            vec![0.0, 0.1, 5.0, 5.1, 10.0, 10.1],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((6, 1), vec![0.0, 0.1, 5.0, 5.1, 10.0, 10.1]).unwrap();
         let y = Array1::from_vec(vec![0, 0, 1, 1, 2, 2]);
 
         let ovr = OneVsRestClassifier::new(make_threshold_factory());
@@ -616,11 +615,7 @@ mod tests {
 
     #[test]
     fn test_ovr_two_classes() {
-        let x = Array2::from_shape_vec(
-            (6, 1),
-            vec![0.0, 0.1, 0.2, 10.0, 10.1, 10.2],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((6, 1), vec![0.0, 0.1, 0.2, 10.0, 10.1, 10.2]).unwrap();
         let y = Array1::from_vec(vec![0, 0, 0, 1, 1, 1]);
 
         let ovr = OneVsRestClassifier::new(make_threshold_factory());
@@ -677,11 +672,8 @@ mod tests {
     #[test]
     fn test_ovo_n_estimators_four_classes() {
         // 4 classes -> C(4,2) = 6 pairwise classifiers
-        let x = Array2::from_shape_vec(
-            (8, 1),
-            vec![0.0, 0.1, 3.0, 3.1, 6.0, 6.1, 9.0, 9.1],
-        )
-        .unwrap();
+        let x =
+            Array2::from_shape_vec((8, 1), vec![0.0, 0.1, 3.0, 3.1, 6.0, 6.1, 9.0, 9.1]).unwrap();
         let y = Array1::from_vec(vec![0, 0, 1, 1, 2, 2, 3, 3]);
 
         let ovo = OneVsOneClassifier::new(make_threshold_factory());
@@ -711,11 +703,7 @@ mod tests {
 
     #[test]
     fn test_ovo_two_classes() {
-        let x = Array2::from_shape_vec(
-            (6, 1),
-            vec![0.0, 0.1, 0.2, 10.0, 10.1, 10.2],
-        )
-        .unwrap();
+        let x = Array2::from_shape_vec((6, 1), vec![0.0, 0.1, 0.2, 10.0, 10.1, 10.2]).unwrap();
         let y = Array1::from_vec(vec![0, 0, 0, 1, 1, 1]);
 
         let ovo = OneVsOneClassifier::new(make_threshold_factory());

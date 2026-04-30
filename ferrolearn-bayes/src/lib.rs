@@ -65,3 +65,44 @@ pub use categorical::{CategoricalNB, FittedCategoricalNB};
 pub use complement::{ComplementNB, FittedComplementNB};
 pub use gaussian::{FittedGaussianNB, GaussianNB};
 pub use multinomial::{FittedMultinomialNB, MultinomialNB};
+
+use ndarray::Array2;
+use num_traits::Float;
+
+/// Smoothing-floor used when `force_alpha = false` to mirror scikit-learn's
+/// legacy "raise alpha to 1e-10" behavior. When `force_alpha = true`
+/// (the default), the user-supplied alpha is returned as-is, even if zero.
+pub(crate) fn clamp_alpha<F: Float>(alpha: F, force_alpha: bool) -> F {
+    if force_alpha {
+        alpha
+    } else {
+        let floor = F::from(1e-10).unwrap();
+        if alpha < floor { floor } else { alpha }
+    }
+}
+
+/// Numerically stable row-wise log-softmax: returns `jll - logsumexp(jll, axis=1)`.
+///
+/// Used by every Fitted*NB to convert joint log-likelihoods into log
+/// probabilities. The subtraction-of-row-max trick keeps the exponentials
+/// bounded by 1, avoiding overflow.
+pub(crate) fn log_softmax_rows<F: Float>(jll: &Array2<F>) -> Array2<F> {
+    let n_samples = jll.nrows();
+    let n_classes = jll.ncols();
+    let mut log_proba = Array2::<F>::zeros((n_samples, n_classes));
+    for i in 0..n_samples {
+        let max_score = jll
+            .row(i)
+            .iter()
+            .fold(F::neg_infinity(), |a, &b| a.max(b));
+        let mut sum_exp = F::zero();
+        for ci in 0..n_classes {
+            sum_exp = sum_exp + (jll[[i, ci]] - max_score).exp();
+        }
+        let log_norm = max_score + sum_exp.ln();
+        for ci in 0..n_classes {
+            log_proba[[i, ci]] = jll[[i, ci]] - log_norm;
+        }
+    }
+    log_proba
+}

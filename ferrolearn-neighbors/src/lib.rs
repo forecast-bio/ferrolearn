@@ -50,12 +50,15 @@
 //! supporting both `f32` and `f64`.
 
 pub mod balltree;
+pub mod graph;
 pub mod kdtree;
 pub mod knn;
 pub mod local_outlier_factor;
 pub mod nearest_centroid;
 pub mod nearest_neighbors;
 pub mod radius_neighbors;
+
+pub use graph::{GraphMode, kneighbors_graph, radius_neighbors_graph, sort_graph_by_row_values};
 
 // Re-export the main types at the crate root.
 pub use knn::{

@@ -147,6 +147,40 @@ impl<F: Float> FittedLogisticRegressionCV<F> {
     }
 }
 
+impl<F: Float + ndarray::ScalarOperand + Send + Sync + 'static> FittedLogisticRegressionCV<F> {
+    /// Predict per-class probabilities. Mirrors sklearn
+    /// `LogisticRegressionCV.predict_proba`. Delegates to the inner
+    /// fitted LogisticRegression at the best C value.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from the inner `predict_proba`.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        self.inner.predict_proba(x)
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba).
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
+
+    /// Raw decision-function scores delegated to the inner fitted
+    /// LogisticRegression at the best C value. Mirrors sklearn
+    /// `LogisticRegressionCV.decision_function`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from the inner `decision_function`.
+    pub fn decision_function(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        self.inner.decision_function(x)
+    }
+}
+
 /// Split data into k folds, returning `(train_indices, test_indices)` for
 /// fold number `fold`.
 fn kfold_split(n_samples: usize, k: usize, fold: usize) -> (Vec<usize>, Vec<usize>) {

@@ -1,5 +1,6 @@
 """ferrolearn — scikit-learn compatible Rust ML models."""
 
+# Original 12 estimators
 from ferrolearn._regressors import ElasticNet, Lasso, LinearRegression, Ridge
 from ferrolearn._classifiers import (
     DecisionTreeClassifier,
@@ -11,7 +12,54 @@ from ferrolearn._classifiers import (
 from ferrolearn._transformers import PCA, StandardScaler
 from ferrolearn._clusterers import KMeans
 
+# Phase-2 expansion (~40 more)
+from ferrolearn._extras import (
+    AdaBoostClassifier,
+    AgglomerativeClustering,
+    ARDRegression,
+    BaggingClassifier,
+    BayesianRidge,
+    BernoulliNB,
+    Birch,
+    ComplementNB,
+    DBSCAN,
+    DecisionTreeRegressor,
+    ExtraTreeClassifier,
+    ExtraTreesClassifier,
+    ExtraTreesRegressor,
+    FactorAnalysis,
+    FastICA,
+    GaussianMixture,
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+    HuberRegressor,
+    IncrementalPCA,
+    KernelPCA,
+    KernelRidge,
+    KNeighborsRegressor,
+    LinearSVC,
+    MaxAbsScaler,
+    MinMaxScaler,
+    MiniBatchKMeans,
+    MultinomialNB,
+    NMF,
+    NearestCentroid,
+    Nystroem,
+    PowerTransformer,
+    QuadraticDiscriminantAnalysis,
+    QuantileRegressor,
+    RBFSampler,
+    RandomForestRegressor,
+    RidgeClassifier,
+    RobustScaler,
+    SparsePCA,
+    TruncatedSVD,
+)
+
 __all__ = [
+    # Original 12
     "LinearRegression",
     "Ridge",
     "Lasso",
@@ -24,4 +72,54 @@ __all__ = [
     "StandardScaler",
     "PCA",
     "KMeans",
+    # Linear extras
+    "BayesianRidge",
+    "ARDRegression",
+    "HuberRegressor",
+    "QuantileRegressor",
+    "RidgeClassifier",
+    "LinearSVC",
+    "QuadraticDiscriminantAnalysis",
+    # Bayes extras
+    "MultinomialNB",
+    "BernoulliNB",
+    "ComplementNB",
+    # Tree extras
+    "DecisionTreeRegressor",
+    "RandomForestRegressor",
+    "ExtraTreeClassifier",
+    "ExtraTreesClassifier",
+    "ExtraTreesRegressor",
+    "AdaBoostClassifier",
+    "GradientBoostingClassifier",
+    "GradientBoostingRegressor",
+    "HistGradientBoostingClassifier",
+    "HistGradientBoostingRegressor",
+    "BaggingClassifier",
+    # Neighbors extras
+    "KNeighborsRegressor",
+    "NearestCentroid",
+    # Cluster extras
+    "MiniBatchKMeans",
+    "DBSCAN",
+    "AgglomerativeClustering",
+    "Birch",
+    "GaussianMixture",
+    # Decomp extras
+    "IncrementalPCA",
+    "TruncatedSVD",
+    "FastICA",
+    "NMF",
+    "KernelPCA",
+    "SparsePCA",
+    "FactorAnalysis",
+    # Preprocess extras
+    "MinMaxScaler",
+    "MaxAbsScaler",
+    "RobustScaler",
+    "PowerTransformer",
+    # Kernel extras
+    "KernelRidge",
+    "Nystroem",
+    "RBFSampler",
 ]

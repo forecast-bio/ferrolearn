@@ -27,7 +27,7 @@
 //! # Examples
 //!
 //! ```
-//! use ferrolearn_decomp::EmpiricalCovariance;
+//! use ferrolearn_covariance::EmpiricalCovariance;
 //! use ferrolearn_core::traits::Fit;
 //! use ndarray::array;
 //!
@@ -359,7 +359,7 @@ impl<F: Float + Send + Sync + 'static> FittedCovariance<F> {
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_decomp::EmpiricalCovariance;
+/// use ferrolearn_covariance::EmpiricalCovariance;
 /// use ferrolearn_core::traits::Fit;
 /// use ndarray::array;
 ///
@@ -454,7 +454,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for EmpiricalCovarianc
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_decomp::ShrunkCovariance;
+/// use ferrolearn_covariance::ShrunkCovariance;
 /// use ferrolearn_core::traits::Fit;
 /// use ndarray::array;
 ///
@@ -552,7 +552,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for ShrunkCovariance<F
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_decomp::LedoitWolf;
+/// use ferrolearn_covariance::LedoitWolf;
 /// use ferrolearn_core::traits::Fit;
 /// use ndarray::array;
 ///
@@ -758,7 +758,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for LedoitWolf<F> {
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_decomp::OAS;
+/// use ferrolearn_covariance::OAS;
 /// use ferrolearn_core::traits::Fit;
 /// use ndarray::array;
 ///
@@ -927,7 +927,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for OAS<F> {
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_decomp::MinCovDet;
+/// use ferrolearn_covariance::MinCovDet;
 /// use ferrolearn_core::traits::Fit;
 /// use ndarray::array;
 ///
@@ -1213,7 +1213,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for MinCovDet<F> {
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_decomp::EllipticEnvelope;
+/// use ferrolearn_covariance::EllipticEnvelope;
 /// use ferrolearn_core::traits::{Fit, Predict};
 /// use ndarray::array;
 ///

@@ -480,6 +480,67 @@ impl<F: Float + Send + Sync + 'static> FittedGaussianNB<F> {
 
         Ok(proba)
     }
+
+    /// Compute the unnormalized joint log-likelihood `log P(c) + log P(x|c)`.
+    ///
+    /// Returns shape `(n_samples, n_classes)`. Matches sklearn
+    /// `GaussianNB._joint_log_likelihood`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features does
+    /// not match the fitted model.
+    pub fn predict_joint_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features_fitted = self.theta.ncols();
+        if x.ncols() != n_features_fitted {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![n_features_fitted],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted GaussianNB".into(),
+            });
+        }
+        Ok(self.joint_log_likelihood(x))
+    }
+
+    /// Compute log of class probabilities (numerically stable).
+    ///
+    /// Returns shape `(n_samples, n_classes)` where each row's exponential
+    /// sums to 1.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features does
+    /// not match the fitted model.
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let jll = self.predict_joint_log_proba(x)?;
+        Ok(crate::log_softmax_rows(&jll))
+    }
+
+    /// Mean accuracy on the given test data and labels.
+    ///
+    /// Equivalent to sklearn's `ClassifierMixin.score`. Returns
+    /// `(predict(x) == y).mean()`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the fitted model.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        let n = y.len();
+        if n == 0 {
+            return Ok(F::zero());
+        }
+        let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
+        Ok(F::from(correct).unwrap() / F::from(n).unwrap())
+    }
 }
 
 impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedGaussianNB<F> {

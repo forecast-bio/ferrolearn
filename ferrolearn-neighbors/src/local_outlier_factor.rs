@@ -60,19 +60,28 @@ pub struct LocalOutlierFactor<F> {
     pub contamination: f64,
     /// The algorithm to use for neighbor search. Default: `Auto`.
     pub algorithm: Algorithm,
+    /// When `true`, the fitted estimator is intended to detect outliers in
+    /// **new** data via `predict` / `decision_function` / `score_samples`.
+    /// When `false` (default), the model is in outlier-detection mode and
+    /// `fit_predict(X)` should be used to label the training data itself.
+    /// Mirrors sklearn's `novelty` parameter; ferrolearn does not enforce
+    /// the strict mode separation, so this is informational.
+    pub novelty: bool,
     _marker: std::marker::PhantomData<F>,
 }
 
 impl<F: Float> LocalOutlierFactor<F> {
     /// Create a new `LocalOutlierFactor` with default settings.
     ///
-    /// Defaults: `n_neighbors = 20`, `contamination = 0.1`, `algorithm = Auto`.
+    /// Defaults: `n_neighbors = 20`, `contamination = 0.1`,
+    /// `algorithm = Auto`, `novelty = false`.
     #[must_use]
     pub fn new() -> Self {
         Self {
             n_neighbors: 20,
             contamination: 0.1,
             algorithm: Algorithm::Auto,
+            novelty: false,
             _marker: std::marker::PhantomData,
         }
     }
@@ -96,6 +105,29 @@ impl<F: Float> LocalOutlierFactor<F> {
     pub fn with_algorithm(mut self, algorithm: Algorithm) -> Self {
         self.algorithm = algorithm;
         self
+    }
+
+    /// Toggle novelty mode. See struct field doc.
+    #[must_use]
+    pub fn with_novelty(mut self, novelty: bool) -> Self {
+        self.novelty = novelty;
+        self
+    }
+
+    /// Fit the model on `x` and return outlier labels (`-1` outlier, `+1`
+    /// inlier) for those same training samples in one call. Mirrors
+    /// sklearn `LocalOutlierFactor.fit_predict`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`Fit::fit`] or
+    /// [`Predict::predict`] on the fitted model.
+    pub fn fit_predict(&self, x: &Array2<F>) -> Result<Array1<isize>, FerroError>
+    where
+        F: Send + Sync + 'static,
+    {
+        let fitted = self.fit(x, &())?;
+        fitted.predict(x)
     }
 }
 
@@ -291,120 +323,11 @@ impl<F: Float + Send + Sync + 'static> Predict<Array2<F>> for FittedLocalOutlier
     /// Returns [`FerroError::ShapeMismatch`] if the number of features does
     /// not match the training data.
     fn predict(&self, x: &Array2<F>) -> Result<Array1<isize>, FerroError> {
-        let n_features = x.ncols();
-        let train_features = self.x_train.ncols();
-
-        if n_features != train_features {
-            return Err(FerroError::ShapeMismatch {
-                expected: vec![train_features],
-                actual: vec![n_features],
-                context: "number of features must match training data".into(),
-            });
-        }
-
-        let n_samples = x.nrows();
-        let n_train = self.x_train.nrows();
-
-        // Check if x is exactly the training data (by pointer comparison of shape).
-        // This is a heuristic; for general case we recompute.
-        let is_training = n_samples == n_train
-            && (0..n_samples).all(|i| (0..n_features).all(|j| x[[i, j]] == self.x_train[[i, j]]));
-
-        let scores = if is_training {
-            self.lof_scores.clone()
-        } else {
-            // Compute LOF for new data against training set.
-            let train_data: Vec<Vec<F>> =
-                (0..n_train).map(|i| self.x_train.row(i).to_vec()).collect();
-
-            let effective_k = self.n_neighbors.min(n_train);
-            let eps = F::from(1e-15).unwrap();
-
-            // Compute k-distances for training points.
-            let train_neighbors: Vec<Vec<(usize, F)>> = (0..n_train)
-                .map(|i| knn_brute_force(&train_data, i, effective_k))
-                .collect();
-
-            let k_dist_train: Vec<F> = train_neighbors
-                .iter()
-                .map(|nn| {
-                    if nn.is_empty() {
-                        F::zero()
-                    } else {
-                        nn[nn.len() - 1].1
-                    }
-                })
-                .collect();
-
-            let lrd_train: Vec<F> = train_neighbors
-                .iter()
-                .map(|nn| {
-                    if nn.is_empty() {
-                        return F::one();
-                    }
-                    let sum_reach: F = nn
-                        .iter()
-                        .map(|&(neighbor_idx, dist)| k_dist_train[neighbor_idx].max(dist))
-                        .fold(F::zero(), |a, b| a + b);
-                    if sum_reach < eps {
-                        F::from(1e10).unwrap()
-                    } else {
-                        F::from(nn.len()).unwrap() / sum_reach
-                    }
-                })
-                .collect();
-
-            // For each new point, find k nearest training neighbors.
-            (0..n_samples)
-                .map(|i| {
-                    let query: Vec<F> = x.row(i).to_vec();
-
-                    // Find k nearest training points.
-                    let mut dists: Vec<(usize, F)> = train_data
-                        .iter()
-                        .enumerate()
-                        .map(|(j, row)| (j, euclidean_dist(&query, row)))
-                        .collect();
-                    dists.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
-                    dists.truncate(effective_k);
-
-                    if dists.is_empty() {
-                        return F::one();
-                    }
-
-                    // Reachability distance and LRD for the query.
-                    let sum_reach: F = dists
-                        .iter()
-                        .map(|&(neighbor_idx, dist)| k_dist_train[neighbor_idx].max(dist))
-                        .fold(F::zero(), |a, b| a + b);
-
-                    let lrd_query = if sum_reach < eps {
-                        F::from(1e10).unwrap()
-                    } else {
-                        F::from(dists.len()).unwrap() / sum_reach
-                    };
-
-                    if lrd_query < eps {
-                        return F::one();
-                    }
-
-                    // LOF: mean neighbor LRD / query LRD.
-                    let mean_neighbor_lrd: F = dists
-                        .iter()
-                        .map(|&(neighbor_idx, _)| lrd_train[neighbor_idx])
-                        .fold(F::zero(), |a, b| a + b)
-                        / F::from(dists.len()).unwrap();
-
-                    mean_neighbor_lrd / lrd_query
-                })
-                .collect()
-        };
-
-        let mut predictions = Array1::<isize>::zeros(n_samples);
+        let scores = self.compute_lof(x)?;
+        let mut predictions = Array1::<isize>::zeros(x.nrows());
         for (i, &score) in scores.iter().enumerate() {
             predictions[i] = if score <= self.threshold { 1 } else { -1 };
         }
-
         Ok(predictions)
     }
 }
@@ -422,6 +345,151 @@ impl<F: Float + Send + Sync + 'static> FittedLocalOutlierFactor<F> {
     #[must_use]
     pub fn threshold(&self) -> F {
         self.threshold
+    }
+
+    /// Compute the LOF score for each row of `x`.
+    ///
+    /// Used internally by [`Predict::predict`], [`score_samples`](Self::score_samples),
+    /// and [`decision_function`](Self::decision_function). For training-data
+    /// inputs (detected by exact equality) the cached `lof_scores` are
+    /// returned directly; for new data the LOF is recomputed against the
+    /// stored training set using brute-force k-NN (no spatial index yet —
+    /// future work, see #66/#67).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features does
+    /// not match the training data.
+    fn compute_lof(&self, x: &Array2<F>) -> Result<Vec<F>, FerroError> {
+        let n_features = x.ncols();
+        let train_features = self.x_train.ncols();
+
+        if n_features != train_features {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![train_features],
+                actual: vec![n_features],
+                context: "number of features must match training data".into(),
+            });
+        }
+
+        let n_samples = x.nrows();
+        let n_train = self.x_train.nrows();
+
+        // Check if x is exactly the training data (cheap heuristic — used to
+        // skip the recomputation for the common fit_predict / training-eval
+        // case).
+        let is_training = n_samples == n_train
+            && (0..n_samples).all(|i| (0..n_features).all(|j| x[[i, j]] == self.x_train[[i, j]]));
+
+        if is_training {
+            return Ok(self.lof_scores.clone());
+        }
+
+        // Compute LOF for new data against the training set.
+        let train_data: Vec<Vec<F>> =
+            (0..n_train).map(|i| self.x_train.row(i).to_vec()).collect();
+
+        let effective_k = self.n_neighbors.min(n_train);
+        let eps = F::from(1e-15).unwrap();
+
+        let train_neighbors: Vec<Vec<(usize, F)>> = (0..n_train)
+            .map(|i| knn_brute_force(&train_data, i, effective_k))
+            .collect();
+
+        let k_dist_train: Vec<F> = train_neighbors
+            .iter()
+            .map(|nn| {
+                if nn.is_empty() {
+                    F::zero()
+                } else {
+                    nn[nn.len() - 1].1
+                }
+            })
+            .collect();
+
+        let lrd_train: Vec<F> = train_neighbors
+            .iter()
+            .map(|nn| {
+                if nn.is_empty() {
+                    return F::one();
+                }
+                let sum_reach: F = nn
+                    .iter()
+                    .map(|&(neighbor_idx, dist)| k_dist_train[neighbor_idx].max(dist))
+                    .fold(F::zero(), |a, b| a + b);
+                if sum_reach < eps {
+                    F::from(1e10).unwrap()
+                } else {
+                    F::from(nn.len()).unwrap() / sum_reach
+                }
+            })
+            .collect();
+
+        let scores: Vec<F> = (0..n_samples)
+            .map(|i| {
+                let query: Vec<F> = x.row(i).to_vec();
+                let mut dists: Vec<(usize, F)> = train_data
+                    .iter()
+                    .enumerate()
+                    .map(|(j, row)| (j, euclidean_dist(&query, row)))
+                    .collect();
+                dists.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+                dists.truncate(effective_k);
+
+                if dists.is_empty() {
+                    return F::one();
+                }
+                let sum_reach: F = dists
+                    .iter()
+                    .map(|&(neighbor_idx, dist)| k_dist_train[neighbor_idx].max(dist))
+                    .fold(F::zero(), |a, b| a + b);
+                let lrd_query = if sum_reach < eps {
+                    F::from(1e10).unwrap()
+                } else {
+                    F::from(dists.len()).unwrap() / sum_reach
+                };
+                if lrd_query < eps {
+                    return F::one();
+                }
+                let mean_neighbor_lrd: F = dists
+                    .iter()
+                    .map(|&(neighbor_idx, _)| lrd_train[neighbor_idx])
+                    .fold(F::zero(), |a, b| a + b)
+                    / F::from(dists.len()).unwrap();
+                mean_neighbor_lrd / lrd_query
+            })
+            .collect();
+
+        Ok(scores)
+    }
+
+    /// Opposite of the LOF score: higher = more inlier-like. Mirrors
+    /// sklearn `LocalOutlierFactor.score_samples`.
+    ///
+    /// Returns shape `(n_samples,)`. Always negative-valued for typical
+    /// LOF outputs (LOF >= 1 → score_samples <= -1).
+    ///
+    /// # Errors
+    ///
+    /// As [`compute_lof`](Self::compute_lof).
+    pub fn score_samples(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
+        let lof = self.compute_lof(x)?;
+        Ok(Array1::from_iter(lof.into_iter().map(|v| -v)))
+    }
+
+    /// Shifted opposite-of-LOF: positive values indicate inliers, negative
+    /// outliers. `decision_function = -lof - (-threshold) = threshold - lof`,
+    /// so a sample with LOF exactly at the threshold gets `0`. Mirrors
+    /// sklearn `LocalOutlierFactor.decision_function`.
+    ///
+    /// # Errors
+    ///
+    /// As [`compute_lof`](Self::compute_lof).
+    pub fn decision_function(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
+        let lof = self.compute_lof(x)?;
+        Ok(Array1::from_iter(
+            lof.into_iter().map(|v| self.threshold - v),
+        ))
     }
 }
 

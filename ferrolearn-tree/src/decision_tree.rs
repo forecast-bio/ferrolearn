@@ -28,6 +28,9 @@ use ferrolearn_core::pipeline::{FittedPipelineEstimator, PipelineEstimator};
 use ferrolearn_core::traits::{Fit, Predict};
 use ndarray::{Array1, Array2};
 use num_traits::{Float, FromPrimitive, ToPrimitive};
+use rand::SeedableRng;
+use rand::rngs::StdRng;
+use rand::seq::index::sample as rand_sample_indices;
 use serde::{Deserialize, Serialize};
 
 // ---------------------------------------------------------------------------
@@ -103,7 +106,14 @@ struct ClassificationData<'a, F> {
     x: &'a Array2<F>,
     y: &'a [usize],
     n_classes: usize,
+    /// Fixed feature subset for the entire tree (used by Bagging-style
+    /// per-tree feature subsampling). Mutually exclusive with
+    /// [`max_features_per_split`].
     feature_indices: Option<&'a [usize]>,
+    /// When set, every split samples a fresh random subset of this many
+    /// features (per-split feature sampling, the Breiman 2001 RandomForest
+    /// behaviour and what scikit-learn does).
+    max_features_per_split: Option<usize>,
     criterion: ClassificationCriterion,
 }
 
@@ -112,6 +122,8 @@ struct RegressionData<'a, F> {
     x: &'a Array2<F>,
     y: &'a Array1<F>,
     feature_indices: Option<&'a [usize]>,
+    /// See [`ClassificationData::max_features_per_split`].
+    max_features_per_split: Option<usize>,
 }
 
 // ---------------------------------------------------------------------------
@@ -258,6 +270,36 @@ impl<F: Float + Send + Sync + 'static> FittedDecisionTreeClassifier<F> {
         }
         Ok(proba)
     }
+
+    /// Mean accuracy on the given test data and labels.
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::mean_accuracy(&preds, y))
+    }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba). Mirrors
+    /// sklearn's `ClassifierMixin.predict_log_proba`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for DecisionTreeClassifier<F> {
@@ -325,6 +367,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Decisio
             y: &y_mapped,
             n_classes,
             feature_indices: None,
+            max_features_per_split: None,
             criterion: self.criterion,
         };
         let params = TreeParams {
@@ -334,7 +377,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Decisio
         };
 
         let mut nodes: Vec<Node<F>> = Vec::new();
-        build_classification_tree(&data, &indices, &mut nodes, 0, &params);
+        build_classification_tree(&data, &indices, &mut nodes, 0, &params, None);
 
         let feature_importances = compute_feature_importances(&nodes, n_features, n_samples);
 
@@ -570,6 +613,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for DecisionTre
             x,
             y,
             feature_indices: None,
+            max_features_per_split: None,
         };
         let params = TreeParams {
             max_depth: self.max_depth,
@@ -578,7 +622,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for DecisionTre
         };
 
         let mut nodes: Vec<Node<F>> = Vec::new();
-        build_regression_tree(&data, &indices, &mut nodes, 0, &params);
+        build_regression_tree(&data, &indices, &mut nodes, 0, &params, None);
 
         let feature_importances = compute_feature_importances(&nodes, n_features, n_samples);
 
@@ -601,6 +645,25 @@ impl<F: Float + Send + Sync + 'static> FittedDecisionTreeRegressor<F> {
     #[must_use]
     pub fn n_features(&self) -> usize {
         self.n_features
+    }
+
+    /// R² coefficient of determination on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::r2_score(&preds, y))
     }
 }
 
@@ -806,6 +869,7 @@ fn build_classification_tree<F: Float>(
     nodes: &mut Vec<Node<F>>,
     depth: usize,
     params: &TreeParams,
+    mut rng: Option<&mut StdRng>,
 ) -> usize {
     let n = indices.len();
 
@@ -822,7 +886,14 @@ fn build_classification_tree<F: Float>(
         return make_classification_leaf(nodes, &class_counts, data.n_classes, n);
     }
 
-    let best = find_best_classification_split(data, indices, params.min_samples_leaf);
+    // Reborrow the rng for the split-finder; recursive children get fresh
+    // reborrows via `rng.as_deref_mut()` below.
+    let best = find_best_classification_split(
+        data,
+        indices,
+        params.min_samples_leaf,
+        rng.as_deref_mut(),
+    );
 
     if let Some((best_feature, best_threshold, best_impurity_decrease)) = best {
         let (left_indices, right_indices): (Vec<usize>, Vec<usize>) = indices
@@ -836,8 +907,22 @@ fn build_classification_tree<F: Float>(
             n_samples: 0,
         }); // placeholder
 
-        let left_idx = build_classification_tree(data, &left_indices, nodes, depth + 1, params);
-        let right_idx = build_classification_tree(data, &right_indices, nodes, depth + 1, params);
+        let left_idx = build_classification_tree(
+            data,
+            &left_indices,
+            nodes,
+            depth + 1,
+            params,
+            rng.as_deref_mut(),
+        );
+        let right_idx = build_classification_tree(
+            data,
+            &right_indices,
+            nodes,
+            depth + 1,
+            params,
+            rng.as_deref_mut(),
+        );
 
         nodes[node_idx] = Node::Split {
             feature: best_feature,
@@ -857,10 +942,17 @@ fn build_classification_tree<F: Float>(
 /// Find the best split for a classification node.
 ///
 /// Returns `(feature_index, threshold, weighted_impurity_decrease)` or `None`.
+///
+/// When `data.max_features_per_split` is set, `rng` must be `Some` and a fresh
+/// random subset of that many features is drawn for this single split (the
+/// per-split feature sampling used by Breiman 2001 RandomForest and
+/// scikit-learn). When `data.feature_indices` is set, the fixed per-tree
+/// subset is used instead. Otherwise all features are considered.
 fn find_best_classification_split<F: Float>(
     data: &ClassificationData<'_, F>,
     indices: &[usize],
     min_samples_leaf: usize,
+    rng: Option<&mut StdRng>,
 ) -> Option<(usize, F, F)> {
     let n = indices.len();
     let n_f = F::from(n).unwrap();
@@ -876,15 +968,24 @@ fn find_best_classification_split<F: Float>(
     let mut best_feature = 0;
     let mut best_threshold = F::zero();
 
-    // Iterate over either specified feature subset or all features.
-    let feature_iter: Box<dyn Iterator<Item = usize>> =
-        if let Some(feat_indices) = data.feature_indices {
-            Box::new(feat_indices.iter().copied())
-        } else {
-            Box::new(0..n_features)
-        };
+    // Build the candidate feature list for this split.
+    //
+    // Priority:
+    //   1. `max_features_per_split` — sample fresh subset using rng (Breiman RF).
+    //   2. `feature_indices`        — fixed per-tree subset (Bagging).
+    //   3. otherwise                — all features (plain DT).
+    let candidate_features: Vec<usize> = match (data.max_features_per_split, rng) {
+        (Some(k), Some(rng)) => {
+            let k = k.min(n_features).max(1);
+            rand_sample_indices(rng, n_features, k).into_vec()
+        }
+        _ => match data.feature_indices {
+            Some(feat) => feat.to_vec(),
+            None => (0..n_features).collect(),
+        },
+    };
 
-    for feat in feature_iter {
+    for feat in candidate_features {
         let mut sorted_indices: Vec<usize> = indices.to_vec();
         sorted_indices.sort_by(|&a, &b| data.x[[a, feat]].partial_cmp(&data.x[[b, feat]]).unwrap());
 
@@ -940,6 +1041,7 @@ fn build_regression_tree<F: Float>(
     nodes: &mut Vec<Node<F>>,
     depth: usize,
     params: &TreeParams,
+    mut rng: Option<&mut StdRng>,
 ) -> usize {
     let n = indices.len();
     let mean = mean_value(data.y, indices);
@@ -967,7 +1069,12 @@ fn build_regression_tree<F: Float>(
         return idx;
     }
 
-    let best = find_best_regression_split(data, indices, params.min_samples_leaf);
+    let best = find_best_regression_split(
+        data,
+        indices,
+        params.min_samples_leaf,
+        rng.as_deref_mut(),
+    );
 
     if let Some((best_feature, best_threshold, best_impurity_decrease)) = best {
         let (left_indices, right_indices): (Vec<usize>, Vec<usize>) = indices
@@ -981,8 +1088,22 @@ fn build_regression_tree<F: Float>(
             n_samples: 0,
         }); // placeholder
 
-        let left_idx = build_regression_tree(data, &left_indices, nodes, depth + 1, params);
-        let right_idx = build_regression_tree(data, &right_indices, nodes, depth + 1, params);
+        let left_idx = build_regression_tree(
+            data,
+            &left_indices,
+            nodes,
+            depth + 1,
+            params,
+            rng.as_deref_mut(),
+        );
+        let right_idx = build_regression_tree(
+            data,
+            &right_indices,
+            nodes,
+            depth + 1,
+            params,
+            rng.as_deref_mut(),
+        );
 
         nodes[node_idx] = Node::Split {
             feature: best_feature,
@@ -1008,10 +1129,14 @@ fn build_regression_tree<F: Float>(
 /// Find the best split for a regression node using MSE reduction.
 ///
 /// Returns `(feature_index, threshold, weighted_mse_decrease)` or `None`.
+///
+/// See [`find_best_classification_split`] for the candidate-feature selection
+/// rules (per-split sampling vs fixed subset vs all features).
 fn find_best_regression_split<F: Float>(
     data: &RegressionData<'_, F>,
     indices: &[usize],
     min_samples_leaf: usize,
+    rng: Option<&mut StdRng>,
 ) -> Option<(usize, F, F)> {
     let n = indices.len();
     let n_f = F::from(n).unwrap();
@@ -1031,14 +1156,18 @@ fn find_best_regression_split<F: Float>(
     let mut best_feature = 0;
     let mut best_threshold = F::zero();
 
-    let feature_iter: Box<dyn Iterator<Item = usize>> =
-        if let Some(feat_indices) = data.feature_indices {
-            Box::new(feat_indices.iter().copied())
-        } else {
-            Box::new(0..n_features)
-        };
+    let candidate_features: Vec<usize> = match (data.max_features_per_split, rng) {
+        (Some(k), Some(rng)) => {
+            let k = k.min(n_features).max(1);
+            rand_sample_indices(rng, n_features, k).into_vec()
+        }
+        _ => match data.feature_indices {
+            Some(feat) => feat.to_vec(),
+            None => (0..n_features).collect(),
+        },
+    };
 
-    for feat in feature_iter {
+    for feat in candidate_features {
         let mut sorted_indices: Vec<usize> = indices.to_vec();
         sorted_indices.sort_by(|&a, &b| data.x[[a, feat]].partial_cmp(&data.x[[b, feat]]).unwrap());
 
@@ -1117,6 +1246,52 @@ pub(crate) fn compute_feature_importances<F: Float>(
     importances
 }
 
+/// Aggregate per-tree feature importances across an ensemble.
+///
+/// - `trees`: the per-tree node lists.
+/// - `feature_indices`: when `Some`, each tree was trained on a feature
+///   subset; the tree-local feature indices are remapped through
+///   `feature_indices[t]` back to the original feature space. When `None`,
+///   every tree uses the full feature space directly.
+/// - `weights`: when `Some`, each tree's importances are scaled by
+///   `weights[t]` before aggregation (used by AdaBoost). When `None`,
+///   uniform weights of 1.
+/// - `n_features`: width of the original feature space.
+///
+/// Returns an `Array1<F>` of length `n_features`, normalized to sum to 1
+/// (or all zeros if no splits had any impurity decrease).
+pub(crate) fn aggregate_tree_importances<F: Float>(
+    trees: &[Vec<Node<F>>],
+    feature_indices: Option<&[Vec<usize>]>,
+    weights: Option<&[F]>,
+    n_features: usize,
+) -> Array1<F> {
+    let mut total_imp = Array1::<F>::zeros(n_features);
+    for (t, nodes) in trees.iter().enumerate() {
+        let w = weights.map_or(F::one(), |ws| ws[t]);
+        for node in nodes {
+            if let Node::Split {
+                feature,
+                impurity_decrease,
+                ..
+            } = node
+            {
+                let original_feature = match feature_indices {
+                    Some(map) => map[t][*feature],
+                    None => *feature,
+                };
+                total_imp[original_feature] =
+                    total_imp[original_feature] + w * *impurity_decrease;
+            }
+        }
+    }
+    let total: F = total_imp.iter().copied().fold(F::zero(), |a, b| a + b);
+    if total > F::zero() {
+        total_imp.mapv_inplace(|v| v / total);
+    }
+    total_imp
+}
+
 // ---------------------------------------------------------------------------
 // Public builders for forest usage
 // ---------------------------------------------------------------------------
@@ -1139,10 +1314,43 @@ pub(crate) fn build_classification_tree_with_feature_subset<F: Float>(
         y,
         n_classes,
         feature_indices: Some(feature_indices),
+        max_features_per_split: None,
         criterion,
     };
     let mut nodes = Vec::new();
-    build_classification_tree(&data, indices, &mut nodes, 0, params);
+    build_classification_tree(&data, indices, &mut nodes, 0, params, None);
+    nodes
+}
+
+/// Build a classification tree with **per-split** random feature sampling.
+///
+/// At every split node, a fresh random subset of `max_features` features is
+/// drawn from the full `0..n_features` pool. This is the Breiman (2001)
+/// RandomForest behaviour and matches scikit-learn.
+///
+/// Used by `RandomForestClassifier` and `ExtraTreesClassifier`.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn build_classification_tree_per_split_features<F: Float>(
+    x: &Array2<F>,
+    y: &[usize],
+    n_classes: usize,
+    indices: &[usize],
+    max_features: usize,
+    params: &TreeParams,
+    criterion: ClassificationCriterion,
+    seed: u64,
+) -> Vec<Node<F>> {
+    let data = ClassificationData {
+        x,
+        y,
+        n_classes,
+        feature_indices: None,
+        max_features_per_split: Some(max_features),
+        criterion,
+    };
+    let mut rng = StdRng::seed_from_u64(seed);
+    let mut nodes = Vec::new();
+    build_classification_tree(&data, indices, &mut nodes, 0, params, Some(&mut rng));
     nodes
 }
 
@@ -1158,9 +1366,34 @@ pub(crate) fn build_regression_tree_with_feature_subset<F: Float>(
         x,
         y,
         feature_indices: Some(feature_indices),
+        max_features_per_split: None,
     };
     let mut nodes = Vec::new();
-    build_regression_tree(&data, indices, &mut nodes, 0, params);
+    build_regression_tree(&data, indices, &mut nodes, 0, params, None);
+    nodes
+}
+
+/// Build a regression tree with **per-split** random feature sampling
+/// (Breiman 2001 RandomForest, sklearn-equivalent).
+///
+/// Used by `RandomForestRegressor` and `ExtraTreesRegressor`.
+pub(crate) fn build_regression_tree_per_split_features<F: Float>(
+    x: &Array2<F>,
+    y: &Array1<F>,
+    indices: &[usize],
+    max_features: usize,
+    params: &TreeParams,
+    seed: u64,
+) -> Vec<Node<F>> {
+    let data = RegressionData {
+        x,
+        y,
+        feature_indices: None,
+        max_features_per_split: Some(max_features),
+    };
+    let mut rng = StdRng::seed_from_u64(seed);
+    let mut nodes = Vec::new();
+    build_regression_tree(&data, indices, &mut nodes, 0, params, Some(&mut rng));
     nodes
 }
 

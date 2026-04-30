@@ -7,7 +7,7 @@
 //! - [`ndcg_score`] — Normalized Discounted Cumulative Gain
 
 use ferrolearn_core::FerroError;
-use ndarray::Array1;
+use ndarray::{Array1, Array2};
 use num_traits::Float;
 
 // ---------------------------------------------------------------------------
@@ -180,6 +180,197 @@ pub fn ndcg_score<F: Float + Send + Sync + 'static>(
     }
 
     Ok(dcg / ideal_dcg)
+}
+
+// ---------------------------------------------------------------------------
+// Multilabel ranking metrics
+// ---------------------------------------------------------------------------
+
+fn check_ranking_inputs<F: Float>(
+    y_true: &Array2<usize>,
+    y_score: &Array2<F>,
+    context: &str,
+) -> Result<(), FerroError> {
+    if y_true.shape() != y_score.shape() {
+        return Err(FerroError::ShapeMismatch {
+            expected: vec![y_true.nrows(), y_true.ncols()],
+            actual: vec![y_score.nrows(), y_score.ncols()],
+            context: format!("{context}: y_true and y_score must have the same shape"),
+        });
+    }
+    if y_true.is_empty() {
+        return Err(FerroError::InsufficientSamples {
+            required: 1,
+            actual: 0,
+            context: context.into(),
+        });
+    }
+    Ok(())
+}
+
+/// Compute the coverage error: how far down the ranked list we have to go
+/// to cover all true labels, averaged over samples.
+///
+/// Lower is better; 1.0 is perfect (every true label sits at the top of the
+/// score-sorted list for its sample).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if `y_true` and `y_score` differ.
+/// Returns [`FerroError::InsufficientSamples`] if either is empty.
+pub fn coverage_error<F>(y_true: &Array2<usize>, y_score: &Array2<F>) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_ranking_inputs(y_true, y_score, "coverage_error")?;
+    let n_samples = y_true.nrows();
+    let n_labels = y_true.ncols();
+
+    let n_f = F::from(n_samples).ok_or_else(|| FerroError::InvalidParameter {
+        name: "n_samples".into(),
+        reason: "could not convert".into(),
+    })?;
+
+    let mut acc = F::zero();
+    for i in 0..n_samples {
+        let row_true = y_true.row(i);
+        let row_score = y_score.row(i);
+        // Find the lowest score among the true (positive) labels for this row.
+        let mut min_pos_score = F::infinity();
+        let mut any = false;
+        for j in 0..n_labels {
+            if row_true[j] > 0 {
+                any = true;
+                if row_score[j] < min_pos_score {
+                    min_pos_score = row_score[j];
+                }
+            }
+        }
+        if !any {
+            // No positive labels — sklearn convention skips this sample.
+            continue;
+        }
+        // Coverage = number of labels with score >= min_pos_score
+        let mut cov = 0usize;
+        for j in 0..n_labels {
+            if row_score[j] >= min_pos_score {
+                cov += 1;
+            }
+        }
+        acc = acc + F::from(cov).unwrap_or(F::zero());
+    }
+    Ok(acc / n_f)
+}
+
+/// Compute the label-ranking average precision (LRAP) score.
+///
+/// For each sample, considers the rank of each positive label among all
+/// labels and averages the per-positive-label precision. Higher is better;
+/// `1.0` is perfect.
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if `y_true` and `y_score` differ.
+/// Returns [`FerroError::InsufficientSamples`] if either is empty.
+pub fn label_ranking_average_precision_score<F>(
+    y_true: &Array2<usize>,
+    y_score: &Array2<F>,
+) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_ranking_inputs(y_true, y_score, "label_ranking_average_precision_score")?;
+    let n_samples = y_true.nrows();
+    let n_labels = y_true.ncols();
+
+    let mut sample_scores: Vec<F> = Vec::with_capacity(n_samples);
+    for i in 0..n_samples {
+        let row_true = y_true.row(i);
+        let row_score = y_score.row(i);
+        let positives: Vec<usize> = (0..n_labels).filter(|&j| row_true[j] > 0).collect();
+        if positives.is_empty() || positives.len() == n_labels {
+            // sklearn convention: degenerate samples (all-positive or
+            // all-negative) score 1.0.
+            sample_scores.push(F::one());
+            continue;
+        }
+        let mut sample_acc = F::zero();
+        for &pos in &positives {
+            let pos_score = row_score[pos];
+            // Rank of `pos` is the number of labels with score >= its own.
+            let mut rank = 0usize;
+            let mut tp = 0usize;
+            for j in 0..n_labels {
+                if row_score[j] >= pos_score {
+                    rank += 1;
+                    if row_true[j] > 0 {
+                        tp += 1;
+                    }
+                }
+            }
+            sample_acc =
+                sample_acc + F::from(tp).unwrap_or(F::zero()) / F::from(rank).unwrap_or(F::one());
+        }
+        sample_scores.push(sample_acc / F::from(positives.len()).unwrap_or(F::one()));
+    }
+    let n_f = F::from(sample_scores.len()).ok_or_else(|| FerroError::InvalidParameter {
+        name: "n_samples".into(),
+        reason: "could not convert".into(),
+    })?;
+    let total = sample_scores.iter().copied().fold(F::zero(), |a, b| a + b);
+    Ok(total / n_f)
+}
+
+/// Compute the label-ranking loss: the average number of badly-ordered
+/// label pairs per sample, normalised by the number of possible label pairs.
+///
+/// Lower is better; `0.0` is perfect (all positives outrank all negatives
+/// for every sample).
+///
+/// # Errors
+///
+/// Returns [`FerroError::ShapeMismatch`] if `y_true` and `y_score` differ.
+/// Returns [`FerroError::InsufficientSamples`] if either is empty.
+pub fn label_ranking_loss<F>(y_true: &Array2<usize>, y_score: &Array2<F>) -> Result<F, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    check_ranking_inputs(y_true, y_score, "label_ranking_loss")?;
+    let n_samples = y_true.nrows();
+    let n_labels = y_true.ncols();
+
+    let mut totals = F::zero();
+    let mut counted = 0usize;
+    for i in 0..n_samples {
+        let row_true = y_true.row(i);
+        let row_score = y_score.row(i);
+        let positives: Vec<usize> = (0..n_labels).filter(|&j| row_true[j] > 0).collect();
+        let negatives: Vec<usize> = (0..n_labels).filter(|&j| row_true[j] == 0).collect();
+        if positives.is_empty() || negatives.is_empty() {
+            // Degenerate samples contribute 0 to the loss in sklearn.
+            continue;
+        }
+        let mut bad_pairs = 0usize;
+        for &p in &positives {
+            for &n in &negatives {
+                if row_score[p] <= row_score[n] {
+                    bad_pairs += 1;
+                }
+            }
+        }
+        let denom = positives.len() * negatives.len();
+        let frac = F::from(bad_pairs).unwrap_or(F::zero()) / F::from(denom).unwrap_or(F::one());
+        totals = totals + frac;
+        counted += 1;
+    }
+    if counted == 0 {
+        return Ok(F::zero());
+    }
+    let n_f = F::from(counted).ok_or_else(|| FerroError::InvalidParameter {
+        name: "counted".into(),
+        reason: "could not convert".into(),
+    })?;
+    Ok(totals / n_f)
 }
 
 // ---------------------------------------------------------------------------

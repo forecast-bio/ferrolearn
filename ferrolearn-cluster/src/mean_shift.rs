@@ -400,6 +400,19 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for MeanShift<F> {
     }
 }
 
+impl<F: Float + Send + Sync + 'static> MeanShift<F> {
+    /// Fit on `x` and return labels for those samples in one call.
+    /// Equivalent to sklearn `ClusterMixin.fit_predict`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`Fit::fit`] / [`Predict::predict`].
+    pub fn fit_predict(&self, x: &Array2<F>) -> Result<Array1<usize>, FerroError> {
+        let fitted = self.fit(x, &())?;
+        fitted.predict(x)
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Predict implementation
 // ─────────────────────────────────────────────────────────────────────────────

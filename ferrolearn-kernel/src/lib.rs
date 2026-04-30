@@ -81,3 +81,57 @@ pub use local_polynomial::{FittedLocalPolynomialRegression, LocalPolynomialRegre
 pub use nadaraya_watson::{FittedNadarayaWatson, NadarayaWatson};
 pub use nystroem::{FittedNystroem, KernelType, Nystroem};
 pub use rbf_sampler::{FittedRBFSampler, RBFSampler};
+
+use ndarray::{Array1, Array2};
+use num_traits::Float;
+
+/// Mean accuracy: `(sum(predictions == targets)) / n`. Mirrors sklearn
+/// `ClassifierMixin.score`.
+pub(crate) fn mean_accuracy<F: Float>(predictions: &Array1<usize>, targets: &Array1<usize>) -> F {
+    let n = targets.len();
+    if n == 0 {
+        return F::zero();
+    }
+    let correct = predictions
+        .iter()
+        .zip(targets.iter())
+        .filter(|(p, t)| p == t)
+        .count();
+    F::from(correct).unwrap() / F::from(n).unwrap()
+}
+
+/// R² coefficient of determination. Mirrors sklearn
+/// `RegressorMixin.score`. Constant-y returns `1.0` if perfect, else
+/// `F::neg_infinity()`.
+pub(crate) fn r2_score<F: Float>(y_pred: &Array1<F>, y_true: &Array1<F>) -> F {
+    let n = y_true.len();
+    if n == 0 {
+        return F::zero();
+    }
+    let mean = y_true.iter().copied().fold(F::zero(), |a, b| a + b) / F::from(n).unwrap();
+    let mut ss_res = F::zero();
+    let mut ss_tot = F::zero();
+    for i in 0..n {
+        let r = y_true[i] - y_pred[i];
+        let t = y_true[i] - mean;
+        ss_res = ss_res + r * r;
+        ss_tot = ss_tot + t * t;
+    }
+    if ss_tot == F::zero() {
+        if ss_res == F::zero() {
+            F::one()
+        } else {
+            F::neg_infinity()
+        }
+    } else {
+        F::one() - ss_res / ss_tot
+    }
+}
+
+/// Element-wise log of a probability matrix, used as the body of every
+/// classifier `predict_log_proba` method. Clamps below `1e-300` to avoid
+/// `-inf` / `NaN`.
+pub(crate) fn log_proba<F: Float>(proba: &Array2<F>) -> Array2<F> {
+    let eps = F::from(1e-300).unwrap();
+    proba.mapv(|p| if p > eps { p.ln() } else { eps.ln() })
+}

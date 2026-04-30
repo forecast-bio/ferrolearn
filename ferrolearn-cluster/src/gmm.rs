@@ -218,30 +218,85 @@ impl<F: Float> FittedGaussianMixture<F> {
         self.lower_bound_
     }
 
-    /// Compute the *Bayesian Information Criterion* for model selection.
-    ///
-    /// Lower BIC indicates a better model (balancing fit and complexity).
-    ///
-    /// `BIC = -2 · log_likelihood · n_samples + n_params · ln(n_samples)`
+    /// Number of free parameters in the model. Convenience accessor for
+    /// information-criterion calculations.
     #[must_use]
-    pub fn bic(&self, n_samples: usize) -> F {
-        let n = F::from(n_samples).unwrap_or_else(F::one);
-        let log_n = n.ln();
-        let params = F::from(self.n_free_params()).unwrap_or_else(F::one);
-        -F::from(2.0).unwrap() * self.lower_bound_ * n + params * log_n
+    pub fn n_parameters(&self) -> usize {
+        self.n_free_params()
     }
 
-    /// Compute the *Akaike Information Criterion* for model selection.
+    /// Per-component posterior responsibilities (soft assignments).
+    /// Equivalent to sklearn `GaussianMixture.predict_proba`. Each row of
+    /// the returned `(n_samples, n_components)` matrix sums to 1.
     ///
-    /// Lower AIC indicates a better model.
+    /// # Errors
     ///
-    /// `AIC = -2 · log_likelihood · n_samples + 2 · n_params`
-    #[must_use]
-    pub fn aic(&self, n_samples: usize) -> F {
+    /// Returns [`FerroError::ShapeMismatch`] if the feature count differs
+    /// from the fitted model.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let log_resp_raw = self.log_responsibilities(x)?;
+        let (log_resp_norm, _) = log_sum_exp_rows(&log_resp_raw);
+        Ok(log_resp_norm.mapv(num_traits::Float::exp))
+    }
+
+    /// Per-sample log-likelihood under the fitted mixture. Mirrors
+    /// sklearn `GaussianMixture.score_samples`. Returns shape
+    /// `(n_samples,)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the feature count differs
+    /// from the fitted model.
+    pub fn score_samples(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
+        let log_resp_raw = self.log_responsibilities(x)?;
+        let (_, log_prob) = log_sum_exp_rows(&log_resp_raw);
+        Ok(log_prob)
+    }
+
+    /// Mean per-sample log-likelihood. Mirrors sklearn
+    /// `GaussianMixture.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the feature count differs
+    /// from the fitted model.
+    pub fn score(&self, x: &Array2<F>) -> Result<F, FerroError> {
+        let s = self.score_samples(x)?;
+        let n = s.len();
+        if n == 0 {
+            return Ok(F::zero());
+        }
+        Ok(s.iter().copied().fold(F::zero(), |a, b| a + b) / F::from(n).unwrap())
+    }
+
+    /// Bayesian Information Criterion: `-2 · log_likelihood + n_params · ln(n)`.
+    /// Mirrors sklearn's signature `bic(X)`. Lower = better model.
+    ///
+    /// # Errors
+    ///
+    /// As [`score_samples`](Self::score_samples).
+    pub fn bic(&self, x: &Array2<F>) -> Result<F, FerroError> {
+        let s = self.score_samples(x)?;
+        let n_samples = s.len();
         let n = F::from(n_samples).unwrap_or_else(F::one);
-        let two = F::from(2.0).unwrap();
+        let log_n = n.ln();
+        let log_lik: F = s.iter().copied().fold(F::zero(), |a, b| a + b);
         let params = F::from(self.n_free_params()).unwrap_or_else(F::one);
-        -two * self.lower_bound_ * n + two * params
+        Ok(-F::from(2.0).unwrap() * log_lik + params * log_n)
+    }
+
+    /// Akaike Information Criterion: `-2 · log_likelihood + 2 · n_params`.
+    /// Mirrors sklearn's signature `aic(X)`. Lower = better model.
+    ///
+    /// # Errors
+    ///
+    /// As [`score_samples`](Self::score_samples).
+    pub fn aic(&self, x: &Array2<F>) -> Result<F, FerroError> {
+        let s = self.score_samples(x)?;
+        let two = F::from(2.0).unwrap();
+        let log_lik: F = s.iter().copied().fold(F::zero(), |a, b| a + b);
+        let params = F::from(self.n_free_params()).unwrap_or_else(F::one);
+        Ok(-two * log_lik + two * params)
     }
 
     /// Number of free parameters in the model.
@@ -462,22 +517,97 @@ fn log_sum_exp_rows<F: Float>(log_resp: &Array2<F>) -> (Array2<F>, Array1<F>) {
 // EM internals
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Initialise component means by sampling `k` distinct rows from `x`.
+/// Initialise component means using **Greedy KMeans++** seeding (Arthur &
+/// Vassilvitskii 2007 with the scikit-learn-style multi-trial selection).
+/// This matches scikit-learn's `init_params='kmeans'` GMM default.
+///
+/// At each step, `2 + log(k)` candidate indices are sampled with probability
+/// ∝ D(x)² (the squared distance to the nearest already-chosen centre) and
+/// the candidate that minimises the resulting potential (sum of min squared
+/// distances) is kept. Plain (single-trial) KMeans++ frequently lands in
+/// inferior local minima — measured at -0.27 ARI vs sklearn at n=200 with
+/// uniform-random init, and ~0.16 ARI gap remaining at n=5000 with
+/// single-trial KMeans++.
 fn init_means<F: Float>(x: &Array2<F>, k: usize, rng: &mut StdRng) -> Array2<F> {
     let n_samples = x.nrows();
     let n_features = x.ncols();
     let mut means = Array2::zeros((k, n_features));
 
-    // Pick k random indices (with possible repetition if k > n_samples).
-    for ki in 0..k {
-        let idx = rng.random_range(0..n_samples);
-        means.row_mut(ki).assign(&x.row(idx));
-        // Add a tiny jitter to avoid degenerate covariances.
+    if n_samples == 0 {
+        return means;
+    }
+
+    let first_idx = rng.random_range(0..n_samples);
+    means.row_mut(0).assign(&x.row(first_idx));
+
+    if k == 1 {
+        return means;
+    }
+
+    let mut min_sq_dist: Vec<f64> = Vec::with_capacity(n_samples);
+    for i in 0..n_samples {
+        let mut d = 0.0_f64;
         for j in 0..n_features {
-            let jitter: f64 = rng.random_range(-1e-4..1e-4);
-            means[[ki, j]] = means[[ki, j]] + F::from(jitter).unwrap_or_else(F::zero);
+            let dx = (x[[i, j]] - means[[0, j]]).to_f64().unwrap_or(0.0);
+            d += dx * dx;
+        }
+        min_sq_dist.push(d);
+    }
+
+    let n_trials = (2 + (k as f64).ln().floor() as usize).max(1);
+
+    for ki in 1..k {
+        let total: f64 = min_sq_dist.iter().sum();
+
+        if total <= 0.0 {
+            let idx = rng.random_range(0..n_samples);
+            means.row_mut(ki).assign(&x.row(idx));
+            continue;
+        }
+
+        let mut best_candidate: usize = 0;
+        let mut best_potential: Option<f64> = None;
+        let mut best_new_dists: Option<Vec<f64>> = None;
+
+        for _ in 0..n_trials {
+            let mut threshold: f64 = rng.random_range(0.0..total);
+            let mut candidate = n_samples - 1;
+            for i in 0..n_samples {
+                threshold -= min_sq_dist[i];
+                if threshold <= 0.0 {
+                    candidate = i;
+                    break;
+                }
+            }
+
+            // Score this candidate by computing the new total potential.
+            let mut new_dists = min_sq_dist.clone();
+            let mut potential = 0.0_f64;
+            for i in 0..n_samples {
+                let mut d = 0.0_f64;
+                for j in 0..n_features {
+                    let dx = (x[[i, j]] - x[[candidate, j]]).to_f64().unwrap_or(0.0);
+                    d += dx * dx;
+                }
+                if d < new_dists[i] {
+                    new_dists[i] = d;
+                }
+                potential += new_dists[i];
+            }
+
+            if best_potential.is_none_or(|bp| potential < bp) {
+                best_potential = Some(potential);
+                best_candidate = candidate;
+                best_new_dists = Some(new_dists);
+            }
+        }
+
+        means.row_mut(ki).assign(&x.row(best_candidate));
+        if let Some(d) = best_new_dists {
+            min_sq_dist = d;
         }
     }
+
     means
 }
 
@@ -591,6 +721,11 @@ fn run_em<F: Float>(
             }
         }
 
+        // sklearn-style covariance regularisation added directly in the
+        // M-step (rather than only at cholesky time). This stabilises EM
+        // iterations and matches sklearn's `reg_covar=1e-6` default.
+        let reg_covar = F::from(1e-6).unwrap_or_else(F::epsilon);
+
         // Update covariances.
         match covariance_type {
             CovarianceType::Full => {
@@ -608,9 +743,9 @@ fn run_em<F: Float>(
                             }
                         }
                     }
-                    // Symmetrise and normalise.
+                    // Symmetrise, normalise, and add diagonal regularisation.
                     for i in 0..n_features {
-                        cov_k[[i, i]] = cov_k[[i, i]] / nki;
+                        cov_k[[i, i]] = cov_k[[i, i]] / nki + reg_covar;
                         for j in 0..i {
                             cov_k[[i, j]] = cov_k[[i, j]] / nki;
                             cov_k[[j, i]] = cov_k[[i, j]];
@@ -782,6 +917,19 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for GaussianMixture<F>
             name: "n_init".into(),
             reason: "internal error: no EM runs completed".into(),
         })
+    }
+}
+
+impl<F: Float + Send + Sync + 'static> GaussianMixture<F> {
+    /// Fit on `x` and return hard cluster assignments for those samples.
+    /// Equivalent to sklearn `ClusterMixin.fit_predict`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`Fit::fit`] / [`Predict::predict`].
+    pub fn fit_predict(&self, x: &Array2<F>) -> Result<Array1<usize>, FerroError> {
+        let fitted = self.fit(x, &())?;
+        fitted.predict(x)
     }
 }
 
@@ -1160,7 +1308,7 @@ mod tests {
             .with_random_state(42)
             .fit(&x, &())
             .unwrap();
-        let bic = fitted.bic(x.nrows());
+        let bic = fitted.bic(&x).unwrap();
         assert!(bic.is_finite(), "BIC should be finite");
     }
 
@@ -1171,7 +1319,7 @@ mod tests {
             .with_random_state(42)
             .fit(&x, &())
             .unwrap();
-        let aic = fitted.aic(x.nrows());
+        let aic = fitted.aic(&x).unwrap();
         assert!(aic.is_finite(), "AIC should be finite");
     }
 
@@ -1184,13 +1332,15 @@ mod tests {
             .with_max_iter(200)
             .fit(&x, &())
             .unwrap()
-            .bic(x.nrows());
+            .bic(&x)
+            .unwrap();
         let bic5 = GaussianMixture::<f64>::new(5)
             .with_random_state(42)
             .with_max_iter(200)
             .fit(&x, &())
             .unwrap()
-            .bic(x.nrows());
+            .bic(&x)
+            .unwrap();
         // This holds when the penalty dominates the likelihood gain.
         assert!(bic2 < bic5, "bic2={bic2} bic5={bic5}");
     }

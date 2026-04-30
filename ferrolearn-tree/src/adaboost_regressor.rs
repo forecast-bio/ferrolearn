@@ -25,6 +25,7 @@
 
 use crate::decision_tree::{self, Node, build_regression_tree_with_feature_subset};
 use ferrolearn_core::error::FerroError;
+use ferrolearn_core::introspection::HasFeatureImportances;
 use ferrolearn_core::pipeline::{FittedPipelineEstimator, PipelineEstimator};
 use ferrolearn_core::traits::{Fit, Predict};
 use ndarray::{Array1, Array2};
@@ -151,6 +152,15 @@ pub struct FittedAdaBoostRegressor<F> {
     estimator_weights: Vec<F>,
     /// Number of features.
     n_features: usize,
+    /// Per-feature importance scores aggregated across the boosted trees,
+    /// weighted by `estimator_weights` (normalized to sum to 1).
+    feature_importances: Array1<F>,
+}
+
+impl<F: Float + Send + Sync + 'static> HasFeatureImportances<F> for FittedAdaBoostRegressor<F> {
+    fn feature_importances(&self) -> &Array1<F> {
+        &self.feature_importances
+    }
 }
 
 impl<F: Float + Send + Sync + 'static> FittedAdaBoostRegressor<F> {
@@ -170,6 +180,25 @@ impl<F: Float + Send + Sync + 'static> FittedAdaBoostRegressor<F> {
     #[must_use]
     pub fn n_features(&self) -> usize {
         self.n_features
+    }
+
+    /// R² coefficient of determination on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::r2_score(&preds, y))
     }
 }
 
@@ -331,10 +360,18 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<F>> for AdaBoostReg
             estimator_weights.push(est_weight);
         }
 
+        let feature_importances = decision_tree::aggregate_tree_importances(
+            &estimators,
+            None,
+            Some(&estimator_weights),
+            n_features,
+        );
+
         Ok(FittedAdaBoostRegressor {
             estimators,
             estimator_weights,
             n_features,
+            feature_importances,
         })
     }
 }

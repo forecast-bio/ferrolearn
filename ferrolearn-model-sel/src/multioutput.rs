@@ -409,8 +409,8 @@ mod tests {
     #[test]
     fn test_moc_fit_predict_two_targets() {
         // Target 1: all 0.0, Target 2: all 1.0
-        let x = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
-            .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let y =
             Array2::from_shape_vec((4, 2), vec![0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0]).unwrap();
 
@@ -473,8 +473,8 @@ mod tests {
     #[test]
     fn test_mor_fit_predict_two_targets() {
         // Each target column should get its own mean predictor.
-        let x = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
-            .unwrap();
+        let x =
+            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
         let y =
             Array2::from_shape_vec((4, 2), vec![2.0, 4.0, 2.0, 4.0, 2.0, 4.0, 2.0, 4.0]).unwrap();
 

@@ -64,18 +64,29 @@ pub struct BernoulliNB<F> {
     /// Optional user-supplied class priors. If set, these are used
     /// instead of computing priors from the data.
     pub class_prior: Option<Vec<F>>,
+    /// Whether to learn class priors from the data. When `false` and
+    /// `class_prior` is `None`, uniform priors `1 / n_classes` are used.
+    /// Default: `true`.
+    pub fit_prior: bool,
+    /// When `false`, `alpha` values below `1e-10` are silently raised to
+    /// `1e-10` (legacy behavior). When `true` (default), the user-supplied
+    /// `alpha` is used as-is.
+    pub force_alpha: bool,
 }
 
 impl<F: Float> BernoulliNB<F> {
     /// Create a new `BernoulliNB` with default settings.
     ///
-    /// Default: `alpha = 1.0`, `binarize = None`, `class_prior = None`.
+    /// Default: `alpha = 1.0`, `binarize = None`, `class_prior = None`,
+    /// `fit_prior = true`, `force_alpha = true`.
     #[must_use]
     pub fn new() -> Self {
         Self {
             alpha: F::one(),
             binarize: None,
             class_prior: None,
+            fit_prior: true,
+            force_alpha: true,
         }
     }
 
@@ -102,6 +113,22 @@ impl<F: Float> BernoulliNB<F> {
     #[must_use]
     pub fn with_class_prior(mut self, priors: Vec<F>) -> Self {
         self.class_prior = Some(priors);
+        self
+    }
+
+    /// Toggle whether to learn class priors from data. Mirrors sklearn's
+    /// `fit_prior`. When `false` and no `class_prior` is set, uniform priors
+    /// are used.
+    #[must_use]
+    pub fn with_fit_prior(mut self, fit_prior: bool) -> Self {
+        self.fit_prior = fit_prior;
+        self
+    }
+
+    /// Toggle the `force_alpha` policy. See struct field doc.
+    #[must_use]
+    pub fn with_force_alpha(mut self, force_alpha: bool) -> Self {
+        self.force_alpha = force_alpha;
         self
     }
 }
@@ -136,10 +163,13 @@ pub struct FittedBernoulliNB<F> {
     feature_counts: Array2<F>,
     /// Per-class sample counts.
     class_counts: Vec<usize>,
-    /// Smoothing parameter carried forward for partial_fit.
+    /// Smoothing parameter carried forward for partial_fit (post-clamp
+    /// when `force_alpha=false`).
     alpha: F,
     /// Optional user-supplied class priors.
     class_prior: Option<Vec<F>>,
+    /// Whether priors were fit from data (carried forward for partial_fit).
+    fit_prior: bool,
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for BernoulliNB<F> {
@@ -186,6 +216,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Bernoul
 
         let n_f = F::from(n_samples).unwrap();
         let two = F::from(2.0).unwrap();
+        let alpha = crate::clamp_alpha(self.alpha, self.force_alpha);
 
         let mut log_prior = Array1::<F>::zeros(n_classes);
         let mut log_prob = Array2::<F>::zeros((n_classes, n_features));
@@ -215,13 +246,14 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Bernoul
                 feature_counts[[ci, j]] = fc;
 
                 // Smoothed probability: (N_cj + alpha) / (N_c + 2*alpha).
-                let p = (fc + self.alpha) / (n_c_f + two * self.alpha);
+                let p = (fc + alpha) / (n_c_f + two * alpha);
                 log_prob[[ci, j]] = p.ln();
                 log_neg_prob[[ci, j]] = (F::one() - p).ln();
             }
         }
 
-        // Use user-supplied class priors if provided.
+        // Resolve priors: explicit class_prior wins; else fit_prior chooses
+        // between empirical (already filled) and uniform.
         if let Some(ref priors) = self.class_prior {
             if priors.len() != n_classes {
                 return Err(FerroError::InvalidParameter {
@@ -236,6 +268,11 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Bernoul
             for (ci, &p) in priors.iter().enumerate() {
                 log_prior[ci] = p.ln();
             }
+        } else if !self.fit_prior {
+            let uniform = (F::one() / F::from(n_classes).unwrap()).ln();
+            for ci in 0..n_classes {
+                log_prior[ci] = uniform;
+            }
         }
 
         Ok(FittedBernoulliNB {
@@ -246,8 +283,9 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Bernoul
             binarize: self.binarize,
             feature_counts,
             class_counts: class_counts_vec,
-            alpha: self.alpha,
+            alpha,
             class_prior: self.class_prior.clone(),
+            fit_prior: self.fit_prior,
         })
     }
 }
@@ -325,12 +363,20 @@ impl<F: Float + Send + Sync + 'static> FittedBernoulliNB<F> {
             }
         }
 
-        // Recompute log priors.
+        // Recompute log priors. Explicit class_prior is sticky; otherwise
+        // honor fit_prior.
         if self.class_prior.is_none() {
-            let total: usize = self.class_counts.iter().sum();
-            let total_f = F::from(total).unwrap();
-            for (ci, &count) in self.class_counts.iter().enumerate() {
-                self.log_prior[ci] = (F::from(count).unwrap() / total_f).ln();
+            if self.fit_prior {
+                let total: usize = self.class_counts.iter().sum();
+                let total_f = F::from(total).unwrap();
+                for (ci, &count) in self.class_counts.iter().enumerate() {
+                    self.log_prior[ci] = (F::from(count).unwrap() / total_f).ln();
+                }
+            } else {
+                let uniform = (F::one() / F::from(n_classes).unwrap()).ln();
+                for ci in 0..n_classes {
+                    self.log_prior[ci] = uniform;
+                }
             }
         }
 
@@ -413,6 +459,71 @@ impl<F: Float + Send + Sync + 'static> FittedBernoulliNB<F> {
         }
 
         Ok(proba)
+    }
+
+    /// Compute the unnormalized joint log-likelihood `log P(c) + log P(x|c)`.
+    ///
+    /// If binarize was set during fitting, features are binarized first.
+    /// Returns shape `(n_samples, n_classes)`. Matches sklearn
+    /// `BernoulliNB._joint_log_likelihood`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features does
+    /// not match the fitted model.
+    pub fn predict_joint_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features_fitted = self.log_prob.ncols();
+        if x.ncols() != n_features_fitted {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![n_features_fitted],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted BernoulliNB".into(),
+            });
+        }
+        let x_bin = if let Some(threshold) = self.binarize {
+            binarize_array(x, threshold)
+        } else {
+            x.clone()
+        };
+        Ok(self.joint_log_likelihood(&x_bin))
+    }
+
+    /// Compute log of class probabilities (numerically stable).
+    ///
+    /// Returns shape `(n_samples, n_classes)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features does
+    /// not match the fitted model.
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let jll = self.predict_joint_log_proba(x)?;
+        Ok(crate::log_softmax_rows(&jll))
+    }
+
+    /// Mean accuracy on the given test data and labels.
+    ///
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the fitted model.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        let n = y.len();
+        if n == 0 {
+            return Ok(F::zero());
+        }
+        let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
+        Ok(F::from(correct).unwrap() / F::from(n).unwrap())
     }
 }
 

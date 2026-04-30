@@ -66,6 +66,17 @@ pub struct ComplementNB<F> {
     /// use priors in the standard way (it uses complement weights), but
     /// this field is provided for API consistency with other NB variants.
     pub class_prior: Option<Vec<F>>,
+    /// Whether to learn class priors from the data. Stored for API
+    /// consistency; ComplementNB's predict does not consult priors in the
+    /// multi-class case. Default: `true`.
+    pub fit_prior: bool,
+    /// When `false`, `alpha` values below `1e-10` are silently raised to
+    /// `1e-10` (legacy behavior). Default: `true`.
+    pub force_alpha: bool,
+    /// When `true`, performs a second L1 normalization of the weights
+    /// (Rennie et al. 2003 §4.4 "normalized weights" variant). Default:
+    /// `false`.
+    pub norm: bool,
 }
 
 impl<F: Float> ComplementNB<F> {
@@ -75,6 +86,9 @@ impl<F: Float> ComplementNB<F> {
         Self {
             alpha: F::one(),
             class_prior: None,
+            fit_prior: true,
+            force_alpha: true,
+            norm: false,
         }
     }
 
@@ -93,6 +107,28 @@ impl<F: Float> ComplementNB<F> {
     #[must_use]
     pub fn with_class_prior(mut self, priors: Vec<F>) -> Self {
         self.class_prior = Some(priors);
+        self
+    }
+
+    /// Toggle `fit_prior`. Stored for API consistency with other discrete NBs.
+    #[must_use]
+    pub fn with_fit_prior(mut self, fit_prior: bool) -> Self {
+        self.fit_prior = fit_prior;
+        self
+    }
+
+    /// Toggle the `force_alpha` policy. See struct field doc.
+    #[must_use]
+    pub fn with_force_alpha(mut self, force_alpha: bool) -> Self {
+        self.force_alpha = force_alpha;
+        self
+    }
+
+    /// Toggle the second L1 normalization on weights (sklearn's `norm`
+    /// parameter; Rennie et al. 2003 §4.4).
+    #[must_use]
+    pub fn with_norm(mut self, norm: bool) -> Self {
+        self.norm = norm;
         self
     }
 }
@@ -115,8 +151,12 @@ pub struct FittedComplementNB<F> {
     feature_counts: Array2<F>,
     /// Per-class sample counts.
     class_counts: Vec<usize>,
-    /// Smoothing parameter carried forward for partial_fit.
+    /// Smoothing parameter carried forward for partial_fit (post-clamp
+    /// when `force_alpha=false`).
     alpha: F,
+    /// Whether to apply the second L1 normalization on weights (carried
+    /// forward for partial_fit).
+    norm: bool,
 }
 
 impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for ComplementNB<F> {
@@ -164,6 +204,7 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Complem
         let n_classes = classes.len();
 
         let n_feat_f = F::from(n_features).unwrap();
+        let alpha = crate::clamp_alpha(self.alpha, self.force_alpha);
 
         // Compute per-class feature count sums, shape (n_classes, n_features).
         let mut class_feature_counts = Array2::<F>::zeros((n_classes, n_features));
@@ -198,12 +239,16 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Complem
             // Complement counts: sum over all other classes.
             let complement_total = total_all - class_feature_counts.row(ci).sum();
 
-            let denom = complement_total + self.alpha * n_feat_f;
+            let denom = complement_total + alpha * n_feat_f;
 
             for j in 0..n_features {
                 let complement_count_j = total_feature_counts[j] - class_feature_counts[[ci, j]];
-                weights[[ci, j]] = ((complement_count_j + self.alpha) / denom).ln();
+                weights[[ci, j]] = ((complement_count_j + alpha) / denom).ln();
             }
+        }
+
+        if self.norm {
+            apply_norm_inplace(&mut weights);
         }
 
         // Validate class_prior length if provided.
@@ -225,8 +270,31 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, Array1<usize>> for Complem
             weights,
             feature_counts: class_feature_counts,
             class_counts,
-            alpha: self.alpha,
+            alpha,
+            norm: self.norm,
         })
+    }
+}
+
+/// Apply sklearn's `norm=True` second L1 normalization to complement
+/// weights, then negate so ferrolearn's `argmin` predict semantics keep
+/// matching sklearn's `argmax(X @ feature_log_prob.T)`.
+///
+/// Walks each row of `weights` (= sklearn's pre-negation `logged`):
+/// - row_sum = Σ_j logged[c, j]    (≤ 0 since logs of probabilities)
+/// - normalized = logged / row_sum  (≥ 0, rows sum to 1)
+/// - weights[c, j] = -normalized    (re-negated to keep argmin convention)
+fn apply_norm_inplace<F: Float>(weights: &mut Array2<F>) {
+    let n_classes = weights.nrows();
+    let n_features = weights.ncols();
+    for ci in 0..n_classes {
+        let row_sum = (0..n_features).fold(F::zero(), |acc, j| acc + weights[[ci, j]]);
+        if row_sum == F::zero() {
+            continue;
+        }
+        for j in 0..n_features {
+            weights[[ci, j]] = -(weights[[ci, j]] / row_sum);
+        }
     }
 }
 
@@ -318,6 +386,10 @@ impl<F: Float + Send + Sync + 'static> FittedComplementNB<F> {
             }
         }
 
+        if self.norm {
+            apply_norm_inplace(&mut self.weights);
+        }
+
         Ok(())
     }
 
@@ -389,6 +461,68 @@ impl<F: Float + Send + Sync + 'static> FittedComplementNB<F> {
         }
 
         Ok(proba)
+    }
+
+    /// Compute the joint log-likelihood scores using sklearn's sign
+    /// convention: argmax(jll) gives the predicted class.
+    ///
+    /// Returns shape `(n_samples, n_classes)`. ComplementNB's complement
+    /// scoring is "lower=better", so this method returns
+    /// `-complement_scores` to match sklearn's convention where higher is
+    /// better. Matches sklearn `ComplementNB._joint_log_likelihood`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features does
+    /// not match the fitted model.
+    pub fn predict_joint_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_features_fitted = self.weights.ncols();
+        if x.ncols() != n_features_fitted {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![n_features_fitted],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted ComplementNB".into(),
+            });
+        }
+        Ok(self.complement_scores(x).mapv(|v| -v))
+    }
+
+    /// Compute log of class probabilities (numerically stable).
+    ///
+    /// Returns shape `(n_samples, n_classes)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the number of features does
+    /// not match the fitted model.
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let jll = self.predict_joint_log_proba(x)?;
+        Ok(crate::log_softmax_rows(&jll))
+    }
+
+    /// Mean accuracy on the given test data and labels.
+    ///
+    /// Equivalent to sklearn's `ClassifierMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the fitted model.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<usize>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        let n = y.len();
+        if n == 0 {
+            return Ok(F::zero());
+        }
+        let correct = preds.iter().zip(y.iter()).filter(|(p, t)| p == t).count();
+        Ok(F::from(correct).unwrap() / F::from(n).unwrap())
     }
 }
 

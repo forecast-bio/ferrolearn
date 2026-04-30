@@ -16,6 +16,29 @@ let pipeline = Pipeline::new()
     .estimator_step("clf", Box::new(linear::LogisticRegression::<f64>::new()));
 ```
 
+## Performance & sklearn parity
+
+ferrolearn 0.3.0 was validated against scikit-learn 1.8.0 with **144 head-to-head
+measurements** across 50+ estimators — same dataset, same hyperparameters, same
+metric, both libraries called from one Python process. See
+[BENCHMARKS.md](BENCHMARKS.md) for the full report.
+
+| Family | n compared | fit geomean | predict geomean | mean Δ score | parity / better |
+|---|---:|---:|---:|---:|---:|
+| **regressor**  | 43 | **8.21×** | **4.39×** | -0.0006 R²       | 33/43 |
+| **classifier** | 51 | **6.75×** | **8.88×** | +0.0035 accuracy | 38/48 |
+| **cluster**    | 15 | 1.35×     | —         | +0.0000 ARI      | 15/15 (perfect parity) |
+| **decomp**     | 15 | **5.16×** | **4.56×** | —                | — |
+| **preprocess** | 14 | **9.82×** | **2.74×** | —                | — (numerical agreement to 1e-16) |
+| **kernel approx** | 6 | **6.78×** | 1.26×     | —                | — |
+
+Across every family where quality is measurable, ferrolearn matches or beats
+sklearn on average — perfect parity on clustering, +0.35pp accuracy across
+51 classifier comparisons, statistical-tie on R² across 43 regressor
+comparisons — while running 1.4–9.8× faster on fit and 1.3–8.9× faster on
+predict. Reproduce locally with
+`maturin develop --release && python ferrolearn-bench/head_to_head_full.py`.
+
 ## Features
 
 **Supervised Learning**

@@ -161,6 +161,32 @@ impl<F: Float + Send + Sync + 'static> FittedIncrementalPCA<F> {
         &self.singular_values_
     }
 
+    /// Map reduced data back to the original feature space. Mirrors
+    /// sklearn `IncrementalPCA.inverse_transform`. Returns shape
+    /// `(n_samples, n_features)` via `X_reduced @ components + mean`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x_reduced.ncols()` does
+    /// not equal the number of components.
+    pub fn inverse_transform(&self, x_reduced: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_components = self.components_.nrows();
+        if x_reduced.ncols() != n_components {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x_reduced.nrows(), n_components],
+                actual: vec![x_reduced.nrows(), x_reduced.ncols()],
+                context: "FittedIncrementalPCA::inverse_transform".into(),
+            });
+        }
+        let mut result = x_reduced.dot(&self.components_);
+        for mut row in result.rows_mut() {
+            for (v, &m) in row.iter_mut().zip(self.mean_.iter()) {
+                *v = *v + m;
+            }
+        }
+        Ok(result)
+    }
+
     /// Process one additional batch, updating the model in-place.
     ///
     /// This is the core of the incremental algorithm. See the module-level

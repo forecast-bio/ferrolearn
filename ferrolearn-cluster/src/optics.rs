@@ -894,6 +894,20 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for OPTICS<F> {
     }
 }
 
+impl<F: Float + Send + Sync + 'static> OPTICS<F> {
+    /// Fit on `x` and return the cluster labels for those samples in one
+    /// call. Equivalent to sklearn `ClusterMixin.fit_predict`. Noise
+    /// samples are labeled as `-1`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`Fit::fit`].
+    pub fn fit_predict(&self, x: &Array2<F>) -> Result<Array1<isize>, FerroError> {
+        let fitted = self.fit(x, &())?;
+        Ok(fitted.labels().clone())
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Tests
 // ─────────────────────────────────────────────────────────────────────────────

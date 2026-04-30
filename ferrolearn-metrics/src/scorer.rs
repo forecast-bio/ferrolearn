@@ -111,6 +111,104 @@ pub fn make_scorer<F: Float>(
 }
 
 // ---------------------------------------------------------------------------
+// Built-in scorer registry (sklearn parity: get_scorer / get_scorer_names /
+// check_scoring)
+// ---------------------------------------------------------------------------
+
+/// The full list of built-in `f64` scorer names recognised by [`get_scorer`].
+///
+/// Matches sklearn's regressor + classifier scorer canon. Names with a
+/// `neg_` prefix wrap a loss (so higher is still better when used as a
+/// scoring objective).
+pub const BUILTIN_SCORER_NAMES: &[&str] = &[
+    "neg_mean_absolute_error",
+    "neg_mean_squared_error",
+    "neg_root_mean_squared_error",
+    "neg_mean_squared_log_error",
+    "neg_root_mean_squared_log_error",
+    "neg_mean_absolute_percentage_error",
+    "neg_median_absolute_error",
+    "neg_max_error",
+    "r2",
+    "explained_variance",
+    "neg_mean_poisson_deviance",
+    "neg_mean_gamma_deviance",
+];
+
+/// Return all built-in scorer names recognised by [`get_scorer`].
+#[must_use]
+pub fn get_scorer_names() -> &'static [&'static str] {
+    BUILTIN_SCORER_NAMES
+}
+
+/// Return a [`Scorer`] by canonical name.
+///
+/// Names follow the scikit-learn convention: regression losses are exposed
+/// with a `neg_` prefix so callers can always *maximise* a scorer.
+///
+/// # Errors
+///
+/// Returns [`FerroError::InvalidParameter`] if `name` is not in
+/// [`BUILTIN_SCORER_NAMES`].
+pub fn get_scorer(name: &str) -> Result<Scorer<f64>, FerroError> {
+    use crate::regression::{
+        explained_variance_score, max_error, mean_absolute_error, mean_absolute_percentage_error,
+        mean_gamma_deviance, mean_poisson_deviance, mean_squared_error, mean_squared_log_error,
+        median_absolute_error, r2_score, root_mean_squared_error, root_mean_squared_log_error,
+    };
+    let scorer = match name {
+        "neg_mean_absolute_error" => make_scorer(mean_absolute_error, false, name),
+        "neg_mean_squared_error" => make_scorer(mean_squared_error, false, name),
+        "neg_root_mean_squared_error" => make_scorer(root_mean_squared_error, false, name),
+        "neg_mean_squared_log_error" => make_scorer(mean_squared_log_error, false, name),
+        "neg_root_mean_squared_log_error" => make_scorer(root_mean_squared_log_error, false, name),
+        "neg_mean_absolute_percentage_error" => {
+            make_scorer(mean_absolute_percentage_error, false, name)
+        }
+        "neg_median_absolute_error" => make_scorer(median_absolute_error, false, name),
+        "neg_max_error" => make_scorer(max_error, false, name),
+        "r2" => make_scorer(r2_score, true, name),
+        "explained_variance" => make_scorer(explained_variance_score, true, name),
+        "neg_mean_poisson_deviance" => make_scorer(mean_poisson_deviance, false, name),
+        "neg_mean_gamma_deviance" => make_scorer(mean_gamma_deviance, false, name),
+        other => {
+            return Err(FerroError::InvalidParameter {
+                name: "scoring".into(),
+                reason: format!(
+                    "get_scorer: unknown scorer '{other}'. \
+                     Use get_scorer_names() for the supported list."
+                ),
+            });
+        }
+    };
+    Ok(scorer)
+}
+
+/// Resolve a string scoring name (or pass-through a pre-built [`Scorer`]) into
+/// a usable [`Scorer<f64>`].
+///
+/// Convenience wrapper that mirrors sklearn's `check_scoring`: callers can
+/// pass either a string name or a fully-built [`Scorer`].
+///
+/// # Errors
+///
+/// Returns the same errors as [`get_scorer`] when `name` is unknown.
+pub fn check_scoring(name_or_scorer: ScoringInput) -> Result<Scorer<f64>, FerroError> {
+    match name_or_scorer {
+        ScoringInput::Name(s) => get_scorer(s),
+        ScoringInput::Scorer(s) => Ok(s),
+    }
+}
+
+/// Input type accepted by [`check_scoring`].
+pub enum ScoringInput<'a> {
+    /// A canonical scorer name (see [`BUILTIN_SCORER_NAMES`]).
+    Name(&'a str),
+    /// A pre-built [`Scorer`].
+    Scorer(Scorer<f64>),
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 

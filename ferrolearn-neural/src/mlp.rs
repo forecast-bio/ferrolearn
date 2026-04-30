@@ -7,7 +7,7 @@
 //! # Classifier
 //!
 //! ```
-//! use ferrolearn_linear::mlp::MLPClassifier;
+//! use ferrolearn_neural::mlp::MLPClassifier;
 //! use ferrolearn_core::{Fit, Predict};
 //! use ndarray::{array, Array2};
 //!
@@ -26,7 +26,7 @@
 //! # Regressor
 //!
 //! ```
-//! use ferrolearn_linear::mlp::MLPRegressor;
+//! use ferrolearn_neural::mlp::MLPRegressor;
 //! use ferrolearn_core::{Fit, Predict};
 //! use ndarray::{array, Array2};
 //!
@@ -426,7 +426,7 @@ fn apply_adam_update<F: Float>(
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_linear::mlp::MLPClassifier;
+/// use ferrolearn_neural::mlp::MLPClassifier;
 /// use ferrolearn_core::{Fit, Predict};
 /// use ndarray::{array, Array2};
 ///
@@ -746,6 +746,17 @@ impl<F: Float + Send + Sync + ScalarOperand + 'static> FittedMLPClassifier<F> {
     pub fn n_layers(&self) -> usize {
         self.layers.len()
     }
+
+    /// Element-wise log of [`predict_proba`](Self::predict_proba). Mirrors
+    /// sklearn `MLPClassifier.predict_log_proba`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`predict_proba`](Self::predict_proba).
+    pub fn predict_log_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let proba = self.predict_proba(x)?;
+        Ok(crate::log_proba(&proba))
+    }
 }
 
 impl<F: Float + Send + Sync + ScalarOperand + 'static> Predict<Array2<F>>
@@ -844,7 +855,7 @@ where
 /// # Examples
 ///
 /// ```
-/// use ferrolearn_linear::mlp::MLPRegressor;
+/// use ferrolearn_neural::mlp::MLPRegressor;
 /// use ferrolearn_core::{Fit, Predict};
 /// use ndarray::{array, Array2};
 ///

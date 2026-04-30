@@ -18,6 +18,9 @@
 
 use ndarray::{Array1, Array2};
 use num_traits::Float;
+use rand::SeedableRng;
+use rand_distr::{Distribution, StandardNormal};
+use rand_xoshiro::Xoshiro256Plus;
 
 use ferrolearn_core::{FerroError, Fit, Predict};
 
@@ -139,6 +142,25 @@ impl<F: Float + Send + Sync + 'static> std::fmt::Debug for FittedGaussianProcess
 }
 
 impl<F: Float + Send + Sync + 'static> FittedGaussianProcessRegressor<F> {
+    /// R² coefficient of determination on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::r2_score(&preds, y))
+    }
+
     /// Predict mean and standard deviation at new points.
     ///
     /// Returns `(y_mean, y_std)` where `y_std` is the square root of the
@@ -199,6 +221,108 @@ impl<F: Float + Send + Sync + 'static> FittedGaussianProcessRegressor<F> {
 
         let std = var.mapv(num_traits::Float::sqrt);
         Ok((y_pred, std))
+    }
+
+    /// Draw `n_samples` realizations from the GP posterior at the query
+    /// points `x`. Mirrors sklearn `GaussianProcessRegressor.sample_y`.
+    ///
+    /// Returns shape `(n_query, n_samples)`. Each column is one posterior
+    /// draw `mean + L_post @ z` where `L_post` is the Cholesky factor of
+    /// the posterior covariance `K** - K*ᵀ K⁻¹ K*` and `z ~ N(0, I)`.
+    ///
+    /// `random_state = Some(seed)` makes draws reproducible (uses
+    /// `Xoshiro256Plus`); `None` reseeds from the OS RNG.
+    ///
+    /// # Errors
+    ///
+    /// - [`FerroError::ShapeMismatch`] if the feature dimension does not
+    ///   match the training data.
+    /// - [`FerroError::NumericalInstability`] if the posterior covariance
+    ///   fails Cholesky (very rare; a small jitter `1e-10` is added to
+    ///   the diagonal first).
+    pub fn sample_y(
+        &self,
+        x: &Array2<F>,
+        n_samples: usize,
+        random_state: Option<u64>,
+    ) -> Result<Array2<F>, FerroError>
+    where
+        StandardNormal: Distribution<F>,
+    {
+        if x.ncols() != self.x_train.ncols() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows(), self.x_train.ncols()],
+                actual: vec![x.nrows(), x.ncols()],
+                context: "sample_y feature count must match training data".into(),
+            });
+        }
+
+        let n_query = x.nrows();
+        let n_train = self.x_train.nrows();
+
+        let k_star = self.kernel.compute(x, &self.x_train);
+        let k_star_star = self.kernel.compute(x, x);
+
+        // Posterior mean: K* @ alpha_vec + y_mean.
+        let mean = k_star.dot(&self.alpha_vec).mapv(|v| v + self.y_mean);
+
+        // Solve L V = K*^T column-by-column for V (shape (n_train, n_query)).
+        let k_star_t = k_star.t().to_owned();
+        let mut v = Array2::<F>::zeros((n_train, n_query));
+        for col in 0..n_query {
+            for i in 0..n_train {
+                let mut sum = k_star_t[[i, col]];
+                for j in 0..i {
+                    sum = sum - self.l_factor[[i, j]] * v[[j, col]];
+                }
+                v[[i, col]] = sum / self.l_factor[[i, i]];
+            }
+        }
+
+        // Posterior covariance: K** - V^T V, with a small jitter on the
+        // diagonal for Cholesky stability.
+        let mut k_post = Array2::<F>::zeros((n_query, n_query));
+        let jitter = F::from(1e-10).unwrap();
+        for i in 0..n_query {
+            for j in 0..n_query {
+                let mut s = k_star_star[[i, j]];
+                for k in 0..n_train {
+                    s = s - v[[k, i]] * v[[k, j]];
+                }
+                k_post[[i, j]] = s;
+                if i == j {
+                    k_post[[i, j]] = k_post[[i, j]] + jitter;
+                    if k_post[[i, j]] < jitter {
+                        k_post[[i, j]] = jitter;
+                    }
+                }
+            }
+        }
+
+        let l_post = cholesky(&k_post)?;
+
+        let mut rng = match random_state {
+            Some(seed) => Xoshiro256Plus::seed_from_u64(seed),
+            None => Xoshiro256Plus::from_seed(rand::random()),
+        };
+
+        let mut out = Array2::<F>::zeros((n_query, n_samples));
+        for s in 0..n_samples {
+            // Draw z ~ N(0, I).
+            let mut z = Array1::<F>::zeros(n_query);
+            for i in 0..n_query {
+                z[i] = StandardNormal.sample(&mut rng);
+            }
+            // Sample = mean + L_post @ z.
+            for i in 0..n_query {
+                let mut sum = F::zero();
+                for j in 0..=i {
+                    sum = sum + l_post[[i, j]] * z[j];
+                }
+                out[[i, s]] = mean[i] + sum;
+            }
+        }
+        Ok(out)
     }
 
     /// Get the log marginal likelihood of the fitted model.

@@ -95,11 +95,7 @@ impl<F: Float + Send + Sync + 'static> FeatureUnion<F> {
     ///
     /// - [`FerroError::InvalidParameter`] if no transformers have been added.
     /// - Propagates errors from individual transformer fitting.
-    pub fn fit(
-        &self,
-        x: &Array2<F>,
-        y: &Array1<F>,
-    ) -> Result<FittedFeatureUnion<F>, FerroError> {
+    pub fn fit(&self, x: &Array2<F>, y: &Array1<F>) -> Result<FittedFeatureUnion<F>, FerroError> {
         if self.transformers.is_empty() {
             return Err(FerroError::InvalidParameter {
                 name: "transformers".into(),

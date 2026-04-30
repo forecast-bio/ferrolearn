@@ -1,21 +1,32 @@
 # ferrolearn-neighbors
 
-Nearest neighbor models for the [ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework.
+Nearest-neighbor models for the
+[ferrolearn](https://crates.io/crates/ferrolearn) machine learning framework.
+Validated against scikit-learn 1.8.0 head-to-head — see the
+[workspace BENCHMARKS.md](../BENCHMARKS.md).
 
 ## Algorithms
 
 | Model | Description |
 |-------|-------------|
-| `KNeighborsClassifier` | Classify by majority vote of k nearest neighbors |
-| `KNeighborsRegressor` | Predict as (weighted) mean of k nearest neighbors |
+| `KNeighborsClassifier` | Majority-vote classification by k nearest neighbors |
+| `KNeighborsRegressor` | (Weighted) mean of k nearest neighbors |
+| `RadiusNeighborsClassifier` / `RadiusNeighborsRegressor` | All neighbors within a fixed radius |
+| `NearestCentroid` | Classify by nearest class centroid |
+| `NearestNeighbors` | Unsupervised nearest-neighbors lookup / graph |
+| `LocalOutlierFactor` | Density-based outlier / anomaly detection |
+
+Plus graph utilities: `kneighbors_graph`, `radius_neighbors_graph`,
+`sort_graph_by_row_values`.
 
 ## Spatial indexing
 
-- **KD-Tree** — efficient nearest neighbor search for low-dimensional data (d <= 20)
+- **KD-Tree** — efficient nearest-neighbor search for low-dimensional data (d ≲ 20)
 - **Ball Tree** — metric tree for higher-dimensional or non-Euclidean data
 - **Brute force** — exhaustive search fallback
 
-The algorithm is selected automatically based on data dimensionality, or can be set explicitly.
+The algorithm is selected automatically based on data dimensionality, or can
+be set explicitly via `with_algorithm`.
 
 ## Example
 
@@ -31,12 +42,20 @@ let x = Array2::from_shape_vec((6, 2), vec![
 let y = array![0usize, 0, 0, 1, 1, 1];
 
 let model = KNeighborsClassifier::<f64>::new()
-    .with_k(3)
+    .with_n_neighbors(3)
     .with_weights(Weights::Distance);
 let fitted = model.fit(&x, &y).unwrap();
 let predictions = fitted.predict(&x).unwrap();
 ```
 
+## sklearn parity note
+
+ferrolearn's KNN models build the spatial index **eagerly** during `fit()`,
+while scikit-learn defers it to first `predict()`. This is a deliberate
+trade-off: `fit()` is slower, but repeated predict calls amortise the index
+construction across many queries. Accuracy parity with scikit-learn is exact.
+
 ## License
 
-Licensed under either of [Apache License, Version 2.0](../LICENSE-APACHE) or [MIT License](../LICENSE-MIT) at your option.
+Licensed under either of [Apache License, Version 2.0](../LICENSE-APACHE) or
+[MIT License](../LICENSE-MIT) at your option.

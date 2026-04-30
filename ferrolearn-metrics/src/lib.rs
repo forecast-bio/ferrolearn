@@ -74,22 +74,41 @@ pub mod clustering;
 pub mod pairwise;
 pub mod ranking;
 pub mod regression;
+pub mod scorer;
 
 // Flat re-exports for convenient access.
 pub use classification::{
-    Average, accuracy_score, auc, average_precision_score, calibration_curve, confusion_matrix,
-    f1_score, log_loss, precision_recall_curve, precision_score, recall_score, roc_auc_score,
-    roc_curve, top_k_accuracy_score,
+    Average, accuracy_score, auc, average_precision_score, balanced_accuracy_score,
+    brier_score_loss, calibration_curve, classification_report, cohen_kappa_score,
+    confusion_matrix, d2_brier_score, d2_log_loss_score, det_curve, f1_score, fbeta_score,
+    hamming_loss, hinge_loss, jaccard_score, log_loss, matthews_corrcoef,
+    multilabel_confusion_matrix, precision_recall_curve, precision_recall_fscore_support,
+    precision_score, recall_score, roc_auc_score, roc_curve, top_k_accuracy_score, zero_one_loss,
 };
 pub use clustering::{
-    adjusted_mutual_info, adjusted_rand_score, davies_bouldin_score, silhouette_score,
+    NmiMethod, adjusted_mutual_info, adjusted_rand_score, calinski_harabasz_score,
+    completeness_score, contingency_matrix, davies_bouldin_score, fowlkes_mallows_score,
+    homogeneity_completeness_v_measure, homogeneity_score, mutual_info_score,
+    normalized_mutual_info_score, pair_confusion_matrix, rand_score, silhouette_samples,
+    silhouette_score, v_measure_score,
 };
 pub use pairwise::{
-    Metric, chebyshev_distances, cosine_distances, euclidean_distances, manhattan_distances,
-    pairwise_distances,
+    DistanceMetric, Metric, PairwiseKernel, chebyshev_distances, cosine_distances,
+    euclidean_distances, manhattan_distances, nan_euclidean_distances, pairwise_distances,
+    pairwise_distances_argmin, pairwise_distances_argmin_min, pairwise_kernels,
 };
-pub use ranking::{dcg_score, ndcg_score};
+pub use ranking::{
+    coverage_error, dcg_score, label_ranking_average_precision_score, label_ranking_loss,
+    ndcg_score,
+};
 pub use regression::{
-    explained_variance_score, mean_absolute_error, mean_absolute_percentage_error,
-    mean_squared_error, r2_score, root_mean_squared_error,
+    d2_absolute_error_score, d2_pinball_score, d2_tweedie_score, explained_variance_score,
+    max_error, mean_absolute_error, mean_absolute_percentage_error, mean_gamma_deviance,
+    mean_pinball_loss, mean_poisson_deviance, mean_squared_error, mean_squared_log_error,
+    mean_tweedie_deviance, median_absolute_error, r2_score, root_mean_squared_error,
+    root_mean_squared_log_error,
+};
+pub use scorer::{
+    BUILTIN_SCORER_NAMES, Scorer, ScoringInput, check_scoring, get_scorer, get_scorer_names,
+    make_scorer,
 };

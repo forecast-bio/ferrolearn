@@ -1,0 +1,22 @@
+[package]
+name = "ferrolearn-neural"
+version = "0.3.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Neural network estimators for the ferrolearn ML framework"
+readme = "README.md"
+keywords = ["machine-learning", "neural-network", "mlp", "rbm", "deep-learning"]
+categories = ["science", "algorithms"]
+
+[dependencies]
+ferrolearn-core.workspace = true
+ndarray.workspace = true
+num-traits.workspace = true
+rand.workspace = true
+rand_distr.workspace = true
+rand_xoshiro.workspace = true
+
+[dev-dependencies]
+approx.workspace = true

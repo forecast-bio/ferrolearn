@@ -922,6 +922,499 @@ where
 }
 
 // ---------------------------------------------------------------------------
+// Friedman benchmarks (#1, #2, #3)
+// ---------------------------------------------------------------------------
+
+/// Generate the "Friedman #1" regression problem (Friedman, 1991).
+///
+/// Inputs `X` are uniform on `[0, 1]^n_features` (`n_features >= 5`). The
+/// target depends only on the first five features:
+///
+/// ```text
+/// y = 10 * sin(pi * x0 * x1) + 20 * (x2 - 0.5)^2 + 10 * x3 + 5 * x4 + noise
+/// ```
+///
+/// # Errors
+///
+/// Returns [`FerroError::InvalidParameter`] if `n_features < 5`.
+pub fn make_friedman1<F>(
+    n_samples: usize,
+    n_features: usize,
+    noise: f64,
+    random_state: Option<u64>,
+) -> Result<(Array2<F>, Array1<F>), FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    if n_features < 5 {
+        return Err(FerroError::InvalidParameter {
+            name: "n_features".into(),
+            reason: format!("make_friedman1: must be >= 5, got {n_features}"),
+        });
+    }
+    let mut rng = make_rng(random_state);
+    let unif = Uniform::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "uniform".into(),
+        reason: e.to_string(),
+    })?;
+    let normal =
+        Normal::new(0.0_f64, noise.max(0.0)).map_err(|e| FerroError::InvalidParameter {
+            name: "noise".into(),
+            reason: e.to_string(),
+        })?;
+
+    let mut x = Array2::<F>::zeros((n_samples, n_features));
+    let mut y = Array1::<F>::zeros(n_samples);
+    for i in 0..n_samples {
+        let mut row = vec![0.0_f64; n_features];
+        for j in 0..n_features {
+            row[j] = unif.sample(&mut rng);
+            x[[i, j]] = F::from(row[j]).ok_or_else(|| FerroError::InvalidParameter {
+                name: "x".into(),
+                reason: "could not convert uniform sample".into(),
+            })?;
+        }
+        let val = 10.0 * (PI * row[0] * row[1]).sin()
+            + 20.0 * (row[2] - 0.5).powi(2)
+            + 10.0 * row[3]
+            + 5.0 * row[4]
+            + if noise > 0.0 {
+                normal.sample(&mut rng)
+            } else {
+                0.0
+            };
+        y[i] = F::from(val).ok_or_else(|| FerroError::InvalidParameter {
+            name: "y".into(),
+            reason: "could not convert target".into(),
+        })?;
+    }
+    Ok((x, y))
+}
+
+/// Generate the "Friedman #2" regression problem.
+///
+/// Inputs are 4-dimensional and have specific physical ranges:
+///
+/// - `x0 ~ U(0, 100)`
+/// - `x1 ~ U(40 * pi, 560 * pi)`
+/// - `x2 ~ U(0, 1)`
+/// - `x3 ~ U(1, 11)`
+///
+/// Target: `y = sqrt(x0^2 + (x1 * x2 - 1 / (x1 * x3))^2) + noise`
+pub fn make_friedman2<F>(
+    n_samples: usize,
+    noise: f64,
+    random_state: Option<u64>,
+) -> Result<(Array2<F>, Array1<F>), FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    let mut rng = make_rng(random_state);
+    let normal =
+        Normal::new(0.0_f64, noise.max(0.0)).map_err(|e| FerroError::InvalidParameter {
+            name: "noise".into(),
+            reason: e.to_string(),
+        })?;
+    let mut x = Array2::<F>::zeros((n_samples, 4));
+    let mut y = Array1::<F>::zeros(n_samples);
+    let u01 = Uniform::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "uniform".into(),
+        reason: e.to_string(),
+    })?;
+    for i in 0..n_samples {
+        let r0 = u01.sample(&mut rng) * 100.0;
+        let r1 = 40.0 * PI + u01.sample(&mut rng) * (560.0 - 40.0) * PI;
+        let r2 = u01.sample(&mut rng);
+        let r3 = 1.0 + u01.sample(&mut rng) * 10.0;
+        let xs = [r0, r1, r2, r3];
+        for j in 0..4 {
+            x[[i, j]] = F::from(xs[j]).ok_or_else(|| FerroError::InvalidParameter {
+                name: "x".into(),
+                reason: "could not convert".into(),
+            })?;
+        }
+        let inner = r1 * r2 - 1.0 / (r1 * r3);
+        let target = (r0 * r0 + inner * inner).sqrt()
+            + if noise > 0.0 {
+                normal.sample(&mut rng)
+            } else {
+                0.0
+            };
+        y[i] = F::from(target).ok_or_else(|| FerroError::InvalidParameter {
+            name: "y".into(),
+            reason: "could not convert".into(),
+        })?;
+    }
+    Ok((x, y))
+}
+
+/// Generate the "Friedman #3" regression problem.
+///
+/// Same inputs as [`make_friedman2`]; target is:
+///
+/// `y = arctan((x1 * x2 - 1 / (x1 * x3)) / x0) + noise`
+pub fn make_friedman3<F>(
+    n_samples: usize,
+    noise: f64,
+    random_state: Option<u64>,
+) -> Result<(Array2<F>, Array1<F>), FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    let mut rng = make_rng(random_state);
+    let normal =
+        Normal::new(0.0_f64, noise.max(0.0)).map_err(|e| FerroError::InvalidParameter {
+            name: "noise".into(),
+            reason: e.to_string(),
+        })?;
+    let mut x = Array2::<F>::zeros((n_samples, 4));
+    let mut y = Array1::<F>::zeros(n_samples);
+    let u01 = Uniform::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "uniform".into(),
+        reason: e.to_string(),
+    })?;
+    for i in 0..n_samples {
+        // x0 strictly positive to avoid divide-by-zero in arctan argument.
+        let r0 = u01.sample(&mut rng) * 100.0 + 1e-6;
+        let r1 = 40.0 * PI + u01.sample(&mut rng) * (560.0 - 40.0) * PI;
+        let r2 = u01.sample(&mut rng);
+        let r3 = 1.0 + u01.sample(&mut rng) * 10.0;
+        let xs = [r0, r1, r2, r3];
+        for j in 0..4 {
+            x[[i, j]] = F::from(xs[j]).ok_or_else(|| FerroError::InvalidParameter {
+                name: "x".into(),
+                reason: "could not convert".into(),
+            })?;
+        }
+        let arg = (r1 * r2 - 1.0 / (r1 * r3)) / r0;
+        let target = arg.atan()
+            + if noise > 0.0 {
+                normal.sample(&mut rng)
+            } else {
+                0.0
+            };
+        y[i] = F::from(target).ok_or_else(|| FerroError::InvalidParameter {
+            name: "y".into(),
+            reason: "could not convert".into(),
+        })?;
+    }
+    Ok((x, y))
+}
+
+// ---------------------------------------------------------------------------
+// Low-rank, SPD, sparse SPD matrix generators
+// ---------------------------------------------------------------------------
+
+/// Generate a mostly-low-rank random matrix with bell-curve singular values.
+///
+/// Returns an `(n_samples, n_features)` matrix `U * S * V^T` where `U` and `V`
+/// are random orthonormal matrices and `S` decays geometrically with
+/// effective rank `effective_rank`.
+pub fn make_low_rank_matrix<F>(
+    n_samples: usize,
+    n_features: usize,
+    effective_rank: usize,
+    tail_strength: f64,
+    random_state: Option<u64>,
+) -> Result<Array2<F>, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    if effective_rank == 0 {
+        return Err(FerroError::InvalidParameter {
+            name: "effective_rank".into(),
+            reason: "must be >= 1".into(),
+        });
+    }
+    let mut rng = make_rng(random_state);
+    let normal = Normal::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "normal".into(),
+        reason: e.to_string(),
+    })?;
+
+    let n = n_samples.min(n_features);
+    let mut sigma = vec![0.0_f64; n];
+    for (i, s) in sigma.iter_mut().enumerate() {
+        let low_rank = (-((i as f64 / effective_rank as f64).powi(2))).exp();
+        let tail = tail_strength * (-(0.1 * i as f64)).exp();
+        *s = low_rank + tail;
+    }
+
+    // Build dense X by drawing random Gaussian and rescaling its singular
+    // values via SVD-like multiplication: simple approximation — generate
+    // random matrix and scale columns by sigma.
+    let mut a = Array2::<f64>::zeros((n_samples, n));
+    let mut b = Array2::<f64>::zeros((n, n_features));
+    for i in 0..n_samples {
+        for j in 0..n {
+            a[[i, j]] = normal.sample(&mut rng);
+        }
+    }
+    for i in 0..n {
+        for j in 0..n_features {
+            b[[i, j]] = normal.sample(&mut rng) * sigma[i];
+        }
+    }
+    let prod = a.dot(&b);
+    let mut out = Array2::<F>::zeros((n_samples, n_features));
+    for i in 0..n_samples {
+        for j in 0..n_features {
+            out[[i, j]] = F::from(prod[[i, j]]).ok_or_else(|| FerroError::InvalidParameter {
+                name: "matrix".into(),
+                reason: "could not convert".into(),
+            })?;
+        }
+    }
+    Ok(out)
+}
+
+/// Generate a random symmetric positive-definite matrix.
+///
+/// Constructs `A = X^T X + n * I` where `X` is `n x n` with i.i.d. Gaussian
+/// entries and `I` is the identity. The result is symmetric and SPD.
+pub fn make_spd_matrix<F>(n: usize, random_state: Option<u64>) -> Result<Array2<F>, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    if n == 0 {
+        return Err(FerroError::InvalidParameter {
+            name: "n".into(),
+            reason: "must be >= 1".into(),
+        });
+    }
+    let mut rng = make_rng(random_state);
+    let normal = Normal::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "normal".into(),
+        reason: e.to_string(),
+    })?;
+    let mut a = Array2::<f64>::zeros((n, n));
+    for i in 0..n {
+        for j in 0..n {
+            a[[i, j]] = normal.sample(&mut rng);
+        }
+    }
+    let sym = a.t().dot(&a);
+    let mut out = Array2::<F>::zeros((n, n));
+    let n_f = n as f64;
+    for i in 0..n {
+        for j in 0..n {
+            let v = sym[[i, j]] + if i == j { n_f } else { 0.0 };
+            out[[i, j]] = F::from(v).ok_or_else(|| FerroError::InvalidParameter {
+                name: "matrix".into(),
+                reason: "could not convert".into(),
+            })?;
+        }
+    }
+    Ok(out)
+}
+
+/// Generate a random sparse symmetric positive-definite matrix.
+///
+/// Builds an SPD matrix whose off-diagonal entries are zero with probability
+/// `1 - alpha` (so `alpha = 1.0` reproduces [`make_spd_matrix`]).
+pub fn make_sparse_spd_matrix<F>(
+    n: usize,
+    alpha: f64,
+    random_state: Option<u64>,
+) -> Result<Array2<F>, FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    if !(0.0..=1.0).contains(&alpha) {
+        return Err(FerroError::InvalidParameter {
+            name: "alpha".into(),
+            reason: format!("must be in [0, 1], got {alpha}"),
+        });
+    }
+    let mut rng = make_rng(random_state);
+    let normal = Normal::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "normal".into(),
+        reason: e.to_string(),
+    })?;
+    let u01 = Uniform::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "uniform".into(),
+        reason: e.to_string(),
+    })?;
+    let mut prec = Array2::<f64>::zeros((n, n));
+    for i in 0..n {
+        for j in (i + 1)..n {
+            if u01.sample(&mut rng) < alpha {
+                let v = normal.sample(&mut rng);
+                prec[[i, j]] = v;
+                prec[[j, i]] = v;
+            }
+        }
+        prec[[i, i]] = 1.0;
+    }
+    // ensure SPD: shift diag by sum of row absolute values
+    for i in 0..n {
+        let row_sum: f64 = (0..n).filter(|&j| j != i).map(|j| prec[[i, j]].abs()).sum();
+        prec[[i, i]] = row_sum + 1.0;
+    }
+    let mut out = Array2::<F>::zeros((n, n));
+    for i in 0..n {
+        for j in 0..n {
+            out[[i, j]] = F::from(prec[[i, j]]).ok_or_else(|| FerroError::InvalidParameter {
+                name: "matrix".into(),
+                reason: "could not convert".into(),
+            })?;
+        }
+    }
+    Ok(out)
+}
+
+// ---------------------------------------------------------------------------
+// Gaussian quantiles, Hastie 10.2, multilabel classification
+// ---------------------------------------------------------------------------
+
+/// Generate isotropic Gaussian samples and split them into `n_classes`
+/// concentric quantile shells.
+///
+/// All samples come from a standard normal distribution; the `i`-th class
+/// occupies the `i / n_classes` to `(i + 1) / n_classes` quantile of the
+/// sample's squared norm.
+pub fn make_gaussian_quantiles<F>(
+    n_samples: usize,
+    n_features: usize,
+    n_classes: usize,
+    random_state: Option<u64>,
+) -> Result<(Array2<F>, Array1<usize>), FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    if n_classes < 2 {
+        return Err(FerroError::InvalidParameter {
+            name: "n_classes".into(),
+            reason: "must be >= 2".into(),
+        });
+    }
+    let mut rng = make_rng(random_state);
+    let normal = Normal::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "normal".into(),
+        reason: e.to_string(),
+    })?;
+    let mut x = Array2::<f64>::zeros((n_samples, n_features));
+    let mut sq_norm: Vec<(usize, f64)> = Vec::with_capacity(n_samples);
+    for i in 0..n_samples {
+        let mut s = 0.0_f64;
+        for j in 0..n_features {
+            let v = normal.sample(&mut rng);
+            x[[i, j]] = v;
+            s += v * v;
+        }
+        sq_norm.push((i, s));
+    }
+    sq_norm.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+    let mut y = Array1::<usize>::zeros(n_samples);
+    for (rank, (idx, _)) in sq_norm.iter().enumerate() {
+        let cls = (rank * n_classes) / n_samples;
+        y[*idx] = cls.min(n_classes - 1);
+    }
+    let mut out = Array2::<F>::zeros((n_samples, n_features));
+    for i in 0..n_samples {
+        for j in 0..n_features {
+            out[[i, j]] = F::from(x[[i, j]]).ok_or_else(|| FerroError::InvalidParameter {
+                name: "x".into(),
+                reason: "could not convert".into(),
+            })?;
+        }
+    }
+    Ok((out, y))
+}
+
+/// Generate Hastie's binary classification benchmark from
+/// "Elements of Statistical Learning" (Ex 10.2).
+///
+/// Produces 10-dimensional standard-normal inputs; the binary label is
+/// `1` iff `sum(x_i^2) > 9.34`.
+pub fn make_hastie_10_2<F>(
+    n_samples: usize,
+    random_state: Option<u64>,
+) -> Result<(Array2<F>, Array1<usize>), FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    let mut rng = make_rng(random_state);
+    let normal = Normal::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "normal".into(),
+        reason: e.to_string(),
+    })?;
+    let mut x = Array2::<F>::zeros((n_samples, 10));
+    let mut y = Array1::<usize>::zeros(n_samples);
+    for i in 0..n_samples {
+        let mut s = 0.0_f64;
+        for j in 0..10 {
+            let v = normal.sample(&mut rng);
+            s += v * v;
+            x[[i, j]] = F::from(v).ok_or_else(|| FerroError::InvalidParameter {
+                name: "x".into(),
+                reason: "could not convert".into(),
+            })?;
+        }
+        // 9.34 ≈ median of chi-squared with 10 df
+        y[i] = if s > 9.34 { 1 } else { 0 };
+    }
+    Ok((x, y))
+}
+
+/// Generate a random multi-label classification dataset.
+///
+/// Returns `(X, Y)` where `X` is `(n_samples, n_features)` and `Y` is a
+/// binary `(n_samples, n_classes)` indicator matrix. Each sample is assigned
+/// a label combination drawn from a Poisson distribution truncated to
+/// `[0, n_classes]`.
+pub fn make_multilabel_classification<F>(
+    n_samples: usize,
+    n_features: usize,
+    n_classes: usize,
+    n_labels: usize,
+    random_state: Option<u64>,
+) -> Result<(Array2<F>, Array2<usize>), FerroError>
+where
+    F: Float + Send + Sync + 'static,
+{
+    if n_classes == 0 {
+        return Err(FerroError::InvalidParameter {
+            name: "n_classes".into(),
+            reason: "must be >= 1".into(),
+        });
+    }
+    let mut rng = make_rng(random_state);
+    let unif = Uniform::new(0.0_f64, 1.0_f64).map_err(|e| FerroError::InvalidParameter {
+        name: "uniform".into(),
+        reason: e.to_string(),
+    })?;
+
+    let mut x = Array2::<F>::zeros((n_samples, n_features));
+    let mut y = Array2::<usize>::zeros((n_samples, n_classes));
+    for i in 0..n_samples {
+        // pick number of labels for this sample (clamp to [1, n_classes])
+        let target_labels = n_labels.clamp(1, n_classes);
+        // pick `target_labels` distinct random classes
+        let mut chosen = std::collections::HashSet::new();
+        while chosen.len() < target_labels {
+            let c = (unif.sample(&mut rng) * n_classes as f64).floor() as usize;
+            chosen.insert(c.min(n_classes - 1));
+        }
+        for c in &chosen {
+            y[[i, *c]] = 1;
+        }
+        for j in 0..n_features {
+            // X is just standard-normal noise modulated by labels.
+            let mut v = unif.sample(&mut rng) - 0.5;
+            for c in &chosen {
+                v += ((*c + 1) as f64) * 0.1;
+            }
+            x[[i, j]] = F::from(v).ok_or_else(|| FerroError::InvalidParameter {
+                name: "x".into(),
+                reason: "could not convert".into(),
+            })?;
+        }
+    }
+    Ok((x, y))
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 

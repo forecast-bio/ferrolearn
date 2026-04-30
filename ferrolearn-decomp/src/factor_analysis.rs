@@ -179,6 +179,36 @@ impl<F: Float + Send + Sync + 'static> FittedFactorAnalysis<F> {
     pub fn log_likelihood(&self) -> F {
         self.log_likelihood
     }
+
+    /// Map latent representation back to the original feature space.
+    /// Mirrors sklearn `FactorAnalysis.inverse_transform`. Returns
+    /// `Z @ Wᵀ + mean` where `W` is the loading matrix.
+    ///
+    /// Note: ferrolearn's FactorAnalysis stores `components` with shape
+    /// `(n_features, n_components)` (transposed relative to sklearn's
+    /// `components_` layout), so the formula transposes accordingly.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `z.ncols()` does not
+    /// equal the number of components.
+    pub fn inverse_transform(&self, z: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        let n_components = self.components.ncols();
+        if z.ncols() != n_components {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![z.nrows(), n_components],
+                actual: vec![z.nrows(), z.ncols()],
+                context: "FittedFactorAnalysis::inverse_transform".into(),
+            });
+        }
+        let mut result = z.dot(&self.components.t());
+        for mut row in result.rows_mut() {
+            for (v, &m) in row.iter_mut().zip(self.mean.iter()) {
+                *v = *v + m;
+            }
+        }
+        Ok(result)
+    }
 }
 
 // ---------------------------------------------------------------------------

@@ -246,6 +246,189 @@ impl<F: Float + Send + Sync + 'static> FittedBayesianGaussianMixture<F> {
     pub fn n_features(&self) -> usize {
         self.n_features_
     }
+
+    /// Per-component posterior responsibilities (soft assignments).
+    /// Equivalent to sklearn `BayesianGaussianMixture.predict_proba`.
+    /// Each row of the returned `(n_samples, n_components)` matrix sums
+    /// to 1.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the feature count differs
+    /// from the fitted model.
+    pub fn predict_proba(&self, x: &Array2<F>) -> Result<Array2<F>, FerroError> {
+        if x.ncols() != self.n_features_ {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features_],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted BayesianGaussianMixture".into(),
+            });
+        }
+        Ok(compute_responsibilities(
+            x,
+            &self.means_,
+            &self.covariances_,
+            &self.weights_,
+            self.covariance_type_,
+        ))
+    }
+
+    /// Per-sample log-likelihood under the fitted variational mixture.
+    /// Mirrors sklearn `BayesianGaussianMixture.score_samples`. Returns
+    /// shape `(n_samples,)`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the feature count differs
+    /// from the fitted model.
+    pub fn score_samples(&self, x: &Array2<F>) -> Result<Array1<F>, FerroError> {
+        if x.ncols() != self.n_features_ {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![self.n_features_],
+                actual: vec![x.ncols()],
+                context: "number of features must match fitted BayesianGaussianMixture".into(),
+            });
+        }
+        Ok(unnormalized_log_prob(
+            x,
+            &self.means_,
+            &self.covariances_,
+            &self.weights_,
+            self.covariance_type_,
+        ))
+    }
+
+    /// Mean per-sample log-likelihood. Mirrors sklearn
+    /// `BayesianGaussianMixture.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if the feature count differs
+    /// from the fitted model.
+    pub fn score(&self, x: &Array2<F>) -> Result<F, FerroError> {
+        let s = self.score_samples(x)?;
+        let n = s.len();
+        if n == 0 {
+            return Ok(F::zero());
+        }
+        Ok(s.iter().copied().fold(F::zero(), |a, b| a + b) / F::from(n).unwrap())
+    }
+
+    /// Bayesian Information Criterion: `-2 · log_likelihood + n_params · ln(n)`.
+    /// Mirrors sklearn's `bic(X)`. Lower = better model.
+    ///
+    /// # Errors
+    ///
+    /// As [`score_samples`](Self::score_samples).
+    pub fn bic(&self, x: &Array2<F>) -> Result<F, FerroError> {
+        let s = self.score_samples(x)?;
+        let n_samples = s.len();
+        let n = F::from(n_samples).unwrap_or_else(F::one);
+        let log_n = n.ln();
+        let log_lik: F = s.iter().copied().fold(F::zero(), |a, b| a + b);
+        let params = F::from(self.n_free_params()).unwrap_or_else(F::one);
+        Ok(-F::from(2.0).unwrap() * log_lik + params * log_n)
+    }
+
+    /// Akaike Information Criterion: `-2 · log_likelihood + 2 · n_params`.
+    /// Mirrors sklearn's `aic(X)`. Lower = better model.
+    ///
+    /// # Errors
+    ///
+    /// As [`score_samples`](Self::score_samples).
+    pub fn aic(&self, x: &Array2<F>) -> Result<F, FerroError> {
+        let s = self.score_samples(x)?;
+        let two = F::from(2.0).unwrap();
+        let log_lik: F = s.iter().copied().fold(F::zero(), |a, b| a + b);
+        let params = F::from(self.n_free_params()).unwrap_or_else(F::one);
+        Ok(-two * log_lik + two * params)
+    }
+
+    /// Number of free parameters in the model. Mirrors the GMM accounting
+    /// (means + covariance shape + (k-1) weights), used by `bic` / `aic`.
+    fn n_free_params(&self) -> usize {
+        let k = self.weights_.len();
+        let d = self.n_features_;
+        let cov_params = match self.covariance_type_ {
+            BayesianCovType::Full => k * d * (d + 1) / 2,
+            BayesianCovType::Tied => d * (d + 1) / 2,
+            BayesianCovType::Diag => k * d,
+            BayesianCovType::Spherical => k,
+        };
+        k * d + cov_params + (k - 1)
+    }
+}
+
+/// Compute the per-sample log-likelihood `log Σ_k π_k N(x | μ_k, Σ_k)`.
+///
+/// Mirrors the unnormalized half of [`compute_responsibilities`] but
+/// returns the per-row log-sum-exp instead of the row-normalized
+/// posteriors. Used by [`FittedBayesianGaussianMixture::score_samples`].
+fn unnormalized_log_prob<F: Float>(
+    x: &Array2<F>,
+    means: &Array2<F>,
+    covariances: &Array2<F>,
+    weights: &Array1<F>,
+    cov_type: BayesianCovType,
+) -> Array1<F> {
+    let n_samples = x.nrows();
+    let n_features = x.ncols();
+    let k = means.nrows();
+    let neg_half = F::from(-0.5).unwrap();
+    let mut log_joint = Array2::zeros((n_samples, k));
+
+    for ki in 0..k {
+        let log_w = (weights[ki] + eps::<F>()).ln();
+        for i in 0..n_samples {
+            let mahal = match cov_type {
+                BayesianCovType::Spherical => {
+                    let var = covariances[[ki, 0]] + eps::<F>();
+                    let mut sq = F::zero();
+                    for j in 0..n_features {
+                        let d = x[[i, j]] - means[[ki, j]];
+                        sq = sq + d * d;
+                    }
+                    sq / var + F::from(n_features).unwrap() * var.ln()
+                }
+                BayesianCovType::Diag => {
+                    let mut sq = F::zero();
+                    let mut log_det = F::zero();
+                    for j in 0..n_features {
+                        let var = covariances[[ki, j]] + eps::<F>();
+                        let d = x[[i, j]] - means[[ki, j]];
+                        sq = sq + d * d / var;
+                        log_det = log_det + var.ln();
+                    }
+                    sq + log_det
+                }
+                BayesianCovType::Full | BayesianCovType::Tied => {
+                    let offset = ki * n_features;
+                    let mut sq = F::zero();
+                    let mut log_det = F::zero();
+                    for j in 0..n_features {
+                        let var = covariances[[offset + j, j]] + eps::<F>();
+                        let d = x[[i, j]] - means[[ki, j]];
+                        sq = sq + d * d / var;
+                        log_det = log_det + var.ln();
+                    }
+                    sq + log_det
+                }
+            };
+            log_joint[[i, ki]] = log_w + neg_half * mahal;
+        }
+    }
+
+    let mut out = Array1::zeros(n_samples);
+    for i in 0..n_samples {
+        let max_val = (0..k)
+            .map(|ki| log_joint[[i, ki]])
+            .fold(F::neg_infinity(), |a, b| if b > a { b } else { a });
+        let sum_exp: F = (0..k).fold(F::zero(), |acc, ki| {
+            acc + (log_joint[[i, ki]] - max_val).exp()
+        });
+        out[i] = max_val + sum_exp.ln();
+    }
+    out
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -623,6 +806,19 @@ impl<F: Float + Send + Sync + 'static> Fit<Array2<F>, ()> for BayesianGaussianMi
             self.tol,
             &mut rng,
         )
+    }
+}
+
+impl<F: Float + Send + Sync + 'static> BayesianGaussianMixture<F> {
+    /// Fit on `x` and return hard cluster assignments for those samples.
+    /// Equivalent to sklearn `ClusterMixin.fit_predict`.
+    ///
+    /// # Errors
+    ///
+    /// Forwards any error from [`Fit::fit`] / [`Predict::predict`].
+    pub fn fit_predict(&self, x: &Array2<F>) -> Result<Array1<usize>, FerroError> {
+        let fitted = self.fit(x, &())?;
+        fitted.predict(x)
     }
 }
 

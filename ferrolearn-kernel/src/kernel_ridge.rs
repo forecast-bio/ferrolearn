@@ -73,11 +73,14 @@ impl<F: Float + Send + Sync + 'static> KernelRidge<F> {
     ///
     /// Defaults: `alpha = 1.0`, `kernel = Rbf`, `gamma = None` (auto),
     /// `degree = 3`, `coef0 = 0.0`.
+    ///
+    /// The default kernel is `Linear` to match scikit-learn
+    /// (`KernelRidge(kernel='linear')`).
     #[must_use]
     pub fn new() -> Self {
         Self {
             alpha: F::one(),
-            kernel: KernelType::Rbf,
+            kernel: KernelType::Linear,
             gamma: None,
             degree: 3,
             coef0: F::zero(),
@@ -157,6 +160,25 @@ impl<F: Float + Send + Sync + 'static> FittedKernelRidge<F> {
     #[must_use]
     pub fn x_fit(&self) -> &Array2<F> {
         &self.x_fit
+    }
+
+    /// R² coefficient of determination on the given test data.
+    /// Equivalent to sklearn's `RegressorMixin.score`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`FerroError::ShapeMismatch`] if `x.nrows() != y.len()` or
+    /// the feature count does not match the training data.
+    pub fn score(&self, x: &Array2<F>, y: &Array1<F>) -> Result<F, FerroError> {
+        if x.nrows() != y.len() {
+            return Err(FerroError::ShapeMismatch {
+                expected: vec![x.nrows()],
+                actual: vec![y.len()],
+                context: "y length must match number of samples in X".into(),
+            });
+        }
+        let preds = self.predict(x)?;
+        Ok(crate::r2_score(&preds, y))
     }
 }
 
