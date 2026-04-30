@@ -1,0 +1,10 @@
+{
+  "uuid": "2e057971-3dd3-4221-836b-e0a0e53bba62",
+  "issue_uuid": "bb3e808b-fdec-415d-ab14-74e8d2e62525",
+  "author": "doll-agent",
+  "content": "[action] Four head-to-head accuracy fixes verified with real numbers:\n1. RandomForest per-split features: -16pp -> -1pp at medium_10Kx100\n2. LinearSVC coordinate-Newton: -21pp -> +0pp at medium_10Kx100\n3. KernelRidge default kernel='linear': -20pp R² -> 0.0000 (exact parity)\n4. AdaBoostClassifier default SAMME: -19pp -> +0.5pp at small_1Kx10\nClassifier mean Δ across 51 estimators: -0.0142 -> +0.0039 (now positive).\nReports saved at ferrolearn-bench/reports/.",
+  "created_at": "2026-04-30T01:13:22.305892670Z",
+  "kind": "note",
+  "signed_by": "SHA256:vYZz/MN0xv65kCBcHlL16pXDCn0IffeXVhjHdHWEJ/4",
+  "signature": "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAgvYC/Jxp10Xe/mL8k/LiaU07oAkjiSz/Mm5BhrrXGkUMAAAARY3Jvc3NsaW5rLWNvbW1lbnQAAAAAAAAABnNoYTUxMgAAAFMAAAALc3NoLWVkMjU1MTkAAABAZurAAmYVHyRP7cRUPxK10BbgXACcYLnzZ7Os8Kz7BWaUbofsQD4G1b9hVM/CKdeo1Lk5f0aG0DP3y2/yud7RCg=="
+}
